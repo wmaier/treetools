@@ -1,5 +1,5 @@
 =====================================================================
- treetools - constituency tree processing
+ treetools - tree processing
 =====================================================================
 
 treetools is a collection of tools for processing constituency
