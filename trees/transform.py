@@ -249,6 +249,7 @@ def add_parser(subparsers):
     parser.set_defaults(func=run)
     return parser
 
+
 class UsageAction(argparse.Action):
     """Custom action which shows extended help on available transformation
     options.
@@ -268,6 +269,7 @@ class UsageAction(argparse.Action):
                       misc.get_doc_opts(treeoutput.OUTPUT_OPTIONS))
         print("\n%s%s" % (title_str, help_str))
         sys.exit()
+
 
 def run(args):
     """Runs the transformation given command line arguments.
