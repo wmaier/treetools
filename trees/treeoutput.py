@@ -65,7 +65,9 @@ def decorate_label(tree, **params):
     if 'gf_separator' in params:
         gf_separator = unicode(params['gf_separator'])
     gf_string = ""
-    if 'gf' in params and not tree['edge'].startswith("-"):
+    if 'gf' in params and not tree['edge'].startswith("-") \
+       and (trees.has_children(tree) 
+            or 'gf_terminals' in params):
         gf_string = "%s%s" % (gf_separator, tree['edge'])
     head = "" 
     if 'mark_heads_marking' in params and tree['head']:
@@ -217,5 +219,6 @@ OUTPUT_OPTIONS = {'boyd_split_marking' : 'Boyd split: Mark split nodes with *',
                   'boyd_split_numbering' : 'Boyd split: Number split nodes',
                   'export_four' : 'Export fmt: Use lemma (-- if not present)',
                   'gf' : 'Append grammatical function labels to node labels',
-                  'gf_separator' : 'Separator to use for gf option', 
+                  'gf_separator' : 'Separator to use for gf option',
+                  'gf_terminals' : 'If gf is set, use func. labels on terms.',
                   'mark_heads_marking' : 'Output head marking'}
