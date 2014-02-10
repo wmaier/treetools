@@ -94,7 +94,7 @@ def replace_parens(tree):
 
 def export_tabs(length):
     """Number of tabs after a single field in export format, given the
-    length of the field.
+    length of the field. 
     """
     if length < 8:
         return "\t\t\t"
@@ -206,7 +206,7 @@ def write_brackets_subtree(tree, stream, **params):
 def brackets(tree, stream, **params):
     """One bracketed tree per line. Tree must not be discontinuous.
     """
-    if analyze.is_discontinuous(tree):
+    if (analyze.gap_degree(tree) > 0):
         raise ValueError("cannot write a discontinuous trees with brackets.")
     write_brackets_subtree(tree, stream, **params)
     stream.write(u"\n")
