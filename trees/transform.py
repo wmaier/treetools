@@ -72,7 +72,7 @@ def root_attach(tree):
     return tree
 
 
-def mark_heads(tree):
+def negra_mark_heads(tree):
     """Mark the head child of each node in a NeGra/TIGER tree using a simple 
     heuristic. If there is child with a HD edge, it will be marked. Otherwise,
     the rightmost child with a NK edge will be marked. If there is no such
@@ -330,5 +330,5 @@ def run(args):
                         sys.stderr.write("\r%d" % tree_ind)
                 sys.stderr.write("\n")
 
-TRANSFORMATIONS = [root_attach, mark_heads, boyd_split, raising]
+TRANSFORMATIONS = [root_attach, negra_mark_heads, boyd_split, raising]
 
