@@ -10,10 +10,35 @@ import sys
 from . import trees, treeinput, misc
 
 
-def extract(grammar):
-    """Extract a PMCFG. Output is done later in possibly different formats."""
-    pass
+PRAGMA = ":"
+RULE = ":"
+RULEARROW = "<-"
+LINEARIZATION = "="
+SEQUENCE = "->"
 
+
+def make_grammar():
+    """Prepare an empty grammar dict.
+    """
+    grammar = {}
+    grammar['rules'] = {}
+    grammar['lin'] = {}
+    grammar['lindef'] = {}
+    return grammar
+
+
+def extract(tree, grammar, **opts):
+    """Extract a PMCFG. Output is done later in possibly different formats.
+    """
+    for subtree in trees.preorder(tree):
+        if trees.has_children(subtree):
+            lhs = subtree['label']
+            rhses = [child['label'] for child in trees.children(subtree)]
+            rule = tuple([lhs] + rhses)
+            if not rule in grammar['rules']:
+                grammar['rules'][rule] = 0
+            grammar['rules'][rule] += 1
+                
 
 def add_parser(subparsers):
     """Add an argument parser to the subparsers of treetools.py.
@@ -24,6 +49,9 @@ def add_parser(subparsers):
                                    RawDescriptionHelpFormatter,
                                    description='grammar extraction from treebank trees')
     parser.add_argument('src', help='input file')
+    parser.add_argument('--params', nargs='+', metavar='P',
+                        help='params P for grammar extraction in form k:v' \
+                            '(default: %(default)s)', default=[])
     parser.add_argument('--src-format', metavar='FMT',
                         choices=[fun.__name__ 
                                  for fun in treeinput.INPUT_FORMATS],
@@ -61,7 +89,9 @@ class UsageAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         title_str = misc.bold("%s help" % sys.argv[0])
         help_str = "\n\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n" \
-            % (misc.bold('available input formats: '),
+            % (misc.bold('extraction parameters: '), 
+               misc.get_doc_opts(grammar.PARAMS),
+               misc.bold('available input formats: '),
                misc.get_doc(treeinput.INPUT_FORMATS),
                misc.bold('available input options: '),
                misc.get_doc_opts(treeinput.INPUT_OPTIONS),
@@ -79,21 +109,22 @@ def run(args):
     sys.stderr.write("reading from '%s' in format '%s' and encoding '%s'\n" 
                      % (args.src, args.src_format, args.src_enc))
     sys.stderr.write("extracting grammar\n")
-    grammar = {}
+    grammar = make_grammar()
     cnt = 1
     for tree in getattr(treeinput, 
                         args.src_format)(args.src, args.src_enc, 
                                          **misc.options_dict \
                                          (args.src_opts)):
-        extract(grammar)
+        extract(tree, grammar, **misc.options_dict(args.params))
         if cnt % 100 == 0:
             sys.stderr.write("\r%d" % cnt)
         cnt += 1
     sys.stderr.write("writing grammar in format '%s', encoding '%s'\n"
                      % (args.dest_format, args.dest_enc))
-
+    print grammar
     sys.stderr.write("\n")
 
 
+PARAMS = {}
 FORMATS = ['pmcfg']
 FORMAT_OPTIONS = {}
