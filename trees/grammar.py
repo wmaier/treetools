@@ -6,6 +6,7 @@ This module provides functions and classes for grammar extraction
 Author: Wolfgang Maier <maierw@hhu.de>
 """
 import argparse
+import itertools
 import sys
 from . import trees, treeinput, misc
 
@@ -21,24 +22,63 @@ def make_grammar():
     """Prepare an empty grammar dict.
     """
     grammar = {}
-    grammar['rules'] = {}
+    grammar['funcs'] = {}
     grammar['lin'] = {}
     grammar['lindef'] = {}
     return grammar
 
 
+class Mapper(object):
+    """Map objects to ids consisting of a string prefix plus
+    a unique number per unique object."""
+
+    def __init__(self, prefix):
+        """Initialize the counter, the object store, and
+        remember the prefix to be used.
+        """
+        self._prefix = prefix
+        self.nextnum = itertools.count().next
+        self._store = {}
+    
+
+    def get_id(self, obj):
+        """Get an id for an object. New id if never seen before,
+        id from store if seen before."""
+        if obj in self._store:
+            return "%s%d" % (self._prefix, self._store[obj])
+        self._store[obj] = self.nextnum()
+        return self._store[obj]
+
+
 def extract(tree, grammar, **opts):
     """Extract a PMCFG. Output is done later in possibly different formats.
     """
+    tree['arity'] = len(trees.terminal_blocks(tree))
+    tree['terminals'] = trees.terminals(tree)
+    func_mapper = Mapper('f')
+    lin_mapper = Mapper('l')
+    lindef_mapper = Mapper('s')
     for subtree in trees.preorder(tree):
         if trees.has_children(subtree):
-            lhs = subtree['label']
-            rhses = [child['label'] for child in trees.children(subtree)]
-            rule = tuple([lhs] + rhses)
-            if not rule in grammar['rules']:
-                grammar['rules'][rule] = 0
-            grammar['rules'][rule] += 1
-                
+            lindefs = []
+            lhs = "%s%d" % (subtree['label'], subtree['arity'])
+            rhses = []
+            for i, child in enumerate(trees.children(subtree)):
+                child['terminals'] = trees.terminals(child)
+                argpos = 0
+                for j, term in enumerate(child['terminals'][:-1]):
+                    if child['terminals'][j + 1]['num'] \
+                       > (child['terminals'][j]['num'] + 1):
+                        lindefs.append((i, argpos))
+                        argpos += 1
+                lindefs.append((i, argpos))
+                child['arity'] = argpos + 1
+                rhses.append("%s%d" % (child['label'], child['arity']))
+            func_id = func_mapper.get_id(tuple([lhs] + rhses))
+            if not func_id in grammar['funcs']:
+                grammar['funcs'][func_id] = 0
+            grammar['funcs'][func_id] += 1
+
 
 def add_parser(subparsers):
     """Add an argument parser to the subparsers of treetools.py.

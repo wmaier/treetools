@@ -69,6 +69,20 @@ def terminals(tree):
         return sorted(result, key=lambda x: x['num'])
 
 
+def terminal_blocks(tree):
+    """Return an array of arrays of terminals representing the 
+    continuous blocks covered by the root of the tree given as
+    argument."""
+    blocks = [[]]
+    terms = terminals(tree)
+    for i, terminal in enumerate(terms[:-1]):
+        blocks[-1].append(terminal)
+        if terms[i]['num'] + 1 < terms[i + 1]['num']:
+            blocks.append([])
+    blocks[-1].append(terms[-1])
+    return blocks
+
+
 def right_sibling(tree):
     """Return the right sibling of this tree if it exists and None otherwise.
     """
