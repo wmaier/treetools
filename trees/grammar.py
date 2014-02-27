@@ -17,60 +17,44 @@ LINEARIZATION = "="
 SEQUENCE = "->"
 
 
-def make_grammar():
-    """Prepare an empty grammar dict.
+def write_pmcfg(grammar, **opts):
+    """Write grammar in PMCFG format.
     """
-    grammar = {}
-    grammar['funcs'] = {}
-    grammar['lindef'] = {}
-    return grammar
+    pass
 
 
 def extract(tree, grammar, **opts):
     """Extract a PMCFG. Output is done later in possibly different formats.
     """
-    tree['arity'] = len(trees.terminal_blocks(tree))
     tree['terminals'] = trees.terminals(tree)
-    func_cnt = 0
-    lindef_cnt = 0
     for subtree in trees.preorder(tree):
         if trees.has_children(subtree):
-            linearization = []
-            lhs = "%s%d" % (subtree['label'], subtree['arity'])
-            rhses = []
+            lin = []
+            func = [subtree['label']]
             for i, child in enumerate(trees.children(subtree)):
+                func.append(child['label'])
                 child['terminals'] = trees.terminals(child)
                 argpos = 0
                 for j, term in enumerate(child['terminals'][:-1]):
                     if child['terminals'][j + 1]['num'] \
                        > (child['terminals'][j]['num'] + 1):
-                        linearization.append((i, argpos))
+                        lin.append((i, argpos))
                         argpos += 1
-                linearization.append((i, argpos))
-                child['arity'] = argpos + 1
-                rhses.append("%s%d" % (child['label'], child['arity']))
-            func = tuple([lhs] + rhses)
-            func_id = None
-            if not func in grammar['funcs']:
-                func_id = func_cnt
-                func_cnt += 1
-                grammar['funcs'][func_id] = { 'func' : func , 'count' : 0 }
-                grammar['funcs'][func] = func_id
-            else:
-                func_id = grammar['funcs'][func]
-            grammar['funcs'][func_id]['count'] += 1
-            linearization_ids = []
-            for lin in linearization:
-                lindef_id = None
-                if not lin in grammar['lindef']:
-                    lindef_id = lindef_cnt
-                    lindef_cnt += 1
-                    grammar['lindef'][lindef_id] = { 'lindef' : lin }
-                    grammar['lindef'][lin] = lindef_id
-                else:
-                    lindef_id = grammar['lindef'][lin]
-            linearization_ids = tuple(linearization_ids)
-            print grammar
+                lin.append((i, argpos))
+            func = tuple(func)
+            lin = tuple(lin)
+            vert = tuple([dom['label'] for dom in trees.dominance(subtree)])
+            if not func in grammar:
+                grammar[func] = { 'cnt' : 0 , 'lin' : {} }
+            grammar[func]['cnt'] += 1
+            if not lin in grammar[func]['lin']:
+                grammar[func]['lin'][lin] =  { 'cnt' : 0 , 'vert' : {} }
+            grammar[func]['lin'][lin]['cnt'] += 1
+            if not vert in grammar[func]['lin'][lin]['vert']:
+                grammar[func]['lin'][lin]['vert'][vert] = { 'cnt' : 0 }
+            grammar[func]['lin'][lin]['vert'][vert]['cnt'] += 1
+    print grammar
+    return grammar
 
 
 def add_parser(subparsers):
@@ -142,7 +126,7 @@ def run(args):
     sys.stderr.write("reading from '%s' in format '%s' and encoding '%s'\n" 
                      % (args.src, args.src_format, args.src_enc))
     sys.stderr.write("extracting grammar\n")
-    grammar = make_grammar()
+    grammar = {}
     cnt = 1
     for tree in getattr(treeinput, 
                         args.src_format)(args.src, args.src_enc, 
@@ -154,7 +138,7 @@ def run(args):
         cnt += 1
     sys.stderr.write("writing grammar in format '%s', encoding '%s'\n"
                      % (args.dest_format, args.dest_enc))
-    print grammar
+    write_pmcfg(grammar, **misc.options_dict(args.dest_opts))
     sys.stderr.write("\n")
 
 
