@@ -6,7 +6,6 @@ This module provides functions and classes for grammar extraction
 Author: Wolfgang Maier <maierw@hhu.de>
 """
 import argparse
-import itertools
 import sys
 from . import trees, treeinput, misc
 
@@ -23,31 +22,8 @@ def make_grammar():
     """
     grammar = {}
     grammar['funcs'] = {}
-    grammar['lin'] = {}
     grammar['lindef'] = {}
     return grammar
-
-
-class Mapper(object):
-    """Map objects to ids consisting of a string prefix plus
-    a unique number per unique object."""
-
-    def __init__(self, prefix):
-        """Initialize the counter, the object store, and
-        remember the prefix to be used.
-        """
-        self._prefix = prefix
-        self.nextnum = itertools.count().next
-        self._store = {}
-    
-
-    def get_id(self, obj):
-        """Get an id for an object. New id if never seen before,
-        id from store if seen before."""
-        if obj in self._store:
-            return "%s%d" % (self._prefix, self._store[obj])
-        self._store[obj] = self.nextnum()
-        return self._store[obj]
 
 
 def extract(tree, grammar, **opts):
@@ -55,12 +31,11 @@ def extract(tree, grammar, **opts):
     """
     tree['arity'] = len(trees.terminal_blocks(tree))
     tree['terminals'] = trees.terminals(tree)
-    func_mapper = Mapper('f')
-    lin_mapper = Mapper('l')
-    lindef_mapper = Mapper('s')
+    func_cnt = 0
+    lindef_cnt = 0
     for subtree in trees.preorder(tree):
         if trees.has_children(subtree):
-            lindefs = []
+            linearization = []
             lhs = "%s%d" % (subtree['label'], subtree['arity'])
             rhses = []
             for i, child in enumerate(trees.children(subtree)):
@@ -69,15 +44,33 @@ def extract(tree, grammar, **opts):
                 for j, term in enumerate(child['terminals'][:-1]):
                     if child['terminals'][j + 1]['num'] \
                        > (child['terminals'][j]['num'] + 1):
-                        lindefs.append((i, argpos))
+                        linearization.append((i, argpos))
                         argpos += 1
-                lindefs.append((i, argpos))
+                linearization.append((i, argpos))
                 child['arity'] = argpos + 1
                 rhses.append("%s%d" % (child['label'], child['arity']))
-            func_id = func_mapper.get_id(tuple([lhs] + rhses))
-            if not func_id in grammar['funcs']:
-                grammar['funcs'][func_id] = 0
-            grammar['funcs'][func_id] += 1
+            func = tuple([lhs] + rhses)
+            func_id = None
+            if not func in grammar['funcs']:
+                func_id = func_cnt
+                func_cnt += 1
+                grammar['funcs'][func_id] = { 'func' : func , 'count' : 0 }
+                grammar['funcs'][func] = func_id
+            else:
+                func_id = grammar['funcs'][func]
+            grammar['funcs'][func_id]['count'] += 1
+            linearization_ids = []
+            for lin in linearization:
+                lindef_id = None
+                if not lin in grammar['lindef']:
+                    lindef_id = lindef_cnt
+                    lindef_cnt += 1
+                    grammar['lindef'][lindef_id] = { 'lindef' : lin }
+                    grammar['lindef'][lin] = lindef_id
+                else:
+                    lindef_id = grammar['lindef'][lin]
+            linearization_ids = tuple(linearization_ids)
+            print grammar
 
 
 def add_parser(subparsers):
