@@ -115,7 +115,8 @@ def lca(tree_a, tree_b):
 
 
 def dominance(tree):
-    """Return all ancestors of this tree including the tree itself."""
+    """Return all ancestors of this tree including the tree itself.
+    """
     parent = tree
     while not parent['parent'] == None:
         yield parent
