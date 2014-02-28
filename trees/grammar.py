@@ -6,6 +6,7 @@ This module provides functions and classes for grammar extraction
 Author: Wolfgang Maier <maierw@hhu.de>
 """
 import argparse
+import io
 import sys
 from . import trees, treeinput, misc
 
@@ -17,14 +18,36 @@ LINEARIZATION = "="
 SEQUENCE = "->"
 
 
-def write_pmcfg(grammar, **opts):
+def pmcfg(grammar, dest, dest_enc, **opts):
     """Write grammar in PMCFG format.
     """
-    pass
+    lindef_to_id = {}
+    id_to_lindef = {}
+    func_id = 1
+    lindef_id = 1
+    with io.open("%s.pmcfg" % dest, 'w', encoding=dest_enc) as dest_stream:
+        for func in grammar:
+            for lin in grammar[func]:
+                dest_stream.write(u" fun%d %s %s %s %s\n" 
+                                  % (func_id, RULE, func[0], RULEARROW, ' '.join(func[1:])))
+                dest_stream.write(u" fun%d %s" % (func_id, LINEARIZATION))
+                for lindef in lin:
+                    if not lindef in lindef_to_id:
+                        lindef_to_id[lindef] = u"s%d" % lindef_id
+                        id_to_lindef[u"s%d" % lindef_id] = lindef
+                        lindef_id += 1
+                    dest_stream.write(u" %s" % lindef_to_id[lindef])
+                dest_stream.write(u"\n")
+                func_id += 1
+        for lindef_id in sorted(id_to_lindef, key=lambda x : int(x[1:])):
+            dest_stream.write(u" %s %s %s\n" 
+                              % (lindef_id, SEQUENCE, id_to_lindef[lindef_id]))
 
 
 def extract(tree, grammar, **opts):
-    """Extract a PMCFG. Output is done later in possibly different formats.
+    """Extract a PMCFG. We remember "bare" CFG productions, together with 
+    possible linearizations, together with vertical contexts from the tree
+    (for later markovization).
     """
     tree['terminals'] = trees.terminals(tree)
     for subtree in trees.preorder(tree):
@@ -45,15 +68,12 @@ def extract(tree, grammar, **opts):
             lin = tuple(lin)
             vert = tuple([dom['label'] for dom in trees.dominance(subtree)])
             if not func in grammar:
-                grammar[func] = { 'cnt' : 0 , 'lin' : {} }
-            grammar[func]['cnt'] += 1
-            if not lin in grammar[func]['lin']:
-                grammar[func]['lin'][lin] =  { 'cnt' : 0 , 'vert' : {} }
-            grammar[func]['lin'][lin]['cnt'] += 1
-            if not vert in grammar[func]['lin'][lin]['vert']:
-                grammar[func]['lin'][lin]['vert'][vert] = { 'cnt' : 0 }
-            grammar[func]['lin'][lin]['vert'][vert]['cnt'] += 1
-    print grammar
+                grammar[func] = {}
+            if not lin in grammar[func]:
+                grammar[func][lin] =  {} 
+            if not vert in grammar[func][lin]:
+                grammar[func][lin][vert] = 0
+            grammar[func][lin][vert] += 1
     return grammar
 
 
@@ -61,13 +81,14 @@ def add_parser(subparsers):
     """Add an argument parser to the subparsers of treetools.py.
     """
     parser = subparsers.add_parser('extract', 
-                                   usage='%(prog)s src [options] ', 
+                                   usage='%(prog)s src dest [options] ', 
                                    formatter_class=argparse. 
                                    RawDescriptionHelpFormatter,
                                    description='grammar extraction from treebank trees')
     parser.add_argument('src', help='input file')
+    parser.add_argument('dest', help='prefix of output files')
     parser.add_argument('--params', nargs='+', metavar='P',
-                        help='params P for grammar extraction in form k:v' \
+                        help='params P for grammar extraction in form key:value' \
                             '(default: %(default)s)', default=[])
     parser.add_argument('--src-format', metavar='FMT',
                         choices=[fun.__name__ 
@@ -138,7 +159,8 @@ def run(args):
         cnt += 1
     sys.stderr.write("writing grammar in format '%s', encoding '%s'\n"
                      % (args.dest_format, args.dest_enc))
-    write_pmcfg(grammar, **misc.options_dict(args.dest_opts))
+    globals()[args.dest_format](grammar, args.dest, 
+                                args.dest_enc, **misc.options_dict(args.dest_opts))
     sys.stderr.write("\n")
 
 
