@@ -28,23 +28,27 @@ def pmcfg(grammar, dest, dest_enc, **opts):
     with io.open("%s.pmcfg" % dest, 'w', encoding=dest_enc) as dest_stream:
         for func in grammar:
             for lin in grammar[func]:
+                count = sum(grammar[func][lin].values())
                 dest_stream.write(u" fun%d %s %s %s %s\n" 
-                                  % (func_id, RULE, func[0], RULEARROW, ' '.join(func[1:])))
+                                  % (func_id, RULE, func[0], RULEARROW, 
+                                     ' '.join(func[1:])))
                 dest_stream.write(u" fun%d %s" % (func_id, LINEARIZATION))
                 for lindef in lin:
                     if not lindef in lindef_to_id:
-                        lindef_to_id[lindef] = u"s%d" % lindef_id
-                        id_to_lindef[u"s%d" % lindef_id] = lindef
+                        lindef_to_id[lindef] = lindef_id
+                        id_to_lindef[lindef_id] = lindef
                         lindef_id += 1
-                    dest_stream.write(u" %s" % lindef_to_id[lindef])
+                    dest_stream.write(u" s%s" % lindef_to_id[lindef])
                 dest_stream.write(u"\n")
+                dest_stream.write(u" fun%d %d\n" % (func_id, count))
                 func_id += 1
-        for lindef_id in sorted(id_to_lindef, key=lambda x : int(x[1:])):
-            dest_stream.write(u" %s %s %s\n" 
+            
+        for lindef_id in sorted(id_to_lindef, key=int):
+            dest_stream.write(u" s%s %s %s\n" 
                               % (lindef_id, SEQUENCE, id_to_lindef[lindef_id]))
 
 
-def extract(tree, grammar, **opts):
+def extract(tree, grammar):
     """Extract a PMCFG. We remember "bare" CFG productions, together with 
     possible linearizations, together with vertical contexts from the tree
     (for later markovization).
@@ -58,7 +62,7 @@ def extract(tree, grammar, **opts):
                 func.append(child['label'])
                 child['terminals'] = trees.terminals(child)
                 argpos = 0
-                for j, term in enumerate(child['terminals'][:-1]):
+                for j, _ in enumerate(child['terminals'][:-1]):
                     if child['terminals'][j + 1]['num'] \
                        > (child['terminals'][j]['num'] + 1):
                         lin.append((i, argpos))
@@ -80,16 +84,14 @@ def extract(tree, grammar, **opts):
 def add_parser(subparsers):
     """Add an argument parser to the subparsers of treetools.py.
     """
-    parser = subparsers.add_parser('extract', 
+    parser = subparsers.add_parser('grammar', 
                                    usage='%(prog)s src dest [options] ', 
                                    formatter_class=argparse. 
                                    RawDescriptionHelpFormatter,
-                                   description='grammar extraction from treebank trees')
+                                   description='grammar extraction from' \
+                                   ' treebank trees')
     parser.add_argument('src', help='input file')
     parser.add_argument('dest', help='prefix of output files')
-    parser.add_argument('--params', nargs='+', metavar='P',
-                        help='params P for grammar extraction in form key:value' \
-                            '(default: %(default)s)', default=[])
     parser.add_argument('--src-format', metavar='FMT',
                         choices=[fun.__name__ 
                                  for fun in treeinput.INPUT_FORMATS],
@@ -126,17 +128,15 @@ class UsageAction(argparse.Action):
     """
     def __call__(self, parser, namespace, values, option_string=None):
         title_str = misc.bold("%s help" % sys.argv[0])
-        help_str = "\n\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n" \
-            % (misc.bold('extraction parameters: '), 
-               misc.get_doc_opts(grammar.PARAMS),
-               misc.bold('available input formats: '),
+        help_str = "\n\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n\n%s\n\n%s\n" \
+            % (misc.bold('available input formats: '),
                misc.get_doc(treeinput.INPUT_FORMATS),
                misc.bold('available input options: '),
                misc.get_doc_opts(treeinput.INPUT_OPTIONS),
                misc.bold('available dest formats: '),
-               misc.get_doc(grammar.FORMATS),
+               misc.get_doc(FORMATS),
                misc.bold('available dest options: '),
-               misc.get_doc_opts(grammar.FORMAT_OPTIONS))
+               misc.get_doc_opts(FORMAT_OPTIONS))
         print("\n%s%s" % (title_str, help_str))
         sys.exit()
 
@@ -153,17 +153,17 @@ def run(args):
                         args.src_format)(args.src, args.src_enc, 
                                          **misc.options_dict \
                                          (args.src_opts)):
-        extract(tree, grammar, **misc.options_dict(args.params))
+        extract(tree, grammar)
         if cnt % 100 == 0:
             sys.stderr.write("\r%d" % cnt)
         cnt += 1
-    sys.stderr.write("writing grammar in format '%s', encoding '%s'\n"
-                     % (args.dest_format, args.dest_enc))
+    sys.stderr.write("writing grammar in format '%s', encoding '%s', to '%s'\n"
+                     % (args.dest_format, args.dest_enc, args.dest))
     globals()[args.dest_format](grammar, args.dest, 
-                                args.dest_enc, **misc.options_dict(args.dest_opts))
+                                args.dest_enc, 
+                                **misc.options_dict(args.dest_opts))
     sys.stderr.write("\n")
 
 
-PARAMS = {}
-FORMATS = ['pmcfg']
+FORMATS = ['pmcfg', 'rcg']
 FORMAT_OPTIONS = {}
