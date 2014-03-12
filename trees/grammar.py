@@ -5,12 +5,14 @@ This module provides functions and classes for grammar extraction
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
+from __future__ import print_function
 import argparse
 import io
 import sys
 from . import trees, treeinput, misc
 
 
+# PMCFG constants
 PRAGMA = ":"
 RULE = ":"
 RULEARROW = "<-"
@@ -42,7 +44,6 @@ def pmcfg(grammar, dest, dest_enc, **opts):
                 dest_stream.write(u"\n")
                 dest_stream.write(u" fun%d %d\n" % (func_id, count))
                 func_id += 1
-            
         for lindef_id in sorted(id_to_lindef, key=int):
             dest_stream.write(u" s%s %s %s\n" 
                               % (lindef_id, SEQUENCE, id_to_lindef[lindef_id]))
@@ -51,25 +52,41 @@ def pmcfg(grammar, dest, dest_enc, **opts):
 def extract(tree, grammar):
     """Extract a PMCFG. We remember "bare" CFG productions, together with 
     possible linearizations, together with vertical contexts from the tree
-    (for later markovization).
+    (for later markovization). So far no extraction of rules from pre-terminal
+    level.
     """
-    tree['terminals'] = trees.terminals(tree)
     for subtree in trees.preorder(tree):
         if trees.has_children(subtree):
-            lin = []
+            # map terminal indices to the positions of the rhs elements
+            # by which they are covered, furthermore build bare rule
+            term_map = {}
             func = [subtree['label']]
             for i, child in enumerate(trees.children(subtree)):
                 func.append(child['label'])
-                child['terminals'] = trees.terminals(child)
-                argpos = 0
-                for j, _ in enumerate(child['terminals'][:-1]):
-                    if child['terminals'][j + 1]['num'] \
-                       > (child['terminals'][j]['num'] + 1):
-                        lin.append((i, argpos))
-                        argpos += 1
-                lin.append((i, argpos))
+                for terminal in trees.terminals(child):
+                    term_map[terminal['num']] = i
             func = tuple(func)
+            # build linearization
+            lin = []
+            # position within rhs element
+            rhs_argpos = [0] * (len(func) - 1)
+            # one lhs argument per block in the tree
+            for block in trees.terminal_blocks(subtree):
+                lin.append([])
+                # loop through terminals
+                for terminal in block:
+                    rhs_pos = term_map[terminal['num']]
+                    # append the number of the rhs element which covers
+                    # the current terminal if nothing has been appended yet
+                    # or if the current element is different from the last one
+                    # appended
+                    if len(lin[-1]) == 0 or not lin[-1][-1][0] == rhs_pos:
+                        lin[-1].append((rhs_pos, rhs_argpos[rhs_pos]))
+                        rhs_argpos[rhs_pos] += 1
+                # make the argument a tuple
+                lin[-1] = tuple(lin[-1])
             lin = tuple(lin)
+            # vertical context for markovization
             vert = tuple([dom['label'] for dom in trees.dominance(subtree)])
             if not func in grammar:
                 grammar[func] = {}
@@ -165,5 +182,5 @@ def run(args):
     sys.stderr.write("\n")
 
 
-FORMATS = ['pmcfg', 'rcg']
+FORMATS = ['pmcfg']
 FORMAT_OPTIONS = {}
