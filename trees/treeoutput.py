@@ -6,6 +6,7 @@ This module handles tree writing in different formats.
 Author: Wolfgang Maier <maierw@hhu.de>
 """
 from __future__ import division
+from math import floor
 from . import trees, analyze
 import sys
 
@@ -28,7 +29,7 @@ def parse_split_specification(split_spec, size):
     rest_index = None # remember where the 'rest' part is
     for i, part_spec in enumerate(split_spec.split('_')):
         if part_spec[-1] == "%":
-            parts.append(int(round((int(part_spec[:-1]) / 100) * size)))
+            parts.append(int(floor((int(part_spec[:-1]) / 100) * size)))
         elif part_spec[-1] == "#":
             parts.append(int(part_spec[:-1]))
         elif part_spec == 'rest' and rest_index == None:
@@ -43,8 +44,8 @@ def parse_split_specification(split_spec, size):
         if not rest_index == None:
             parts[rest_index] = diff
         else:
-            sys.stderr.write("rounding: extra %d sentences will be added\n")
-            sys.stderr.write("to part with the largest number of\n" % diff)
+            sys.stderr.write("rounding: extra %d sentences will be\n" % diff)
+            sys.stderr.write("added to part with the largest number of\n")
             sys.stderr.write("sentences. In case of a tie, the sentences\n")
             sys.stderr.write("are added to the first part.\n")
             parts[parts.index(max(parts))] += diff
