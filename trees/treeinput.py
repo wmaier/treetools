@@ -9,11 +9,98 @@ Author: Wolfgang Maier <maierw@hhu.de>
 """
 from __future__ import with_statement
 import io
+from StringIO import StringIO
 from . import trees 
 
 
-EXPORT_NUMBER_OF_FIELDS = 6
-EXPORT_FIELDS = ['word', 'lemma', 'label', 'morph', 'edge', 'parent_num']
+CHARACTERS = { "(" : "LRB", ")" : "RRB",
+               " " : "WS", "\t" : "WS", "\n" : "WS", 
+               "\r" : "WS", "\f" : "WS", "\v" : "WS" }
+
+
+def bracket_lexer(stream):
+    """Lexes input coming from stream in opening and closing brackets, 
+    whitespace, and remaining characters. Works as generator."""
+    buf = StringIO()
+    character = stream.read(1)
+    while not character == "":
+        if character in CHARACTERS:
+            if len(buf.getvalue()) > 0:
+                yield buf.getvalue(), "TOKEN"
+                buf.close()
+                buf = StringIO()
+            yield character, CHARACTERS[character]
+        else:
+            buf.write(character)
+        character = stream.read(1)
+
+
+def brackets(in_file, in_encoding, **params):
+    """Read bracketed trees with any kind of indentation by lexing
+    input into whitespace, left/right brackets, and other tokens (aka 
+    labels/words). 
+    States:
+       0   expect sentence
+       1   expect whitespace or label
+       2   expect whitespace or left bracket
+       3   expect whitespace, word or left bracket
+       4   expect whitespace or right bracket
+       5   expect whitespace or left bracket or right bracket
+    """
+    queue = []
+    state = 0
+    level = 0
+    with io.open(in_file, encoding=in_encoding) as stream:
+        for lextoken, lexclass in bracket_lexer(stream):
+            if lexclass == "LRB":
+                if state in [0, 2, 3, 5]:
+                    level += 1
+                    state = 1
+                elif state == 1:
+                    raise ValueError("expected whitespace or label, got (")
+                elif state == 4:
+                    raise ValueError("expected whitespace or ), got (")
+                else:
+                    raise ValueError("unknown state")
+            elif lexclass == "RRB":
+                if state in [0]:
+                    pass
+                elif state in [4, 5]:
+                    level -= 1
+                    state = 5 if not level == 0 else 0
+                elif state == 1:
+                    raise ValueError("expected label, got )")
+                elif state == 2:
+                    raise ValueError("expected whitespace or (, got )")
+                elif state == 3:
+                    raise ValueError("expected whitespace, label or (, got )")
+                else:
+                    raise ValueError("unknown state")
+            elif lexclass == "WS":
+                if state in [0, 1, 3, 4, 5]:
+                    pass
+                elif state == 2:
+                    state = 3
+                else:
+                    raise ValueError("unknown state")
+            elif lexclass == "TOKEN":
+                if state in [0]:
+                    pass
+                elif state == 1:
+                    state = 2
+                elif state == 3:
+                    state = 4
+                elif state == 2:
+                    raise ValueError("expected whitespace or (, got token")
+                elif state == 4:
+                    raise ValueError("expected whitespace or ), got token")
+                elif state == 5:
+                    raise ValueError("expected whitespace, ( or ), got token")
+                else:
+                    raise ValueError("unknown state")
+            else:
+                raise ValueError("unknown lexer token class")
+            print lextoken, "\t", lexclass, "\t", state
 
 
 def export_build_tree(num, node_by_num, children_by_num):
@@ -43,10 +130,10 @@ def export_parse_line(line):
     # if it is export 3, insert dummy lemma
     if fields[4].isdigit():
         fields[1:1] = [u"--"]
-    if len(fields) < EXPORT_NUMBER_OF_FIELDS:
+    if len(fields) < trees.NUMBER_OF_FIELDS:
         raise ValueError("too few fields")
     # throw away after parent number and assign to fields
-    fields = dict(zip(EXPORT_FIELDS, fields[:EXPORT_NUMBER_OF_FIELDS])) 
+    fields = dict(zip(trees.FIELDS, fields[:trees.NUMBER_OF_FIELDS])) 
     fields['parent_num'] = int(fields['parent_num'])
     if not (500 <= fields['parent_num'] < 1000 or fields['parent_num'] == 0):
         raise ValueError("parent field must be 0 or between 500 and 999")
@@ -79,8 +166,7 @@ def export(in_file, in_encoding, **params):
                 if line.startswith(u"#EOS"):
                     node_by_num = {}
                     children_by_num = {}
-                    node_by_num[0] = dict(zip(EXPORT_FIELDS, 
-                                              [None] * EXPORT_NUMBER_OF_FIELDS))
+                    node_by_num[0] = trees.make_node_data()
                     node_by_num[0]['label'] = u"VROOT"
                     node_by_num[0]['edge'] = u"--"
                     term_cnt = 1
@@ -108,6 +194,6 @@ def export(in_file, in_encoding, **params):
                     in_sentence = False
                     sentence = []
 
-INPUT_FORMATS = [export]
+INPUT_FORMATS = [export, brackets]
 INPUT_OPTIONS = { 'export_continuous' : 
                   'Export: number sentences by counting, don\'t use #BOS' }

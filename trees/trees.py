@@ -17,12 +17,22 @@ Author: Wolfgang Maier <maierw@hhu.de>
 from copy import deepcopy
 
 
+NUMBER_OF_FIELDS = 6
+FIELDS = ['word', 'lemma', 'label', 'morph', 'edge', 'parent_num']
+
+
 def make_tree(data):
     """Make an empty tree and possibly initialize with given data.
     """
     # make a copy of given data and make sure to overwrite
     # children and parent 
     return dict(deepcopy(data), **{ 'children' : [], 'parent' : None} )
+
+
+def make_node_data():
+    """Make an empty node data with the right fields.
+    """
+    return dict(zip(FIELDS, [None] * NUMBER_OF_FIELDS))
 
 
 def preorder(tree):
