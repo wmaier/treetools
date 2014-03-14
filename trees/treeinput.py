@@ -9,7 +9,7 @@ Author: Wolfgang Maier <maierw@hhu.de>
 """
 from __future__ import with_statement
 import io
-from StringIO import StringIO
+from cStringIO import StringIO
 from . import trees 
 
 
@@ -50,12 +50,15 @@ def brackets(in_file, in_encoding, **params):
     queue = []
     state = 0
     level = 0
+    term_cnt = 1
+    cnt = 1
     with io.open(in_file, encoding=in_encoding) as stream:
         for lextoken, lexclass in bracket_lexer(stream):
             if lexclass == "LRB":
                 if state in [0, 2, 3, 5]:
                     level += 1
-                    state = 1
+                    queue.append(trees.make_tree(trees.make_node_data()))
+                    state = 2 if state == 0 else 1
                 elif state == 1:
                     raise ValueError("expected whitespace or label, got (")
                 elif state == 4:
@@ -67,7 +70,18 @@ def brackets(in_file, in_encoding, **params):
                     pass
                 elif state in [4, 5]:
                     level -= 1
-                    state = 5 if not level == 0 else 0
+                    if len(queue) > 1:
+                        queue[-2]['children'].append(queue[-1])
+                        queue[-1]['parent'] = queue[-2]
+                        queue.pop()
+                    if level == 0:
+                        queue[0]['id'] = cnt
+                        cnt += 1
+                        yield queue[0]
+                        queue = []
+                        state = 0
+                    else:
+                        state = 5
                 elif state == 1:
                     raise ValueError("expected label, got )")
                 elif state == 2:
@@ -87,8 +101,14 @@ def brackets(in_file, in_encoding, **params):
                 if state in [0]:
                     pass
                 elif state == 1:
+                    queue[-1]['label'] = lextoken
+                    queue[-1]['morph'] = "--"
+                    queue[-1]['edge'] = "--"
                     state = 2
                 elif state == 3:
+                    queue[-1]['word'] = lextoken
+                    queue[-1]['num'] = term_cnt 
+                    term_cnt += 1
                     state = 4
                 elif state == 2:
                     raise ValueError("expected whitespace or (, got token")
@@ -100,8 +120,7 @@ def brackets(in_file, in_encoding, **params):
                     raise ValueError("unknown state")
             else:
                 raise ValueError("unknown lexer token class")
-            print lextoken, "\t", lexclass, "\t", state
-
+            
 
 def export_build_tree(num, node_by_num, children_by_num):
     """ Build a tree from export. """
