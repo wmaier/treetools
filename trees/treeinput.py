@@ -156,10 +156,6 @@ def export_parse_line(line):
     fields['parent_num'] = int(fields['parent_num'])
     if not (500 <= fields['parent_num'] < 1000 or fields['parent_num'] == 0):
         raise ValueError("parent field must be 0 or between 500 and 999")
-    # replace stuff TODO: make this nicer
-    equals_pos = fields['label'].find("=")
-    if equals_pos >= 0:
-        fields['label'] = fields['label'][0:equals_pos]
     return fields
 
 
