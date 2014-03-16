@@ -18,7 +18,7 @@ CHARACTERS = { "(" : "LRB", ")" : "RRB",
                "\r" : "WS", "\f" : "WS", "\v" : "WS" }
 
 
-def brackets_split_label(label, gf_separator):
+def brackets_split_label(label, gf_separator, trunc_equals):
     """Take a label, try to split it at first occurrence of 
     gf separator, return tuple with label and gf. Numbers at the
     end of the label (with the default separator character "-" 
@@ -27,6 +27,10 @@ def brackets_split_label(label, gf_separator):
     head marking and also kept. If no separator present (or only 
     co-indexation), default edge is returned.""" 
     edge = trees.DEFAULT_EDGE
+    if trunc_equals:
+        equals_pos = label.find("=")
+        if equals_pos > -1:
+            label = label[:equals_pos]
     headmarker = ""
     if label[-1] == trees.DEFAULT_HEAD_MARKER:
         headmarker = label[-1]
@@ -78,6 +82,7 @@ def brackets(in_file, in_encoding, **params):
     gf_separator = trees.DEFAULT_GF_SEPARATOR
     if 'brackets_gf_separator' in params:
         gf_separator = params['brackets_gf_separator']
+    trunc_equals = 'trunc_equals' in params
     queue = []
     state = 0
     level = 0
@@ -134,7 +139,8 @@ def brackets(in_file, in_encoding, **params):
                 elif state == 1:
                     if split_gf:
                         label, edge = brackets_split_label(lextoken, 
-                                                           gf_separator) 
+                                                           gf_separator,
+                                                           trunc_equals) 
                     else: 
                         label = lextoken
                         edge = trees.DEFAULT_EDGE
@@ -180,7 +186,7 @@ def export_build_tree(num, node_by_num, children_by_num):
     return tree
 
 
-def export_parse_line(line):
+def export_parse_line(line, **params):
     """ Parse a single export format line, i.e., one node."""
     fields = line.split()
     # if it is export 3, insert dummy lemma
@@ -193,6 +199,11 @@ def export_parse_line(line):
     fields['parent_num'] = int(fields['parent_num'])
     if not (500 <= fields['parent_num'] < 1000 or fields['parent_num'] == 0):
         raise ValueError("parent field must be 0 or between 500 and 999")
+    # options?
+    if 'trunc_equals' in params:
+        equals_pos = line.find("=")
+        if equals_pos > -1:
+            line = line[:equals_pos]
     return fields
 
 
@@ -222,7 +233,7 @@ def export(in_file, in_encoding, **params):
                     node_by_num[0]['label'] = u"VROOT"
                     node_by_num[0]['edge'] = trees.DEFAULT_EDGE
                     term_cnt = 1
-                    for fields in [export_parse_line(line) \
+                    for fields in [export_parse_line(line, params) \
                                        for line in sentence[1:-1]]:
                         word = fields['word']
                         num = None
@@ -247,10 +258,10 @@ def export(in_file, in_encoding, **params):
                     sentence = []
 
 INPUT_FORMATS = [export, brackets]
-INPUT_OPTIONS = { 'brackets_gf' : 
-                  'Brackets: Try to split grammatical functions from label ' \
-                  'at last occurrence of gf separator',
-                  'brackets_gf_separator' : 'Separator to use for gf option ' \
-                  '(default %s)' % trees.DEFAULT_GF_SEPARATOR,
-                  'export_continuous' : 
-                  'Export: number sentences by counting, don\'t use #BOS' }
+INPUT_OPTIONS = { 'brackets_gf' : 'Brackets: Try to split grammatical ' \
+                  'functions from label at last occurrence of gf separator',
+                  'brackets_gf_separator' : 'Brackets: Separator to use for ' \
+                  ' gf option (default %s)' % trees.DEFAULT_GF_SEPARATOR,
+                  'export_continuous' : 'Export: number sentences by ' \
+                  'counting, don\'t use #BOS', 
+                  'trunc_equals' : 'trucate label at first "=" sign'}
