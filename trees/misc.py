@@ -16,9 +16,18 @@ def get_doc(funs):
 
 def get_doc_opts(opts):
     """Generate a string from a dict with names and short explanations."""
-    return "\n".join(["%s%s%s" % (bold(key), 
-                                  " " * (24 - len(key)), opts[key]) 
-                      for key in sorted(opts.keys())]) + "\n"
+    result = []
+    for key in sorted(opts.keys()):
+        exps = [opts[key]]
+        while len(exps[-1]) > 56:
+            last_space = exps[-1][:56].rfind(' ')
+            splitted = [exps[-1][:last_space], exps[-1][last_space + 1:]]
+            del exps[-1]
+            exps += splitted
+        result.append("%s%s%s" % (bold(key), " " * (24 - len(key)), exps[0]))
+        for exp in exps[1:]:
+            result.append("%s%s" % (" " * 24, exp))
+    return "\n".join(result) + "\n"
 
 
 def options_dict(options):
