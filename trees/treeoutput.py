@@ -11,10 +11,6 @@ from math import floor
 from . import trees, analyze
 
 
-DEFAULT_GF_SEPARATOR = u"-"
-DEFAULT_HEAD_MARKER = u"'"
-
-
 def parse_split_specification(split_spec, size):
     """Parse the specification of part sizes for output splitting.
     The specification must be given as list of part size specifications 
@@ -62,7 +58,7 @@ def decorate_label(tree, **params):
     """Compute subtree label decorations depending on given parameters.
     """
     label = tree['label']
-    gf_separator = DEFAULT_GF_SEPARATOR
+    gf_separator = trees.DEFAULT_GF_SEPARATOR
     if 'gf_separator' in params:
         gf_separator = unicode(params['gf_separator'])
     gf_string = ""
@@ -72,7 +68,7 @@ def decorate_label(tree, **params):
         gf_string = "%s%s" % (gf_separator, tree['edge'])
     head = "" 
     if 'mark_heads_marking' in params and tree['head']:
-        head = DEFAULT_HEAD_MARKER
+        head = trees.DEFAULT_HEAD_MARKER
     split_marker = ""
     if 'boyd_split_marking' in params and tree['split']:
         split_marker = "*"

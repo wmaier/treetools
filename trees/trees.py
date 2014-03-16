@@ -17,6 +17,11 @@ Author: Wolfgang Maier <maierw@hhu.de>
 from copy import deepcopy
 
 
+DEFAULT_GF_SEPARATOR = u"-"
+DEFAULT_LEMMA = u"--"
+DEFAULT_EDGE = u"--"
+DEFAULT_MORPH = u"--"
+DEFAULT_HEAD_MARKER = u"'"
 NUMBER_OF_FIELDS = 6
 FIELDS = ['word', 'lemma', 'label', 'morph', 'edge', 'parent_num']
 

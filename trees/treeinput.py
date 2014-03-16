@@ -18,6 +18,33 @@ CHARACTERS = { "(" : "LRB", ")" : "RRB",
                "\r" : "WS", "\f" : "WS", "\v" : "WS" }
 
 
+def brackets_split_label(label, gf_separator):
+    """Take a label, try to split it at first occurrence of 
+    gf separator, return tuple with label and gf. Numbers at the
+    end of the label (with the default separator character "-" 
+    prepended) are taken to be co-indexation marks and re-glued 
+    to the label, "'" at the end of the label is taken to be 
+    head marking and also kept. If no separator present (or only 
+    co-indexation), default edge is returned.""" 
+    edge = trees.DEFAULT_EDGE
+    headmarker = ""
+    if label[-1] == trees.DEFAULT_HEAD_MARKER:
+        headmarker = label[-1]
+        label = label[:-1]
+    coindex = ""
+    coindex_sep = label.rfind(trees.DEFAULT_GF_SEPARATOR)
+    if coindex_sep > -1:
+        if label[coindex_sep + 1:].isdigit():
+            coindex = "%s%s" % (trees.DEFAULT_GF_SEPARATOR, 
+                                label[coindex_sep + 1:])
+            label = label[:coindex_sep]
+    sep = label.find(gf_separator)
+    if sep > 0:
+        edge = label[sep + 1:]
+        label = label[:sep]
+    return ("%s%s%s" % (label, coindex, headmarker)), edge
+
+
 def bracket_lexer(stream):
     """Lexes input coming from stream in opening and closing brackets, 
     whitespace, and remaining characters. Works as generator."""
@@ -47,6 +74,10 @@ def brackets(in_file, in_encoding, **params):
        4   expect whitespace or right bracket
        5   expect whitespace or left bracket or right bracket
     """
+    split_gf = 'brackets_gf' in params
+    gf_separator = trees.DEFAULT_GF_SEPARATOR
+    if 'brackets_gf_separator' in params:
+        gf_separator = params['brackets_gf_separator']
     queue = []
     state = 0
     level = 0
@@ -97,13 +128,19 @@ def brackets(in_file, in_encoding, **params):
                     state = 3
                 else:
                     raise ValueError("unknown state")
-            elif lexclass == "TOKEN":
+            elif lexclass == "TOKEN": 
                 if state in [0]:
                     pass
                 elif state == 1:
-                    queue[-1]['label'] = lextoken
-                    queue[-1]['morph'] = "--"
-                    queue[-1]['edge'] = "--"
+                    if split_gf:
+                        label, edge = brackets_split_label(lextoken, 
+                                                           gf_separator) 
+                    else: 
+                        label = lextoken
+                        edge = trees.DEFAULT_EDGE
+                    queue[-1]['label'] = label
+                    queue[-1]['edge'] = edge
+                    queue[-1]['morph'] = trees.DEFAULT_MORPH
                     state = 2
                 elif state == 3:
                     queue[-1]['word'] = lextoken
@@ -148,7 +185,7 @@ def export_parse_line(line):
     fields = line.split()
     # if it is export 3, insert dummy lemma
     if fields[4].isdigit():
-        fields[1:1] = [u"--"]
+        fields[1:1] = [trees.DEFAULT_LEMMA]
     if len(fields) < trees.NUMBER_OF_FIELDS:
         raise ValueError("too few fields")
     # throw away after parent number and assign to fields
@@ -183,7 +220,7 @@ def export(in_file, in_encoding, **params):
                     children_by_num = {}
                     node_by_num[0] = trees.make_node_data()
                     node_by_num[0]['label'] = u"VROOT"
-                    node_by_num[0]['edge'] = u"--"
+                    node_by_num[0]['edge'] = trees.DEFAULT_EDGE
                     term_cnt = 1
                     for fields in [export_parse_line(line) \
                                        for line in sentence[1:-1]]:
@@ -210,5 +247,10 @@ def export(in_file, in_encoding, **params):
                     sentence = []
 
 INPUT_FORMATS = [export, brackets]
-INPUT_OPTIONS = { 'export_continuous' : 
+INPUT_OPTIONS = { 'brackets_gf' : 
+                  'Brackets: Try to split grammatical functions from label ' \
+                  'at last occurrence of gf separator',
+                  'brackets_gf_separator' : 'Separator to use for gf option ' \
+                  '(default %s)' % trees.DEFAULT_GF_SEPARATOR,
+                  'export_continuous' : 
                   'Export: number sentences by counting, don\'t use #BOS' }
