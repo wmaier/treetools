@@ -6,9 +6,9 @@ This module handles tree writing in different formats.
 Author: Wolfgang Maier <maierw@hhu.de>
 """
 from __future__ import division
+import sys
 from math import floor
 from . import trees, analyze
-import sys
 
 
 DEFAULT_GF_SEPARATOR = u"-"
@@ -196,7 +196,10 @@ def write_brackets_subtree(tree, stream, **params):
     """
     stream.write(u"(")
     if trees.has_children(tree):
-        stream.write(decorate_label(tree, **params))
+        if not 'brackets_emptyroot' in params:
+            stream.write(decorate_label(tree, **params))
+        else:
+            del params['brackets_emptyroot']
         for child in trees.children(tree):
             write_brackets_subtree(child, stream, **params)
     else:
@@ -218,6 +221,7 @@ def brackets(tree, stream, **params):
 OUTPUT_FORMATS = [export, brackets]
 OUTPUT_OPTIONS = {'boyd_split_marking' : 'Boyd split: Mark split nodes with *',
                   'boyd_split_numbering' : 'Boyd split: Number split nodes',
+                  'brackets_emptyroot' : 'Omit root label as in Penn Treebank',
                   'export_four' : 'Export fmt: Use lemma (-- if not present)',
                   'gf' : 'Append grammatical function labels to node labels',
                   'gf_separator' : 'Separator to use for gf option',
