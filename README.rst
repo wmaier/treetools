@@ -3,7 +3,11 @@
 =====================================================================
 
 treetools is a collection of tools for processing constituency
-treebank trees. It has been developed at the Department for
+treebank trees. It contains algorithms for tree manipulation (such
+as removal of crossing branches), tree analysis, and grammar 
+extraction.
+
+treetools is being developed and maintained at the Department for
 Computational Linguistics at the Institute for Language and
 Information at the University of Düsseldorf, Germany (see
 http://phil.hhu.de/beyond-cfg). The project is sponsored by Deutsche
