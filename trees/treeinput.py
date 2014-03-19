@@ -9,13 +9,12 @@ Author: Wolfgang Maier <maierw@hhu.de>
 """
 from __future__ import with_statement
 import io
+import string
 from cStringIO import StringIO
 from . import trees 
 
 
-CHARACTERS = { "(" : "LRB", ")" : "RRB",
-               " " : "WS", "\t" : "WS", "\n" : "WS", 
-               "\r" : "WS", "\f" : "WS", "\v" : "WS" }
+BRACKETS = { "(" : "LRB", ")" : "RRB" }
 
 
 def brackets_split_label(label, gf_separator, trunc_equals):
@@ -52,17 +51,36 @@ def brackets_split_label(label, gf_separator, trunc_equals):
 def bracket_lexer(stream):
     """Lexes input coming from stream in opening and closing brackets, 
     whitespace, and remaining characters. Works as generator."""
-    buf = StringIO()
+    tokenbuf = StringIO()
+    whitespacebuf = StringIO()
     character = stream.read(1)
     while not character == "":
-        if character in CHARACTERS:
-            if len(buf.getvalue()) > 0:
-                yield buf.getvalue(), "TOKEN"
-                buf.close()
-                buf = StringIO()
-            yield character, CHARACTERS[character]
+        tval = tokenbuf.getvalue()
+        wval = whitespacebuf.getvalue()
+        if len(tval) > 0 and len(wval) > 0:
+            raise ValueError("something went wrong in the lexer")
+        if character in BRACKETS:
+            if len(tval) > 0:
+                yield tval, "TOKEN"
+                tokenbuf.close()
+                tokenbuf = StringIO()
+            if len(wval) > 0:
+                yield wval, "WS"
+                whitespacebuf.close()
+                whitespacebuf = StringIO()
+            yield character, BRACKETS[character]
+        elif character in string.whitespace:
+            if len(tval) > 0:
+                yield tval, "TOKEN"
+                tokenbuf.close()
+                tokenbuf = StringIO()
+            whitespacebuf.write(character)
         else:
-            buf.write(character)
+            if len(wval) > 0:
+                yield wval, "WS"
+                whitespacebuf.close()
+                whitespacebuf = StringIO()
+            tokenbuf.write(character)
         character = stream.read(1)
 
 
@@ -163,7 +181,6 @@ def brackets(in_file, in_encoding, **params):
                     raise ValueError("unknown state")
             else:
                 raise ValueError("unknown lexer token class")
-            
 
 def export_build_tree(num, node_by_num, children_by_num):
     """ Build a tree from export. """
