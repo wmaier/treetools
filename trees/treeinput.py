@@ -265,7 +265,7 @@ def export(in_file, in_encoding, **params):
                     node_by_num[0]['label'] = u"VROOT"
                     node_by_num[0]['edge'] = trees.DEFAULT_EDGE
                     term_cnt = 1
-                    for fields in [export_parse_line(line, params) \
+                    for fields in [export_parse_line(line, **params) \
                                        for line in sentence[1:-1]]:
                         word = fields['word']
                         num = None
