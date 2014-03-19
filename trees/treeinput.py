@@ -10,7 +10,7 @@ Author: Wolfgang Maier <maierw@hhu.de>
 from __future__ import with_statement
 import io
 import string
-from cStringIO import StringIO
+from StringIO import StringIO
 from . import trees 
 
 
