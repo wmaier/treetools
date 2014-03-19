@@ -89,12 +89,14 @@ def brackets(in_file, in_encoding, **params):
     input into whitespace, left/right brackets, and other tokens (aka 
     labels/words). 
     States:
-       0   expect sentence
-       1   expect whitespace or label
-       2   expect whitespace or left bracket
-       3   expect whitespace, word or left bracket
-       4   expect whitespace or right bracket
-       5   expect whitespace or left bracket or right bracket
+       0   expect sentence 
+       1   expect whitespace or label (phrase label)
+       2   expect whitespace or left bracket (next child)
+       3   expect whitespace, word or left bracket (word or next child)
+       4   expect whitespace or right bracket (end of phrase after word)
+       5   expect whitespace or left bracket or right bracket 
+           (next child or parent)
+       9   expect possibly empty label (root label)
     """
     split_gf = 'brackets_gf' in params
     gf_separator = trees.DEFAULT_GF_SEPARATOR
@@ -110,9 +112,16 @@ def brackets(in_file, in_encoding, **params):
         for lextoken, lexclass in bracket_lexer(stream):
             if lexclass == "LRB":
                 if state in [0, 2, 3, 5]:
+                    # beginning of sentence or phrase
                     level += 1
                     queue.append(trees.make_tree(trees.make_node_data()))
-                    state = 2 if state == 0 else 1
+                    state = 9 if state == 0 else 1
+                elif state == 9:
+                    # happens when root label is empty (PTB style)
+                    level += 1
+                    queue[-1]['label'] = u"VROOT"
+                    queue.append(trees.make_tree(trees.make_node_data()))
+                    state = 1
                 elif state == 1:
                     raise ValueError("expected whitespace or label, got (")
                 elif state == 4:
@@ -125,10 +134,12 @@ def brackets(in_file, in_encoding, **params):
                 elif state in [4, 5]:
                     level -= 1
                     if len(queue) > 1:
+                        # close phrase
                         queue[-2]['children'].append(queue[-1])
                         queue[-1]['parent'] = queue[-2]
                         queue.pop()
                     if level == 0:
+                        # close sentence
                         queue[0]['id'] = cnt
                         cnt += 1
                         yield queue[0]
@@ -140,21 +151,24 @@ def brackets(in_file, in_encoding, **params):
                     raise ValueError("expected label, got )")
                 elif state == 2:
                     raise ValueError("expected whitespace or (, got )")
-                elif state == 3:
+                elif state in [3, 9]:
                     raise ValueError("expected whitespace, label or (, got )")
                 else:
                     raise ValueError("unknown state")
             elif lexclass == "WS":
-                if state in [0, 1, 3, 4, 5]:
+                if state in [0, 1, 3, 4, 5, 9]:
                     pass
                 elif state == 2:
+                    # only don't skip whitespace if it's then one between POS
+                    # and word
                     state = 3
                 else:
                     raise ValueError("unknown state")
             elif lexclass == "TOKEN": 
-                if state in [0]:
+                if state == 0:
                     pass
-                elif state == 1:
+                elif state in [1, 9]:
+                    # phrase label, 9 when root label, 1 otherwise
                     if split_gf:
                         label, edge = brackets_split_label(lextoken, 
                                                            gf_separator,
@@ -181,6 +195,7 @@ def brackets(in_file, in_encoding, **params):
                     raise ValueError("unknown state")
             else:
                 raise ValueError("unknown lexer token class")
+
 
 def export_build_tree(num, node_by_num, children_by_num):
     """ Build a tree from export. """
