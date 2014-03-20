@@ -45,8 +45,9 @@ def pmcfg(grammar, dest, dest_enc, **opts):
                 dest_stream.write(u" fun%d %d\n" % (func_id, count))
                 func_id += 1
         for lindef_id in sorted(id_to_lindef, key=int):
-            dest_stream.write(u" s%s %s %s\n" 
-                              % (lindef_id, SEQUENCE, id_to_lindef[lindef_id]))
+            lindef = ' '.join(["%d:%d" % (i,j) for (i,j) 
+                               in id_to_lindef[lindef_id]])
+            dest_stream.write(u" s%s %s %s\n" % (lindef_id, SEQUENCE, lindef))
 
 
 def extract(tree, grammar):
