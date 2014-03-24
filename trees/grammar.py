@@ -23,6 +23,67 @@ LINEARIZATION = "="
 SEQUENCE = "->"
 # RCG format constants
 RCG_RULEARROW = "-->"
+DEFAULT_BINLABEL = "@"
+DEFAULT_VERT = "VERT"
+
+
+def linsub(lin, src, dest, replace):
+    """Linearization vector substitution, operation 1. and 2. of Maier (2013), 
+    p. 115
+    """
+    result = []
+    for arg in lin:
+        repl_arg = []
+        for i, (rhspos, rhsargpos) in enumerate(arg):
+            if src(rhspos):
+                this_dest = dest(rhspos)
+                if not this_dest == None:
+                    if not replace or (not repl_arg[-1][0] == this_dest):
+                        repl_arg.append((this_dest, rhsargpos))
+            else:
+                repl_arg.append((rhspos, rhsargpos))
+        if not len(repl_arg) == 0:
+            result.append(tuple(repl_arg))
+    return tuple(result)
+
+
+def binarization_ltor(grammar):
+    """Simple left-to-right binarization.
+    """
+    result = {}
+    for func in grammar:
+        for lin in grammar[func]:
+            rule_cnt = sum(grammar[func][lin].values())
+            if len(func[1:]) <= 2:
+                if not func in result:
+                    result[func] = {}
+                if not lin in result[func]:
+                    result[func][lin] = {}
+                result[func][lin][DEFAULT_VERT] = rule_cnt
+            else:
+                this_lin = lin
+                sub_lin = linsub(lin, lambda x: x > 0, lambda x: 1, True)
+                bin_func = tuple([func[0], func[1], "%s%d" 
+                                  % (DEFAULT_BINLABEL, 1)])
+                if not bin_func in result:
+                    result[bin_func] = {}
+                if not sub_lin in result[bin_func]:
+                    result[bin_func][sub_lin] = {}
+                result[bin_func][sub_lin][DEFAULT_VERT] = rule_cnt
+                for i in range(1, len(func) - 2):
+                    this_lin = linsub(this_lin, lambda x: x >= 0, 
+                                      lambda x: x - 1, False)
+                    this_lin = linsub(this_lin, lambda x: x == -1,
+                                      lambda x: None, False)
+                    sub_lin = linsub(lin, lambda x: x > 0, lambda x: 1, True)
+                    bin_func = tuple(["%s%d" % (DEFAULT_BINLABEL, i), func[i + 1], 
+                                      "%s%d" % (DEFAULT_BINLABEL, i + 1)])
+                    if not bin_func in result:
+                        result[bin_func] = {}
+                    if not sub_lin in result[bin_func]:
+                        result[bin_func][sub_lin] = {}
+                    result[bin_func][sub_lin][DEFAULT_VERT] = rule_cnt
+    return result
 
 
 def pmcfg(grammar, dest, dest_enc, **opts):
@@ -142,13 +203,16 @@ def add_parser(subparsers):
     """Add an argument parser to the subparsers of treetools.py.
     """
     parser = subparsers.add_parser('grammar', 
-                                   usage='%(prog)s src dest [options] ', 
+                                   usage='%(prog)s src dest gramtype [options] ', 
                                    formatter_class=argparse. 
                                    RawDescriptionHelpFormatter,
                                    description='grammar extraction from' \
                                    ' treebank trees')
     parser.add_argument('src', help='input file')
     parser.add_argument('dest', help='prefix of output files')
+    parser.add_argument('gramtype', metavar='T', choices=[t for t in GRAMTYPES],
+                        help='type of output grammar (default: %(default)s)', 
+                        default='treebank')
     parser.add_argument('--src-format', metavar='FMT',
                         choices=[fun.__name__ 
                                  for fun in treeinput.INPUT_FORMATS],
@@ -185,8 +249,10 @@ class UsageAction(argparse.Action):
     """
     def __call__(self, parser, namespace, values, option_string=None):
         title_str = misc.bold("%s help" % sys.argv[0])
-        help_str = "\n\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n\n%s\n\n%s\n" \
-            % (misc.bold('available input formats: '),
+        help_str = "\n\n%s\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n%s" \
+            % (misc.bold('available grammar output types: '),
+               misc.get_doc_opts(GRAMTYPES),
+               misc.bold('available input formats: '),
                misc.get_doc(treeinput.INPUT_FORMATS),
                misc.bold('available input options: '),
                misc.get_doc_opts(treeinput.INPUT_OPTIONS),
@@ -203,7 +269,7 @@ def run(args):
     """
     sys.stderr.write("reading from '%s' in format '%s' and encoding '%s'\n" 
                      % (args.src, args.src_format, args.src_enc))
-    sys.stderr.write("extracting grammar\n")
+    sys.stderr.write("extracting grammar (%s)\n" % args.gramtype)
     grammar = {}
     cnt = 1
     for tree in getattr(treeinput, 
@@ -211,6 +277,10 @@ def run(args):
                                          **misc.options_dict \
                                          (args.src_opts)):
         extract(tree, grammar)
+        if args.gramtype == "treebank":
+            pass
+        elif args.gramtype == "leftright":
+            grammar = binarization_ltor(grammar)
         if cnt % 100 == 0:
             sys.stderr.write("\r%d" % cnt)
         cnt += 1
@@ -224,3 +294,5 @@ def run(args):
 
 FORMATS = ['pmcfg', 'rcg']
 FORMAT_OPTIONS = {}
+GRAMTYPES = { 'treebank' : 'Plain treebank grammar' , 
+              'leftright' : 'Simple left-to-right binarization' }
