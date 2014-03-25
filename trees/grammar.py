@@ -12,6 +12,7 @@ import io
 import itertools
 import sys
 from StringIO import StringIO
+from collections import Counter
 from . import trees, treeinput, misc
 
 
@@ -27,21 +28,60 @@ DEFAULT_BINLABEL = "@"
 DEFAULT_VERT = "VERT"
 
 
+def unique_label():
+    """Generator which delivers unique binarization labels.
+    """
+    counter = itertools.count()
+    for x in counter:
+        yield "%s%d" % (DEFAULT_BINLABEL, x)
+
+
 def linsub(lin, src, dest, replace):
-    """Linearization vector substitution, operation 1. and 2. of Maier (2013), 
-    p. 115
+    """Linearization vector substitution, operations 1.-3. of Maier (2013), 
+    p. 115. src and dest are functions. Creates a new two-dimensional list from
+    a given two-dimensional list with linearization definitions. For all 
+    elements for which dest holds, the corresponding element is replaced with 
+    yield of dest for this element. If replace is true, then replacement is 
+    not performed if the last call to dest has yielded the same value. If dest
+    yields None (operation 2.), a new sublist is introduced.
     """
     result = []
+    # other than in Maier (2013) we have to keep track of the position 
+    # of each linearization vector element *within* an RHS non-term 
+    rhsargpos = Counter([])
+    # iterate through first dimension of list (lhs args)
     for arg in lin:
         repl_arg = []
-        for i, (rhspos, rhsargpos) in enumerate(arg):
+        # iterate through second dimension of list (lhs arg elements)
+        for i, (rhspos, _) in enumerate(arg):
+            # if we have a replacement candidate
             if src(rhspos):
                 this_dest = dest(rhspos)
+                # if replacement is not None
                 if not this_dest == None:
-                    if not replace or (not repl_arg[-1][0] == this_dest):
-                        repl_arg.append((this_dest, rhsargpos))
+                    # if we don't want subsequent identical values 
+                    # in the result list, append if the current sublist 
+                    # was empty or if the last appended element in the sublist
+                    # was not the same as now
+                    if replace:
+                        if len(repl_arg) == 0 \
+                           or not repl_arg[-1][0] == this_dest:
+                            rhsargpos.update([this_dest])
+                            repl_arg.append((this_dest, 
+                                             rhsargpos[this_dest] - 1))
+                    else:
+                        # otherwise append replacement
+                        rhsargpos.update([this_dest])
+                        repl_arg.append((this_dest, rhsargpos[this_dest] - 1))
+                else:
+                    # if replacement is None, don't do replacement
+                    # but create new sublist
+                    if not len(repl_arg) == 0:
+                        result.append(tuple(repl_arg))
+                    repl_arg = []
             else:
-                repl_arg.append((rhspos, rhsargpos))
+                rhsargpos.update([rhspos])
+                repl_arg.append((rhspos, rhsargpos[rhspos] - 1))
         if not len(repl_arg) == 0:
             result.append(tuple(repl_arg))
     return tuple(result)
@@ -50,6 +90,7 @@ def linsub(lin, src, dest, replace):
 def binarization_ltor(grammar):
     """Simple left-to-right binarization.
     """
+    label_gen = unique_label()
     result = {}
     for func in grammar:
         for lin in grammar[func]:
@@ -63,26 +104,38 @@ def binarization_ltor(grammar):
             else:
                 this_lin = lin
                 sub_lin = linsub(lin, lambda x: x > 0, lambda x: 1, True)
-                bin_func = tuple([func[0], func[1], "%s%d" 
-                                  % (DEFAULT_BINLABEL, 1)])
+                bin_label = label_gen.next()
+                bin_func = tuple([func[0], func[1], bin_label])
                 if not bin_func in result:
                     result[bin_func] = {}
                 if not sub_lin in result[bin_func]:
-                    result[bin_func][sub_lin] = {}
+                    result[bin_func][sub_lin] = {} 
                 result[bin_func][sub_lin][DEFAULT_VERT] = rule_cnt
-                for i in range(1, len(func) - 2):
+                for i in range(1, len(func) - 3):
                     this_lin = linsub(this_lin, lambda x: x >= 0, 
                                       lambda x: x - 1, False)
                     this_lin = linsub(this_lin, lambda x: x == -1,
                                       lambda x: None, False)
-                    sub_lin = linsub(lin, lambda x: x > 0, lambda x: 1, True)
-                    bin_func = tuple(["%s%d" % (DEFAULT_BINLABEL, i), func[i + 1], 
-                                      "%s%d" % (DEFAULT_BINLABEL, i + 1)])
+                    sub_lin = linsub(this_lin, lambda x: x > 0, 
+                                     lambda x: 1, True)
+                    next_label = label_gen.next()
+                    bin_func = tuple([bin_label, func[i + 1], next_label])
+                    bin_label = next_label
                     if not bin_func in result:
                         result[bin_func] = {}
                     if not sub_lin in result[bin_func]:
                         result[bin_func][sub_lin] = {}
                     result[bin_func][sub_lin][DEFAULT_VERT] = rule_cnt
+                bin_func = tuple([bin_label, func[-2], func[-1]])
+                this_lin = linsub(this_lin, lambda x: x >= 0,
+                                  lambda x: x - 1, False)
+                this_lin = linsub(this_lin, lambda x: x == -1, 
+                                  lambda x: None, False)
+                if not bin_func in result:
+                    result[bin_func] = {}
+                if not this_lin in result[bin_func]:
+                    result[bin_func][this_lin] = {}
+                result[bin_func][this_lin][DEFAULT_VERT] = rule_cnt
     return result
 
 
