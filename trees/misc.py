@@ -16,7 +16,8 @@ def get_doc(funs):
 
 
 def get_doc_opts(opts):
-    """Generate a string from a dict with names and short explanations."""
+    """Generate a string from a dict with names and short explanations.
+    """
     result = []
     for key in sorted(opts.keys()):
         exps = [opts[key]]
