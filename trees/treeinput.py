@@ -10,11 +10,60 @@ Author: Wolfgang Maier <maierw@hhu.de>
 from __future__ import with_statement
 import io
 import string
+import xml.etree.ElementTree as ET
 from StringIO import StringIO
 from . import trees 
 
 
 BRACKETS = { "(" : "LRB", ")" : "RRB" }
+
+
+def tigerxml_build_tree(self, s):
+    """Build a tree from a <s> element in TIGER XML. If there is 
+    no unique VROOT, add one. So far, head marking in the XML
+    is discarded.
+    """
+    tree = trees.make_tree(trees.make_node_data())
+    idref_to_tree = dict()
+    # handle terminals
+    term_cnt = 1
+    for node in s.find('graph').find('terminals').findall('t'):
+        subtree = tree.make_tree(trees.make_node_data())
+        subtree['word'] = node.get('word')
+        subtree['label'] = node.get('pos')
+        subtree['edge'] = trees.DEFAULT_EDGE
+        subtree['num'] = term_cnt
+        term_cnt += 1
+        idref_to_tree[node.get('id')] = subtree
+    # handle non-terminals
+    for node in s.find('graph').find('nonterminals').findall('nt'):
+        subtree = tree.make_tree(trees.make_node_data())
+        subtree['label'] = node.get('cat')
+        subtree['edge'] = trees.DEFAULT_EDGE
+        idref_to_tree[node.get('id')] = subtree
+    # set edge labels and link the tree
+    for node in s.find('graph').find('nonterminals').findall('nt'):
+        subtree = idref_to_tree[node.get('id')]
+        for edge in node.findall('edge'):
+            child = idref_to_tree[edge.get('idref')]
+            child['edge'] = edge.get('label')
+            child['parent'] = subtree
+    return tree
+
+
+def tigerxml(in_file, in_encoding, **params):
+    """Read trees from TIGER XML. Tries to be as liberal as possible
+    with idref labeling schemes.
+    """
+    with io.open(in_file, encoding=in_encoding) as stream:
+        corpus = ET.parse(stream)
+        tree_cnt = 0
+        for s in corpus.getroot().find('body').findall('s'):
+            tree_cnt += 1;
+            tree = tigerxml_build_tree(s)
+            tree['id'] = tree_cnt if 'continuous' in params \
+                else int(s.get('id')[1:])
+            yield tree
 
 
 def brackets_split_label(label, gf_separator, trunc_equals):
@@ -282,18 +331,18 @@ def export(in_file, in_encoding, **params):
                             children_by_num[fields['parent_num']] = []
                         children_by_num[fields['parent_num']].append(num)
                     tree = export_build_tree(0, node_by_num, children_by_num) 
-                    tree['id'] = tree_cnt if 'export_continuous' in params \
+                    tree['id'] = tree_cnt if 'continuous' in params \
                                  else last_id
                     yield tree
                     tree_cnt += 1
                     in_sentence = False
                     sentence = []
 
-INPUT_FORMATS = [export, brackets]
+INPUT_FORMATS = [export, brackets, tigerxml]
 INPUT_OPTIONS = { 'brackets_gf' : 'Brackets: Try to split grammatical ' \
                   'functions from label at last occurrence of gf separator',
                   'brackets_gf_separator' : 'Brackets: Separator to use for ' \
                   ' gf option (default %s)' % trees.DEFAULT_GF_SEPARATOR,
-                  'export_continuous' : 'Export: number sentences by ' \
+                  'continuous' : 'Export/TIGERXML: number sentences by ' \
                   'counting, don\'t use #BOS', 
                   'trunc_equals' : 'trucate label at first "=" sign'}
