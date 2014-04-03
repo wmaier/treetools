@@ -7,9 +7,10 @@ trees.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
-from __future__ import with_statement
+from __future__ import with_statement, print_function
 import io
 import string
+import sys
 import xml.etree.ElementTree as ET
 from StringIO import StringIO
 from . import trees 
@@ -18,28 +19,31 @@ from . import trees
 BRACKETS = { "(" : "LRB", ")" : "RRB" }
 
 
-def tigerxml_build_tree(self, s):
+def tigerxml_build_tree(s):
     """Build a tree from a <s> element in TIGER XML. If there is 
     no unique VROOT, add one. So far, head marking in the XML
     is discarded.
     """
-    tree = trees.make_tree(trees.make_node_data())
     idref_to_tree = dict()
     # handle terminals
     term_cnt = 1
     for node in s.find('graph').find('terminals').findall('t'):
-        subtree = tree.make_tree(trees.make_node_data())
+        subtree = trees.make_tree(trees.make_node_data())
         subtree['word'] = node.get('word')
         subtree['label'] = node.get('pos')
+        subtree['morph'] = node.get('morph')
+        subtree['lemma'] = node.get('lemma')
         subtree['edge'] = trees.DEFAULT_EDGE
         subtree['num'] = term_cnt
         term_cnt += 1
         idref_to_tree[node.get('id')] = subtree
     # handle non-terminals
     for node in s.find('graph').find('nonterminals').findall('nt'):
-        subtree = tree.make_tree(trees.make_node_data())
+        subtree = trees.make_tree(trees.make_node_data())
         subtree['label'] = node.get('cat')
+        subtree['morph'] = trees.DEFAULT_MORPH
         subtree['edge'] = trees.DEFAULT_EDGE
+        subtree['lemma'] = trees.DEFAULT_LEMMA
         idref_to_tree[node.get('id')] = subtree
     # set edge labels and link the tree
     for node in s.find('graph').find('nonterminals').findall('nt'):
@@ -47,23 +51,46 @@ def tigerxml_build_tree(self, s):
         for edge in node.findall('edge'):
             child = idref_to_tree[edge.get('idref')]
             child['edge'] = edge.get('label')
+            if child['parent'] is not None:
+                raise ValueError("more than one incoming edge")
             child['parent'] = subtree
-    return tree
+            subtree['children'].append(child)
+    root = None
+    for subtree in idref_to_tree.values():
+        if subtree['parent'] is None:
+            if root is None:
+                root = subtree 
+            else:
+                raise ValueError("more than one root node")
+    top = root
+    if not root['label'] == "VROOT":
+        top = trees.make_tree(trees.make_node_data())
+        top['label'] = u"VROOT"
+        top['children'].append(root)
+        top['morph'] = trees.DEFAULT_MORPH
+        top['edge'] = trees.DEFAULT_EDGE
+        top['lemma'] = trees.DEFAULT_LEMMA
+        root['parent'] = top
+    return top
 
 
 def tigerxml(in_file, in_encoding, **params):
-    """Read trees from TIGER XML. Tries to be as liberal as possible
-    with idref labeling schemes.
+    """Read trees from TIGER XML.  
     """
-    with io.open(in_file, encoding=in_encoding) as stream:
+    with open(in_file) as stream: #, encoding=in_encoding) as stream:
+        print("parsing xml...", file=sys.stderr)
         corpus = ET.parse(stream)
         tree_cnt = 0
+        print("reading sentences...", file=sys.stderr)
         for s in corpus.getroot().find('body').findall('s'):
             tree_cnt += 1;
-            tree = tigerxml_build_tree(s)
-            tree['id'] = tree_cnt if 'continuous' in params \
-                else int(s.get('id')[1:])
-            yield tree
+            try:
+                tree = tigerxml_build_tree(s)
+                tree['id'] = tree_cnt if 'continuous' in params \
+                    else int(s.get('id')[1:])
+                yield tree
+            except ValueError as e:
+                print("\nsentence %d: %s\n" % (tree_cnt, e), file=sys.stderr)
 
 
 def brackets_split_label(label, gf_separator, trunc_equals):
