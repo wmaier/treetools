@@ -13,6 +13,46 @@ import io
 from . import trees, treeinput, treeoutput, misc
 
 
+def ptb_get_coindex(label):
+    """Return co-index from PTB-style node label, -1 if none found.
+    """
+    ind = label.rfind(trees.DEFAULT_COINDEX_SEPARATOR) + 1
+    if ind > 0:
+        coind = label[ind:]
+        if coind.isdigit():
+            return int(coind)
+    return -1
+
+
+def ptb_strip_coindex(label):
+    """Return label with co-index stripped, original label
+    if no co-index present.
+    """
+    ind = label.rfind(trees.DEFAULT_COINDEX_SEPARATOR) + 1
+    if ind > 0:
+        coind = label[ind:]
+        if coind.isdigit():
+            slabel = label[:ind-1]
+            return slabel
+    return label
+
+
+def delete_leaf(tree, leaf):
+    """Delete a leaf node and recursively all of its ancestors
+    which do not have siblings. Root of the tree with the leaf
+    must be given as well. Return the first node with siblings 
+    or the (given) root.
+    """
+    parent = leaf['parent']
+    parent['children'].remove(leaf)
+    while not parent == tree \
+            and trees.has_children(parent):
+        p = parent['parent']
+        p['children'].remove(parent)
+        parent = p
+    return parent
+
+
 def root_attach(tree):
     """Reattach some children of the virtual root node in NeGra/TIGER/TueBa-DZ. 
     In a nutshell, the algorithm moves all children of VROOT to the least 
