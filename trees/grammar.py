@@ -7,12 +7,11 @@ Author: Wolfgang Maier <maierw@hhu.de>
 """
 from __future__ import print_function
 import argparse
-import collections
 import io
 import itertools
 import sys
+from collections import defaultdict,Counter
 from StringIO import StringIO
-from collections import Counter
 from . import trees, treeinput, misc
 
 
@@ -33,7 +32,7 @@ def unique_label():
     """
     counter = itertools.count()
     for x in counter:
-        yield "%s%d" % (DEFAULT_BINLABEL, x)
+        yield "%s%dX" % (DEFAULT_BINLABEL, x)
 
 
 def linsub(lin, src, dest, replace):
@@ -179,8 +178,8 @@ def rcg(grammar, dest, dest_enc, **opts):
                 varcnt = 0
                 lhsargs = StringIO()
                 lhsarity = 1
-                rhsargs = collections.defaultdict(dict)
-                rhsarity = collections.defaultdict(int)
+                rhsargs = defaultdict(dict)
+                rhsarity = defaultdict(int)
                 for i, arg in enumerate(lin):
                     if not i == 0: 
                         lhsargs.write(u",")
@@ -330,13 +329,11 @@ def run(args):
                                          **misc.options_dict \
                                          (args.src_opts)):
         extract(tree, grammar)
-        if args.gramtype == "treebank":
-            pass
-        elif args.gramtype == "leftright":
-            grammar = binarization_ltor(grammar)
         if cnt % 100 == 0:
             sys.stderr.write("\r%d" % cnt)
         cnt += 1
+    if args.gramtype == "leftright":
+        grammar = binarization_ltor(grammar)
     sys.stderr.write("writing grammar in format '%s', encoding '%s', to '%s'\n"
                      % (args.dest_format, args.dest_enc, args.dest))
     globals()[args.dest_format](grammar, args.dest, 
