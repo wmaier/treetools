@@ -7,17 +7,22 @@ Author: Wolfgang Maier <maierw@hhu.de>
 """
 from __future__ import print_function
 import argparse
+import collections
 import io
+import itertools
 import sys
+from StringIO import StringIO
 from . import trees, treeinput, misc
 
 
-# PMCFG constants
+# PMCFG format constants
 PRAGMA = ":"
 RULE = ":"
 RULEARROW = "<-"
 LINEARIZATION = "="
 SEQUENCE = "->"
+# RCG format constants
+RCG_RULEARROW = "-->"
 
 
 def pmcfg(grammar, dest, dest_enc, **opts):
@@ -48,6 +53,40 @@ def pmcfg(grammar, dest, dest_enc, **opts):
             lindef = ' '.join(["%d:%d" % (i,j) for (i,j) 
                                in id_to_lindef[lindef_id]])
             dest_stream.write(u" s%s %s %s\n" % (lindef_id, SEQUENCE, lindef))
+
+
+def rcg(grammar, dest, dest_enc, **opts):
+    """Write grammar in rparse rcg format, with count field. 
+    """
+    with io.open("%s.rcg" % dest, 'w', encoding=dest_enc) as dest_stream:
+        for func in grammar:
+            for lin in grammar[func]:
+                count = sum(grammar[func][lin].values())
+                varcnt = 0
+                lhsargs = StringIO()
+                lhsarity = 1
+                rhsargs = collections.defaultdict(dict)
+                rhsarity = collections.defaultdict(int)
+                for i, arg in enumerate(lin):
+                    if not i == 0: 
+                        lhsargs.write(u",")
+                        lhsarity += 1
+                    for var in arg:
+                        lhsargs.write(u"[%d]" % varcnt)
+                        rhsargs[var[0]][var[1]] = varcnt
+                        varcnt += 1
+                rhsargs = [rhsargs[i] for i in sorted(rhsargs, key=int)]
+                for i, rhs_el in enumerate(rhsargs):
+                    rhsargs[i] = ''.join([u"[%d]" % rhs_el[pos] for pos 
+                                          in sorted(rhs_el, key=int)])
+                    rhsarity[i] = len(rhs_el)
+                lhs = u"%s%d(%s)" % (func[0], lhsarity, lhsargs.getvalue())
+                lhsargs.close()
+                rhs = ' '.join([u"%s%d(%s)" % (func[i + 1], rhsarity[i], 
+                                              rhsargs[i]) 
+                                for i in range(len(func[1:]))])
+                dest_stream.write(u"C:%d %s %s %s\n" 
+                                  % (count, lhs, RCG_RULEARROW, rhs))
 
 
 def extract(tree, grammar):
@@ -183,5 +222,5 @@ def run(args):
     sys.stderr.write("\n")
 
 
-FORMATS = ['pmcfg']
+FORMATS = ['pmcfg', 'rcg']
 FORMAT_OPTIONS = {}

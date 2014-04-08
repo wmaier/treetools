@@ -6,6 +6,7 @@ This module provides misc utility functions.
 Author: Wolfgang Maier <maierw@hhu.de>
 """
 
+
 def get_doc(funs):
     """Generate a string from the names and docstrings of a list of given
     functions.
@@ -47,6 +48,7 @@ def options_dict(options):
         else:
             result[option] = True
     return result
+
 
 def bold(text):
     """For getting bold text on the command line (ANSI).
