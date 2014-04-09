@@ -77,7 +77,7 @@ def tigerxml_build_tree(s):
 def tigerxml(in_file, in_encoding, **params):
     """Read trees from TIGER XML.  
     """
-    with open(in_file) as stream: #, encoding=in_encoding) as stream:
+    with open(in_file, encoding=in_encoding) as stream:
         print("parsing xml...", file=sys.stderr)
         corpus = ET.parse(stream)
         tree_cnt = 0
