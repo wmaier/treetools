@@ -21,8 +21,7 @@ BRACKETS = { "(" : "LRB", ")" : "RRB" }
 
 def tigerxml_build_tree(s):
     """Build a tree from a <s> element in TIGER XML. If there is 
-    no unique VROOT, add one. So far, head marking in the XML
-    is discarded.
+    no unique VROOT, add one.
     """
     idref_to_tree = dict()
     # handle terminals
@@ -75,9 +74,9 @@ def tigerxml_build_tree(s):
 
 
 def tigerxml(in_file, in_encoding, **params):
-    """Read trees from TIGER XML.  
+    """Read trees from TIGER XML. The encoding argument is ignored here.
     """
-    with open(in_file, encoding=in_encoding) as stream:
+    with io.open(in_file, mode='rb') as stream:
         print("parsing xml...", file=sys.stderr)
         corpus = ET.parse(stream)
         tree_cnt = 0
