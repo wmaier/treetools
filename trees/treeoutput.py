@@ -57,24 +57,24 @@ def parse_split_specification(split_spec, size):
 def decorate_label(tree, **params):
     """Compute subtree label decorations depending on given parameters.
     """
-    label = tree['label']
+    label = tree.data['label']
     gf_separator = trees.DEFAULT_GF_SEPARATOR
     if 'gf_separator' in params:
         gf_separator = unicode(params['gf_separator'])
     gf_string = ""
-    if 'gf' in params and not tree['edge'].startswith("-") \
+    if 'gf' in params and not tree.data['edge'].startswith("-") \
        and (trees.has_children(tree) 
             or 'gf_terminals' in params):
-        gf_string = "%s%s" % (gf_separator, tree['edge'])
+        gf_string = "%s%s" % (gf_separator, tree.data['edge'])
     head = "" 
-    if 'mark_heads_marking' in params and tree['head']:
+    if 'mark_heads_marking' in params and tree.data['head']:
         head = trees.DEFAULT_HEAD_MARKER
     split_marker = ""
-    if 'boyd_split_marking' in params and tree['split']:
+    if 'boyd_split_marking' in params and tree.data['split']:
         split_marker = "*"
     split_number = ""
-    if 'boyd_split_numbering' in params and tree['split']:
-        split_number = tree['block_number']
+    if 'boyd_split_numbering' in params and tree.data['split']:
+        split_number = tree.data['block_number']
     return u"%s%s%s%s%s" % (label, gf_string, head, split_marker, split_number)
 
 
@@ -82,12 +82,12 @@ def replace_parens(tree):
     """Replace bracket characters in node data before bracketing output.
     """
     for arg in ['word', 'lemma', 'label', 'edge', 'morph']:
-        tree[arg] = tree[arg].replace("(", "LRB")
-        tree[arg] = tree[arg].replace(")", "RRB")
-        tree[arg] = tree[arg].replace("[", "LSB")
-        tree[arg] = tree[arg].replace("]", "RSB")
-        tree[arg] = tree[arg].replace("{", "LCB")
-        tree[arg] = tree[arg].replace("}", "RCB")
+        tree.data[arg] = tree.data[arg].replace("(", "LRB")
+        tree.data[arg] = tree.data[arg].replace(")", "RRB")
+        tree.data[arg] = tree.data[arg].replace("[", "LSB")
+        tree.data[arg] = tree.data[arg].replace("]", "RSB")
+        tree.data[arg] = tree.data[arg].replace("{", "LCB")
+        tree.data[arg] = tree.data[arg].replace("}", "RCB")
     return tree
 
 
@@ -106,29 +106,29 @@ def export_tabs(length):
 def export_format(subtree, **params):
     """Return an export formatted node line for a given subtree.
     """
-    if subtree['edge'] == None:
-        subtree['edge'] = '--'
+    if subtree.data['edge'] == None:
+        subtree.data['edge'] = '--'
     label = decorate_label(subtree, **params)
     if not 'export_four' in params:
         return u"%s%s%s\t%s%s%s\t%d\n" \
-            % (subtree['word'], 
-               export_tabs(len(subtree['word'])), 
+            % (subtree.data['word'], 
+               export_tabs(len(subtree.data['word'])), 
                label, 
-               subtree['morph'], 
-               export_tabs(len(subtree['morph']) + 8), 
-               subtree['edge'], 
-               subtree['parent']['num'])
+               subtree.data['morph'], 
+               export_tabs(len(subtree.data['morph']) + 8), 
+               subtree.data['edge'], 
+               subtree.parent.data['num'])
     else:
         return u"%s%s%s%s%s\t%s%s%s\t%d\n" \
-            % (subtree['word'], 
-               export_tabs(len(subtree['word'])), 
-               subtree['lemma'], 
-               export_tabs(len(subtree['lemma'])), 
+            % (subtree.data['word'], 
+               export_tabs(len(subtree.data['word'])), 
+               subtree.data['lemma'], 
+               export_tabs(len(subtree.data['lemma'])), 
                label, 
-               subtree['morph'], 
-               export_tabs(len(subtree['morph']) + 8), 
-               subtree['edge'], 
-               subtree['parent']['num'])
+               subtree.data['morph'], 
+               export_tabs(len(subtree.data['morph']) + 8), 
+               subtree.data['edge'], 
+               subtree.parent.data['num'])
 
 
 def compute_export_numbering(tree):
@@ -144,7 +144,7 @@ def compute_export_numbering(tree):
                 path_length = 0
                 path_element = terminal
                 while not path_element == subtree:
-                    path_element = path_element['parent']
+                    path_element = path_element.parent
                     path_length += 1
                 level = max(level, path_length)
             if not level in levels:
@@ -152,21 +152,21 @@ def compute_export_numbering(tree):
             levels[level].append(subtree)
     for level in levels:
         levels[level] = sorted(levels[level], \
-                                   key=lambda x: trees.terminals(x)[0]['num'])
+                                   key=lambda x: trees.terminals(x)[0].data['num'])
     num = 500
     for level_num in sorted(levels.keys()):
         level = levels[level_num]
         for subtree in level:
-            subtree['num'] = num
+            subtree.data['num'] = num
             num += 1
-    tree['num'] = 0
+    tree.data['num'] = 0
 
 
 def export(tree, stream, **params): 
     """Export format as in Brants (1997). 
     """
     # check parameters
-    tree_id = tree['id']
+    tree_id = tree.sid
     compute_export_numbering(tree)
     stream.write(u"#BOS %d\n" % tree_id)
     terms = {}
@@ -174,12 +174,12 @@ def export(tree, stream, **params):
     for subtree in trees.preorder(tree):
         if subtree == tree:
             continue
-        subtree['parent_num'] = u"%d" % subtree['parent']['num']
+        subtree.data['parent_num'] = u"%d" % subtree.parent.data['num']
         if trees.has_children(subtree):
-            subtree['word'] = u"#%d" % subtree['num']
-            non_terms[subtree['num']] = export_format(subtree, **params)
+            subtree.data['word'] = u"#%d" % subtree.data['num']
+            non_terms[subtree.data['num']] = export_format(subtree, **params)
         else:
-            terms[subtree['num']] = export_format(subtree, **params)
+            terms[subtree.data['num']] = export_format(subtree, **params)
     for num in sorted(terms.keys()):
         stream.write(terms[num])
     for num in sorted(non_terms.keys()):
@@ -201,7 +201,7 @@ def write_brackets_subtree(tree, stream, **params):
     else:
         tree = replace_parens(tree)
         stream.write(decorate_label(tree, **params))
-        stream.write(" %s" % tree['word'])
+        stream.write(" %s" % tree.data['word'])
     stream.write(u")")
 
 

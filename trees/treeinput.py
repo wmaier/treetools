@@ -27,53 +27,53 @@ def tigerxml_build_tree(s):
     # handle terminals
     term_cnt = 1
     for node in s.find('graph').find('terminals').findall('t'):
-        subtree = trees.make_tree(trees.make_node_data())
-        subtree['word'] = node.get('word')
-        subtree['label'] = node.get('pos')
-        subtree['morph'] = node.get('morph')
-        subtree['lemma'] = node.get('lemma')
-        subtree['edge'] = trees.DEFAULT_EDGE
-        subtree['num'] = term_cnt
+        subtree = trees.Tree(trees.make_node_data())
+        subtree.data['word'] = node.get('word')
+        subtree.data['label'] = node.get('pos')
+        subtree.data['morph'] = node.get('morph')
+        subtree.data['lemma'] = node.get('lemma')
+        subtree.data['edge'] = trees.DEFAULT_EDGE
+        subtree.data['num'] = term_cnt
         term_cnt += 1
         idref_to_tree[node.get('id')] = subtree
     # handle non-terminals
     for node in s.find('graph').find('nonterminals').findall('nt'):
-        subtree = trees.make_tree(trees.make_node_data())
-        subtree['label'] = node.get('cat')
-        subtree['morph'] = trees.DEFAULT_MORPH
-        subtree['edge'] = trees.DEFAULT_EDGE
-        subtree['lemma'] = trees.DEFAULT_LEMMA
+        subtree = trees.Tree(trees.make_node_data())
+        subtree.data['label'] = node.get('cat')
+        subtree.data['morph'] = trees.DEFAULT_MORPH
+        subtree.data['edge'] = trees.DEFAULT_EDGE
+        subtree.data['lemma'] = trees.DEFAULT_LEMMA
         idref_to_tree[node.get('id')] = subtree
     # set edge labels and link the tree
     for node in s.find('graph').find('nonterminals').findall('nt'):
         subtree = idref_to_tree[node.get('id')]
         for edge in node.findall('edge'):
             child = idref_to_tree[edge.get('idref')]
-            child['edge'] = edge.get('label')
-            if child['parent'] is not None:
+            child.data['edge'] = edge.get('label')
+            if child.parent is not None:
                 raise ValueError("more than one incoming edge")
-            child['parent'] = subtree
-            subtree['children'].append(child)
+            child.parent = subtree
+            subtree.children.append(child)
     root = None
     for subtree in idref_to_tree.values():
-        if subtree['parent'] is None:
+        if subtree.parent is None:
             if root is None:
                 root = subtree 
             else:
                 raise ValueError("more than one root node")
     top = root
-    if not root['label'] == "VROOT":
-        top = trees.make_tree(trees.make_node_data())
-        top['label'] = u"VROOT"
-        top['children'].append(root)
-        top['morph'] = trees.DEFAULT_MORPH
-        top['edge'] = trees.DEFAULT_EDGE
-        top['lemma'] = trees.DEFAULT_LEMMA
-        root['parent'] = top
+    if not root.data['label'] == "VROOT":
+        top = trees.Tree(trees.make_node_data())
+        top.data['label'] = u"VROOT"
+        top.children.append(root)
+        top.data['morph'] = trees.DEFAULT_MORPH
+        top.data['edge'] = trees.DEFAULT_EDGE
+        top.data['lemma'] = trees.DEFAULT_LEMMA
+        root.parent = top
     return top
 
 
-def tigerxml(in_file, in_encoding, **params):
+def tigerxml(in_file, _, **params):
     """Read trees from TIGER XML. The encoding argument is ignored here.
     """
     with io.open(in_file, mode='rb') as stream:
@@ -81,15 +81,16 @@ def tigerxml(in_file, in_encoding, **params):
         corpus = ET.parse(stream)
         tree_cnt = 0
         print("reading sentences...", file=sys.stderr)
-        for s in corpus.getroot().find('body').findall('s'):
-            tree_cnt += 1;
+        for s_element in corpus.getroot().find('body').findall('s'):
+            tree_cnt += 1
             try:
-                tree = tigerxml_build_tree(s)
-                tree['id'] = tree_cnt if 'continuous' in params \
-                    else int(s.get('id')[1:])
+                tree = tigerxml_build_tree(s_element)
+                tree.sid = tree_cnt if 'continuous' in params \
+                    else int(s_element.get('id')[1:])
                 yield tree
-            except ValueError as e:
-                print("\nsentence %d: %s\n" % (tree_cnt, e), file=sys.stderr)
+            except ValueError as error:
+                print("\nsentence %d: %s\n" % (tree_cnt, error), 
+                      file=sys.stderr)
 
 
 def brackets_split_label(label, gf_separator, trunc_equals):
@@ -189,13 +190,13 @@ def brackets(in_file, in_encoding, **params):
                 if state in [0, 2, 3, 5]:
                     # beginning of sentence or phrase
                     level += 1
-                    queue.append(trees.make_tree(trees.make_node_data()))
+                    queue.append(trees.Tree(trees.make_node_data()))
                     state = 9 if state == 0 else 1
                 elif state == 9:
                     # happens when root label is empty (PTB style)
                     level += 1
-                    queue[-1]['label'] = u"VROOT"
-                    queue.append(trees.make_tree(trees.make_node_data()))
+                    queue[-1].data['label'] = u"VROOT"
+                    queue.append(trees.Tree(trees.make_node_data()))
                     state = 1
                 elif state == 1:
                     raise ValueError("expected whitespace or label, got (")
@@ -210,12 +211,12 @@ def brackets(in_file, in_encoding, **params):
                     level -= 1
                     if len(queue) > 1:
                         # close phrase
-                        queue[-2]['children'].append(queue[-1])
-                        queue[-1]['parent'] = queue[-2]
+                        queue[-2].children.append(queue[-1])
+                        queue[-1].parent = queue[-2]
                         queue.pop()
                     if level == 0:
                         # close sentence
-                        queue[0]['id'] = cnt
+                        queue[0].sid = cnt
                         cnt += 1
                         yield queue[0]
                         queue = []
@@ -251,13 +252,13 @@ def brackets(in_file, in_encoding, **params):
                     else: 
                         label = lextoken
                         edge = trees.DEFAULT_EDGE
-                    queue[-1]['label'] = label
-                    queue[-1]['edge'] = edge
-                    queue[-1]['morph'] = trees.DEFAULT_MORPH
+                    queue[-1].data['label'] = label
+                    queue[-1].data['edge'] = edge
+                    queue[-1].data['morph'] = trees.DEFAULT_MORPH
                     state = 2
                 elif state == 3:
-                    queue[-1]['word'] = lextoken
-                    queue[-1]['num'] = term_cnt 
+                    queue[-1].data['word'] = lextoken
+                    queue[-1].data['num'] = term_cnt 
                     term_cnt += 1
                     state = 4
                 elif state == 2:
@@ -274,22 +275,22 @@ def brackets(in_file, in_encoding, **params):
 
 def export_build_tree(num, node_by_num, children_by_num):
     """ Build a tree from export. """
-    tree = trees.make_tree(node_by_num[num])
-    tree['terminals'] = []
+    tree = trees.Tree(node_by_num[num])
+    tree.data['terminals'] = []
     if num in children_by_num:
-        tree['children'] = []
+        tree.children = []
         for child in children_by_num[num]:
             child_tree = export_build_tree(child, node_by_num, children_by_num)
-            child_tree['parent'] = tree
-            tree['children'].append(child_tree)
-            tree['terminals'].extend(child_tree['terminals'])
-        tree['children'] = sorted(tree['children'], \
-                                    key=lambda x: min(x['terminals']))
+            child_tree.parent = tree
+            tree.children.append(child_tree)
+            tree.data['terminals'].extend(child_tree.data['terminals'])
+        tree.children = sorted(tree.children, \
+                                    key=lambda x: min(x.data['terminals']))
     else:
-        tree['children'] = []
-        tree['terminals'] = [num]
-        tree['num'] = num
-    tree['terminals'] = sorted(tree['terminals'])
+        tree.children = []
+        tree.data['terminals'] = [num]
+        tree.data['num'] = num
+    tree.data['terminals'] = sorted(tree.data['terminals'])
     return tree
 
 
@@ -357,8 +358,8 @@ def export(in_file, in_encoding, **params):
                             children_by_num[fields['parent_num']] = []
                         children_by_num[fields['parent_num']].append(num)
                     tree = export_build_tree(0, node_by_num, children_by_num) 
-                    tree['id'] = tree_cnt if 'continuous' in params \
-                                 else last_id
+                    tree.sid = tree_cnt if 'continuous' in params \
+                        else last_id
                     yield tree
                     tree_cnt += 1
                     in_sentence = False

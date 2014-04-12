@@ -43,12 +43,12 @@ def delete_leaf(tree, leaf):
     must be given as well. Return the first node with siblings 
     or the (given) root.
     """
-    parent = leaf['parent']
-    parent['children'].remove(leaf)
+    parent = leaf.parent
+    parent.children.remove(leaf)
     while not parent == tree \
             and trees.has_children(parent):
-        p = parent['parent']
-        p['children'].remove(parent)
+        p = parent.parent
+        p.children.remove(parent)
         parent = p
     return parent
 
@@ -67,13 +67,13 @@ def root_attach(tree):
     """ 
     tree_terms = trees.terminals(tree)
     # numbers of leftmost and rightmost terminal
-    tree_min = tree_terms[0]['num']
-    tree_max = tree_terms[-1]['num']
+    tree_min = tree_terms[0].data['num']
+    tree_max = tree_terms[-1].data['num']
     # iterate through all VROOT children and try to attach them to the tree,
     # proceed left to right
     for child in trees.children(tree):
         # indices of terminal children of current child
-        term_ind = [terminal['num'] for terminal in trees.terminals(child)]
+        term_ind = [terminal.data['num'] for terminal in trees.terminals(child)]
         # left and right neighbor of lefmost and rightmost terminal child
         t_l = min(term_ind) - 1
         t_r = max(term_ind) + 1
@@ -82,9 +82,9 @@ def root_attach(tree):
         focus = child
         sibling = trees.right_sibling(focus)
         while not sibling == None:
-            focus_ind = [terminal['num'] for terminal 
+            focus_ind = [terminal.data['num'] for terminal 
                          in trees.terminals(focus)]
-            sibling_ind = [terminal['num'] for terminal 
+            sibling_ind = [terminal.data['num'] for terminal 
                            in trees.terminals(sibling)]
             # skip over sibling if it starts left of the end
             # of the current focus node. Example: right sibling of current
@@ -106,9 +106,9 @@ def root_attach(tree):
         # target for movement is least common ancestor of terminal neighbors
         target = trees.lca(tree_terms[t_l - 1], tree_terms[t_r - 1])
         # move/attach node
-        child['parent']['children'].remove(child)
-        target['children'].append(child)
-        child['parent'] = target
+        child.parent.children.remove(child)
+        target.children.append(child)
+        child.parent = target
     return tree
 
 
@@ -121,11 +121,11 @@ def negra_mark_heads(tree):
     Output options:
         mark_heads_marking: Mark heads with an '
     """
-    tree['head'] = False
+    tree.data['head'] = False
     for subtree in trees.preorder(tree):
         if trees.has_children(subtree):
             subtree_children = trees.children(subtree)
-            edges = [child['edge'] for child in subtree_children]
+            edges = [child.data['edge'] for child in subtree_children]
             # default leftmost
             index = 0
             # if applicable leftmost HD
@@ -134,10 +134,10 @@ def negra_mark_heads(tree):
             # otherwise if applicable rightmost NK
             elif 'NK' in edges:
                 index = (len(edges) - 1) - edges[::-1].index('NK') 
-            subtree_children[index]['head'] = True
+            subtree_children[index].data['head'] = True
             for i, child in enumerate(subtree_children):
                 if not i == index:
-                    child['head'] = False
+                    child.data['head'] = False
     return tree
 
 
@@ -157,8 +157,8 @@ def boyd_split(tree):
     # postorder since we have to 'continuify' lower trees first
     for subtree in trees.postorder(tree):
         # set default values
-        subtree['split'] = False
-        subtree['head_block'] = True
+        subtree.data['split'] = False
+        subtree.data['head_block'] = True
         # split the children such that each sequence of children dominates
         # a continuous block of terminals
         blocks = []
@@ -166,40 +166,40 @@ def boyd_split(tree):
             if len(blocks) == 0:
                 blocks.append([])
             else:
-                last_terminal = trees.terminals(blocks[-1][-1])[-1]['num']
-                if trees.terminals(child)[0]['num'] > last_terminal + 1:
+                last_terminal = trees.terminals(blocks[-1][-1])[-1].data['num']
+                if trees.terminals(child)[0].data['num'] > last_terminal + 1:
                     blocks.append([])
             blocks[-1].append(child)
-        parent = subtree['parent']
+        parent = subtree.parent
         # more than one block: do splitting.
         split = []
         if len(blocks) > 1:
             # unhook node
-            parent['children'].remove(subtree)
-            subtree['parent'] = None
+            parent.children.remove(subtree)
+            subtree.parent = None
             # for each of the blocks, create a split node
             for i, block in enumerate(blocks):
                 # the new node:
-                split.append(trees.make_tree(subtree))
-                split[-1]['split'] = True
-                split[-1]['head'] = subtree['head']
-                split[-1]['head_block'] = False
-                split[-1]['block_number'] = (i + 1)
-                parent['children'].append(split[-1])
-                split[-1]['parent'] = parent
+                split.append(trees.Tree(subtree.data))
+                split[-1].data['split'] = True
+                split[-1].data['head'] = subtree.data['head']
+                split[-1].data['head_block'] = False
+                split[-1].data['block_number'] = (i + 1)
+                parent.children.append(split[-1])
+                split[-1].parent = parent
                 # iterate through children of original node in
                 # the current block
                 for child in block:
                     # mark current block as head block if the current child has
                     # the head attribute set (if the current child is a split 
                     # node, it must also be marked as covering head block)
-                    split[-1]['head_block'] = split[-1]['head_block'] \
-                        or child['head'] and \
-                        ((not child['split']) or child['head_block'])
+                    split[-1].data['head_block'] = split[-1].data['head_block'] \
+                        or child.data['head'] and \
+                        ((not child.data['split']) or child.data['head_block'])
                     # move child below new block node
-                    subtree['children'].remove(child)
-                    split[-1]['children'].append(child)
-                    child['parent'] = split[-1]
+                    subtree.children.remove(child)
+                    split[-1].children.append(child)
+                    child.parent = split[-1]
     return tree
 
 
@@ -213,17 +213,17 @@ def raising(tree):
     removal = []
     for subtree in trees.preorder(tree):
         if not subtree == tree:
-            if subtree['split']:
-                if not subtree['head_block']:
+            if subtree.data['split']:
+                if not subtree.data['head_block']:
                     removal.append(subtree)
     for subtree in removal:
-        parent = subtree['parent']
-        parent['children'].remove(subtree)
-        subtree['parent'] = None
+        parent = subtree.parent
+        parent.children.remove(subtree)
+        subtree.parent = None
         for child in trees.children(subtree):
-            subtree['children'].remove(child)
-            parent['children'].append(child)
-            child['parent'] = parent
+            subtree.children.remove(child)
+            parent.children.append(child)
+            child.parent = parent
     return tree
 
 

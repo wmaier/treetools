@@ -1,19 +1,11 @@
 """ 
 treetools: Tools for transforming treebank trees.
 
-This module provides basic data structures and functions for 
-handling trees. A single (sub)tree is represented by a dict 
-with obligatory keys data, children, parent. We do not rely 
-on the children to be ordered. The function children() can be 
-used to get an ordered list of children ordered by the 
-respective leftmost terminal they dominate. If there are no 
-children, there must be a num key which denotes the position 
-index. Repeated or unspecified indices are an error. Missing 
-children or parent keys are also an error too (use 
-make_tree()).
+This module provides basic data structures and functions for handling trees. 
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
+import itertools
 from copy import deepcopy
 
 
@@ -27,16 +19,38 @@ NUMBER_OF_FIELDS = 6
 FIELDS = ['word', 'lemma', 'label', 'morph', 'edge', 'parent_num']
 
 
-def make_tree(data):
-    """Make an empty tree and possibly initialize with given data.
+class Tree(object):
+    """A tree is represented by a unique ID per instance, a parent, a
+    children list, and a data dict. New instances are constructed by
+    copying given data dict. If there are no children, there must be a
+    num key in the data dict which denotes the position
+    index. Repeated or unspecified indices are an error. Note that
+    comparison between Trees is done solely on the basis of the unique
+    ID. 
     """
-    # make a copy of given data and make sure to overwrite
-    # children and parent 
-    return dict(deepcopy(data), **{ 'children' : [], 'parent' : None} )
+    # unique id generator
+    newid = itertools.count().next
+    
+    def __init__(self, data):
+        """Construct a new tree and copy given data dict.
+        """
+        self.id = Tree.newid()
+        self.children = []
+        self.parent = None
+        self.data = deepcopy(data)
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.id == other.id
+        else:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 def make_node_data():
-    """Make an empty node data with the right fields.
+    """Make an empty node data and pre-initialize with fields
     """
     return dict(zip(FIELDS, [None] * NUMBER_OF_FIELDS))
 
@@ -64,25 +78,25 @@ def postorder(tree):
 def children(tree):
     """Return the ordered children of the root of this tree.
     """
-    return sorted(tree['children'], key=lambda x: terminals(x)[0]['num'])
+    return sorted(tree.children, key=lambda x: terminals(x)[0].data['num'])
 
 
 def has_children(tree):
     """Return true if this tree has any child.
     """
-    return len(tree['children']) > 0
+    return len(tree.children) > 0
 
 
 def terminals(tree):
     """Return all terminal children of this subtree.
     """
-    if len(tree['children']) == 0:
+    if len(tree.children) == 0:
         return [tree]
     else:
         result = []
-        for child in tree['children']:
+        for child in tree.children:
             result.extend(terminals(child))
-        return sorted(result, key=lambda x: x['num'])
+        return sorted(result, key=lambda x: x.data['num'])
 
 
 def terminal_blocks(tree):
@@ -93,7 +107,7 @@ def terminal_blocks(tree):
     terms = terminals(tree)
     for i, terminal in enumerate(terms[:-1]):
         blocks[-1].append(terminal)
-        if terms[i]['num'] + 1 < terms[i + 1]['num']:
+        if terms[i].data['num'] + 1 < terms[i + 1].data['num']:
             blocks.append([])
     blocks[-1].append(terms[-1])
     return blocks
@@ -102,7 +116,7 @@ def terminal_blocks(tree):
 def right_sibling(tree):
     """Return the right sibling of this tree if it exists and None otherwise.
     """
-    siblings = children(tree['parent'])
+    siblings = children(tree.parent)
     for (index, _) in enumerate(siblings[:-1]):
         if siblings[index] == tree:
             return siblings[index + 1]
@@ -115,13 +129,13 @@ def lca(tree_a, tree_b):
     """
     dom_a = [tree_a]
     parent = tree_a
-    while not parent['parent'] == None:
-        parent = parent['parent']
+    while not parent.parent == None:
+        parent = parent.parent
         dom_a.append(parent)
     dom_b = [tree_b]
     parent = tree_b
-    while not parent['parent'] == None:
-        parent = parent['parent']
+    while not parent.parent == None:
+        parent = parent.parent
         dom_b.append(parent)
     i = 0
     for i, (el_a, el_b) in enumerate(zip(dom_a[::-1], dom_b[::-1])):
@@ -134,6 +148,6 @@ def dominance(tree):
     """Return all ancestors of this tree including the tree itself.
     """
     parent = tree
-    while not parent['parent'] == None:
+    while not parent.parent == None:
         yield parent
-        parent = parent['parent']
+        parent = parent.parent
