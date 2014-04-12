@@ -5,7 +5,7 @@ This module handles tree writing in different formats.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
-from __future__ import division
+from __future__ import division, print_function
 import sys
 from math import floor
 from . import trees, analyze
@@ -214,7 +214,36 @@ def brackets(tree, stream, **params):
     stream.write(u"\n")
 
 
-OUTPUT_FORMATS = [export, brackets]
+def tigerxml(tree, stream, **params):
+    """A single sentence as TIGER XML.
+    """
+    compute_export_numbering(tree)
+    stream.write(u"<s id=\"%d\">\n" % tree.data['sid'])
+    stream.write(u"<graph root=\"%s\">\n" % tree.data['num'])
+    stream.write(u"<terminals>\n")
+    for terminal in trees.terminals(tree):
+        stream.write(u"<t id=\"%d\" " % terminal.data['num'])
+        stream.write(u"%s=\"%s\" " % ('word', terminal.data['word']))
+        stream.write(u"%s=\"%s\" " % ('lemma', terminal.data['lemma']))
+        stream.write(u"%s=\"%s\" " % ('pos', terminal.data['label']))
+        stream.write(u"%s=\"%s\" " % ('morph', terminal.data['morph']))
+        stream.write(u"/>\n")
+    stream.write(u"</terminals>\n")
+    stream.write(u"<nonterminals>\n")
+    for subtree in trees.postorder(tree):
+        if trees.has_children(subtree):
+            stream.write(u"<nt id=\"%d\" cat=\"%s\">\n" % 
+                         (subtree.data['num'], subtree.data['label']))
+            for child in trees.children(subtree):
+                stream.write(u"<edge label=\"%s\" idref=\"%d\" />\n"
+                             % (child.data['edge'], child.data['num']))
+            stream.write(u"</nt>\n")
+    stream.write(u"</nonterminals>\n")
+    stream.write(u"</graph>\n")
+    stream.write(u"</s>\n")
+
+
+OUTPUT_FORMATS = [export, brackets, tigerxml]
 OUTPUT_OPTIONS = {'boyd_split_marking' : 'Boyd split: Mark split nodes with *',
                   'boyd_split_numbering' : 'Boyd split: Number split nodes',
                   'brackets_emptyroot' : 'Omit root label as in Penn Treebank',
