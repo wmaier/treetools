@@ -8,6 +8,7 @@ Author: Wolfgang Maier <maierw@hhu.de>
 from __future__ import division, print_function
 import sys
 from math import floor
+from xml.sax.saxutils import quoteattr
 from . import trees, analyze
 
 
@@ -215,30 +216,35 @@ def brackets(tree, stream, **params):
 
 
 def tigerxml(tree, stream, **params):
-    """A single sentence as TIGER XML.
+    """A single sentence as TIGER XML. The IDs should probably 
+    be more fancy.
     """
     compute_export_numbering(tree)
     stream.write(u"<s id=\"%d\">\n" % tree.data['sid'])
     stream.write(u"<graph root=\"%s\">\n" % tree.data['num'])
-    stream.write(u"<terminals>\n")
+    stream.write(u"  <terminals>\n")
     for terminal in trees.terminals(tree):
-        stream.write(u"<t id=\"%d\" " % terminal.data['num'])
-        stream.write(u"%s=\"%s\" " % ('word', terminal.data['word']))
-        stream.write(u"%s=\"%s\" " % ('lemma', terminal.data['lemma']))
-        stream.write(u"%s=\"%s\" " % ('pos', terminal.data['label']))
-        stream.write(u"%s=\"%s\" " % ('morph', terminal.data['morph']))
+        stream.write(u"    <t id=\"%d\" " % terminal.data['num'])
+        for field in ['word', 'lemma', 'label', 'morph']:
+            terminal.data[field] = quoteattr(terminal.data[field])
+        stream.write(u"%s=%s " % ('word', terminal.data['word']))
+        stream.write(u"%s=%s " % ('lemma', terminal.data['lemma']))
+        stream.write(u"%s=%s " % ('pos', terminal.data['label']))
+        stream.write(u"%s=%s " % ('morph', terminal.data['morph']))
         stream.write(u"/>\n")
-    stream.write(u"</terminals>\n")
-    stream.write(u"<nonterminals>\n")
+    stream.write(u"  </terminals>\n")
+    stream.write(u"  <nonterminals>\n")
     for subtree in trees.postorder(tree):
         if trees.has_children(subtree):
-            stream.write(u"<nt id=\"%d\" cat=\"%s\">\n" % 
-                         (subtree.data['num'], subtree.data['label']))
+            stream.write(u"    <nt id=\"%d\" cat=%s>\n" 
+                         % (subtree.data['num'], 
+                            quoteattr(subtree.data['label'])))
             for child in trees.children(subtree):
-                stream.write(u"<edge label=\"%s\" idref=\"%d\" />\n"
-                             % (child.data['edge'], child.data['num']))
-            stream.write(u"</nt>\n")
-    stream.write(u"</nonterminals>\n")
+                stream.write(u"      <edge label=%s idref=\"%d\" />\n"
+                             % (quoteattr(child.data['edge']), 
+                                child.data['num']))
+            stream.write(u"    </nt>\n")
+    stream.write(u"  </nonterminals>\n")
     stream.write(u"</graph>\n")
     stream.write(u"</s>\n")
 

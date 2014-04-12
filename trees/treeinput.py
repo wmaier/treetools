@@ -9,6 +9,7 @@ Author: Wolfgang Maier <maierw@hhu.de>
 """
 from __future__ import with_statement, print_function
 import io
+import re
 import string
 import sys
 import xml.etree.ElementTree as ET
@@ -17,6 +18,7 @@ from . import trees
 
 
 BRACKETS = { "(" : "LRB", ")" : "RRB" }
+DIGITS = re.compile(r'\d+')
 
 
 def tigerxml_build_tree(s):
@@ -83,8 +85,11 @@ def tigerxml(in_file, _, **params):
         print("reading sentences", file=sys.stderr)
         for s_element in corpus.getroot().find('body').findall('s'):
             tree_cnt += 1
+            # take last number (assume there always is one)
+            xml_id = s_element.get('id')
+            xml_id = DIGITS.findall(xml_id)[-1]
             tree_id = tree_cnt if 'continuous' in params \
-                else int(s_element.get('id')[1:])
+                else int(xml_id)
             try:
                 tree = tigerxml_build_tree(s_element)
                 tree.data['sid'] = tree_id
