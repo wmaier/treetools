@@ -166,7 +166,7 @@ def export(tree, stream, **params):
     """Export format as in Brants (1997). 
     """
     # check parameters
-    tree_id = tree.sid
+    tree_id = tree.data['sid']
     compute_export_numbering(tree)
     stream.write(u"#BOS %d\n" % tree_id)
     terms = {}

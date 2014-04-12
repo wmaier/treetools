@@ -51,7 +51,7 @@ def tigerxml_build_tree(s):
             child = idref_to_tree[edge.get('idref')]
             child.data['edge'] = edge.get('label')
             if child.parent is not None:
-                raise ValueError("more than one incoming edge")
+                raise ValueError("more than one incoming edge for one node")
             child.parent = subtree
             subtree.children.append(child)
     root = None
@@ -80,16 +80,17 @@ def tigerxml(in_file, _, **params):
         print("parsing xml...", file=sys.stderr)
         corpus = ET.parse(stream)
         tree_cnt = 0
-        print("reading sentences...", file=sys.stderr)
+        print("reading sentences", file=sys.stderr)
         for s_element in corpus.getroot().find('body').findall('s'):
             tree_cnt += 1
+            tree_id = tree_cnt if 'continuous' in params \
+                else int(s_element.get('id')[1:])
             try:
                 tree = tigerxml_build_tree(s_element)
-                tree.sid = tree_cnt if 'continuous' in params \
-                    else int(s_element.get('id')[1:])
+                tree.data['sid'] = tree_id
                 yield tree
             except ValueError as error:
-                print("\nsentence %d: %s\n" % (tree_cnt, error), 
+                print("\nskipping sentence %d: %s\n" % (tree_id, error), 
                       file=sys.stderr)
 
 
@@ -216,7 +217,7 @@ def brackets(in_file, in_encoding, **params):
                         queue.pop()
                     if level == 0:
                         # close sentence
-                        queue[0].sid = cnt
+                        queue[0].data['sid'] = cnt
                         cnt += 1
                         yield queue[0]
                         queue = []
@@ -358,7 +359,7 @@ def export(in_file, in_encoding, **params):
                             children_by_num[fields['parent_num']] = []
                         children_by_num[fields['parent_num']].append(num)
                     tree = export_build_tree(0, node_by_num, children_by_num) 
-                    tree.sid = tree_cnt if 'continuous' in params \
+                    tree.data['sid'] = tree_cnt if 'continuous' in params \
                         else last_id
                     yield tree
                     tree_cnt += 1
