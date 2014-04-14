@@ -32,7 +32,7 @@ class GapDegree(object):
                 node_gap_deg = 0
                 terms = trees.terminals(subtree)
                 for i, _ in enumerate(terms[:-1]):
-                    if terms[i].num + 1 < terms[i + 1].num:
+                    if terms[i].data['num'] + 1 < terms[i + 1].data['num']:
                         node_gap_deg += 1
                 # store node gap degree
                 if not node_gap_deg in self.gaps_per_node:
