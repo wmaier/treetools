@@ -8,7 +8,6 @@ Author: Wolfgang Maier <maierw@hhu.de>
 from __future__ import print_function
 import argparse
 import io
-import itertools
 import sys
 from collections import defaultdict,Counter
 from StringIO import StringIO
@@ -30,9 +29,10 @@ DEFAULT_VERT = "VERT"
 def unique_label():
     """Generator which delivers unique binarization labels.
     """
-    counter = itertools.count()
-    for x in counter:
-        yield "%s%dX" % (DEFAULT_BINLABEL, x)
+    n = 1
+    while True:
+        yield "%s%dX" % (DEFAULT_BINLABEL, n)
+        n += 1
 
 
 def linsub(lin, src, dest, replace):
