@@ -213,11 +213,11 @@ def extract(tree, grammar):
             # map terminal indices to the positions of the rhs elements
             # by which they are covered, furthermore build bare rule
             term_map = {}
-            func = [subtree['label']]
+            func = [subtree.data['label']]
             for i, child in enumerate(trees.children(subtree)):
-                func.append(child['label'])
+                func.append(child.data['label'])
                 for terminal in trees.terminals(child):
-                    term_map[terminal['num']] = i
+                    term_map[terminal.data['num']] = i
             func = tuple(func)
             # build linearization
             lin = []
@@ -228,7 +228,7 @@ def extract(tree, grammar):
                 lin.append([])
                 # loop through terminals
                 for terminal in block:
-                    rhs_pos = term_map[terminal['num']]
+                    rhs_pos = term_map[terminal.data['num']]
                     # append the number of the rhs element which covers
                     # the current terminal if nothing has been appended yet
                     # or if the current element is different from the last one
@@ -240,7 +240,7 @@ def extract(tree, grammar):
                 lin[-1] = tuple(lin[-1])
             lin = tuple(lin)
             # vertical context for markovization
-            vert = tuple([dom['label'] for dom in trees.dominance(subtree)])
+            vert = tuple([dom.data['label'] for dom in trees.dominance(subtree)])
             if not func in grammar:
                 grammar[func] = {}
             if not lin in grammar[func]:
