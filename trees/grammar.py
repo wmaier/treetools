@@ -22,6 +22,7 @@ LINEARIZATION = "="
 SEQUENCE = "->"
 # RCG format constants
 RCG_RULEARROW = "-->"
+# other constants
 DEFAULT_BINLABEL = "@"
 DEFAULT_VERT = "VERT"
 
@@ -37,7 +38,7 @@ def unique_label():
 
 def linsub(lin, src, dest, replace):
     """Linearization vector substitution, operations 1.-3. of Maier (2013), 
-    p. 115. src and dest are functions. Creates a new two-dimensional list from
+    p. 115. 'src' and 'dest' are functions. Creates a new two-dimensional list from
     a given two-dimensional list with linearization definitions. For all 
     elements for which dest holds, the corresponding element is replaced with 
     yield of dest for this element. If replace is true, then replacement is 
@@ -45,7 +46,7 @@ def linsub(lin, src, dest, replace):
     yields None (operation 2.), a new sublist is introduced.
     """
     result = []
-    # other than in Maier (2013) we have to keep track of the position 
+    # other than in Maier (2013) we keep track of the position 
     # of each linearization vector element *within* an RHS non-term 
     rhsargpos = Counter([])
     # iterate through first dimension of list (lhs args)
