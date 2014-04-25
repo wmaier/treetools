@@ -11,7 +11,9 @@ def get_doc(funs):
     """Generate a string from the names and docstrings of a list of given
     functions.
     """
-    return "\n".join(["%s\n%s" % (bold(fun.__name__), str(fun.__doc__)) 
+    return "\n".join(["%s\n%s\n%s" % (bold(fun.__name__), 
+                                      bold("-" * len(fun.__name__)),
+                                      str(fun.__doc__)) 
                       for fun in funs])
 
 

@@ -11,16 +11,27 @@ import sys
 from . import trees, treeinput, misc
 
 
+def gap_degree_node(n):
+    """Compute gap degree for a single node.
+    """
+    if not trees.has_children(n):
+        return 0
+    node_gap_deg = 0
+    terms = trees.terminals(n)
+    for i, _ in enumerate(terms[:-1]):
+        if terms[i].data['num'] + 1 < terms[i + 1].data['num']:
+            node_gap_deg += 1
+    return node_gap_deg
+
+
 class GapDegree(object):
     """Accumulates statistics concerning gap degree over several trees.
     """
-
     def __init__(self):
         # counts gap degree for each node
         self.gaps_per_node = {}
         # counts highest node gap degree for each tree
         self.gaps_per_tree = {}
-
 
     def run(self, tree):
         """Return the maximal gap degree of any node of the given tree.
@@ -29,11 +40,7 @@ class GapDegree(object):
         for subtree in trees.preorder(tree):
             # skip terminals
             if trees.has_children(subtree):
-                node_gap_deg = 0
-                terms = trees.terminals(subtree)
-                for i, _ in enumerate(terms[:-1]):
-                    if terms[i].data['num'] + 1 < terms[i + 1].data['num']:
-                        node_gap_deg += 1
+                node_gap_deg = gap_degree_node(subtree)
                 # store node gap degree
                 if not node_gap_deg in self.gaps_per_node:
                     self.gaps_per_node[node_gap_deg] = 0
@@ -43,7 +50,6 @@ class GapDegree(object):
         if not tree_gap_deg in self.gaps_per_tree:
             self.gaps_per_tree[tree_gap_deg] = 0
         self.gaps_per_tree[tree_gap_deg] += 1
-    
 
     def done(self):
         """Compute and print summary about gap degree statistics collected

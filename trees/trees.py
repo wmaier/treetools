@@ -148,6 +148,15 @@ def dominance(tree):
     """Return all ancestors of this tree including the tree itself.
     """
     parent = tree
+    yield parent
     while not parent.parent == None:
-        yield parent
         parent = parent.parent
+        yield parent
+
+def label_strip_fanout(label):
+    """Assume the '\d+$' in a given label to be fanout and return
+    the stripped version of the label.
+    """
+    while label[-1].isdigit():
+        label = label[:-1]
+    return label

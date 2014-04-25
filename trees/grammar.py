@@ -12,7 +12,7 @@ import re
 import sys
 from collections import defaultdict,Counter
 from StringIO import StringIO
-from . import trees, treeinput, misc
+from . import analyze, trees, treeinput, misc
 
 
 # PMCFG format constants
@@ -29,6 +29,18 @@ DEFAULT_BINSUFFIX = "X"
 DEFAULT_MARKOV_HORIZONTALSEP = "-"
 DEFAULT_MARKOV_VERTICALSEP = "^"
 DEFAULT_VERT = "VERT"
+
+
+def compute_fan_out(func, lin):
+    """Given a function and the corresponding lineratization, 
+    return an array with the fan-out of each non-terminal in the
+    given function."""
+    c = Counter([rhsref + 1 for arg in lin for (rhsref, _) in arg])
+    result = [None] * (len(c) + 1)
+    for i in c:
+        result[i] = c[i]
+    result[0] = len(lin)
+    return result
 
 
 class LabelGenerator(object):
@@ -55,20 +67,26 @@ class MarkovLabelGenerator(LabelGenerator):
     """
     def next(self, **params):
         vert = ""
-        if self.kwargs['markov_deg'][0] > 0:
+        if self.kwargs['p']['v'] > 0:
             for i, label in enumerate(params['vert']):
-                if not i < self.kwargs['markov_deg'][0]:
+                if not i < self.kwargs['p']['v']:
                     break
-                vert += DEFAULT_MARKOV_VERTICALSEP + params['vert'][i]
+                vert += "%s%s" % (DEFAULT_MARKOV_VERTICALSEP,
+                                  params['vert'][i])
         horiz = ""
-        if self.kwargs['markov_deg'][1] > 0:
+        if self.kwargs['p']['h'] > 0:
             i = params['pos'] + 1
             cnt = 0
-            while (i >= 0 and cnt < self.kwargs['markov_deg'][1]):
+            while (i >= 1 and cnt < self.kwargs['p']['h']):
                 i -= 1
                 cnt += 1
-                horiz += DEFAULT_MARKOV_HORIZONTALSEP \
-                         + params['func'][params['pos'] + 1]
+                if 'nofanout' in self.kwargs['p']:
+                    horiz += "%s%s" % (DEFAULT_MARKOV_HORIZONTALSEP, \
+                                       params['func'][i + 1])
+                else:
+                    horiz += "%s%s%d" % (DEFAULT_MARKOV_HORIZONTALSEP, \
+                                         params['func'][i + 1], 
+                                         params['fanout'][i + 1])
         return "%s%s%s%s" % (DEFAULT_BINLABEL, vert, horiz, DEFAULT_BINSUFFIX)
 
 
@@ -123,9 +141,10 @@ def linsub(lin, src, dest, replace):
     return tuple(result)
 
 
-def binarize_rule_ltor(func, lin, rule_cnt, vert, grammar, label_gen, result):
+def binarize_rule(func, lin, rule_cnt, vert, grammar, label_gen, result):
     """Left-to-right binarization of a single rule.
     """
+    fanout = compute_fan_out(func, lin)
     rule_cnt = sum(grammar[func][lin].values())
     if len(func[1:]) <= 2:
         if not func in result:
@@ -136,7 +155,7 @@ def binarize_rule_ltor(func, lin, rule_cnt, vert, grammar, label_gen, result):
     else:
         this_lin = lin
         sub_lin = linsub(lin, lambda x: x > 0, lambda x: 1, True)
-        bin_label = label_gen.next(func=func, pos=0, vert=vert)
+        bin_label = label_gen.next(func=func, pos=0, vert=vert, fanout=fanout)
         bin_func = tuple([func[0], func[1], bin_label])
         if not bin_func in result:
             result[bin_func] = {}
@@ -149,7 +168,8 @@ def binarize_rule_ltor(func, lin, rule_cnt, vert, grammar, label_gen, result):
             this_lin = linsub(this_lin, lambda x: x == -1,
                               lambda x: None, False)
             sub_lin = linsub(this_lin, lambda x: x > 0, lambda x: 1, True)
-            next_label = label_gen.next(func=func, pos=i, vert=vert)
+            next_label = label_gen.next(func=func, pos=i, vert=vert, 
+                                        fanout=fanout)
             bin_func = tuple([bin_label, func[i + 1], next_label])
             bin_label = next_label
             if not bin_func in result:
@@ -183,15 +203,31 @@ def binarize(grammar, **args):
     """Grammar binarization.
     """
     result = {}
-    if 'markov_deg' in args:
-        label_gen = MarkovLabelGenerator(markov_deg=args['markov_deg'])
+    if args['markov_opts'] is not None:
+        nofanout = 'nofanout' in args['markov_opts']
+        nf_vert = []
+        if nofanout:
+            # collapse counts for vertical context in which labels have
+            # their fanouts stripped
+            for func in grammar:
+                for lin in grammar[func]:
+                    for vert in grammar[func][lin]:
+                        nf_vert.append(tuple([trees.label_strip_fanout(label)
+                                              for label in vert]))
+            nf_vert_c = Counter(nf_vert)
+        label_gen = MarkovLabelGenerator(p=args['markov_opts'])
         for func in grammar:
             for lin in grammar[func]:
                 for vert in grammar[func][lin]:
                     rule_cnt = grammar[func][lin][vert]
+                    if nofanout:
+                        # then use the corresponding counts/contexts
+                        vert = tuple([trees.label_strip_fanout(label)
+                                      for label in vert])
+                        rule_cnt = nf_vert_c[vert]
                     func, lin = args['reordering'](func, lin)
-                    binarize_rule_ltor(func, lin, rule_cnt, vert,
-                                       grammar, label_gen, result)
+                    binarize_rule(func, lin, rule_cnt, vert,
+                                  grammar, label_gen, result)
     else:
         label_gen = LabelGenerator()
         vert = DEFAULT_VERT
@@ -199,8 +235,8 @@ def binarize(grammar, **args):
             for lin in grammar[func]:
                 rule_cnt = sum(grammar[func][lin].values())
                 func, lin = args['reordering'](func, lin)
-                binarize_rule_ltor(func, lin, rule_cnt, vert,
-                                   grammar, label_gen, result)
+                binarize_rule(func, lin, rule_cnt, vert,
+                              grammar, label_gen, result)
     return result
 
 
@@ -305,8 +341,10 @@ def extract(tree, grammar):
                 # make the argument a tuple
                 lin[-1] = tuple(lin[-1])
             lin = tuple(lin)
-            # vertical context for markovization
-            vert = tuple([dom.data['label'] for dom in trees.dominance(subtree)])
+            # vertical context for markovization (with fan-outs)
+            vert = tuple(["%s%d" % (dom.data['label'], 
+                                    analyze.gap_degree_node(dom) + 1)
+                          for dom in trees.dominance(subtree)])
             if not func in grammar:
                 grammar[func] = {}
             if not lin in grammar[func]:
@@ -331,8 +369,11 @@ def add_parser(subparsers):
     parser.add_argument('gramtype', metavar='T', choices=[t for t in GRAMTYPES],
                         help='type of output grammar (default: %(default)s)', 
                         default='treebank')
-    parser.add_argument('--markov', metavar='M', help='markovization vXhX',
-                        default=None)
+    parser.add_argument('--markov', metavar='M', nargs='+', 
+                        help='markovization parameters M as pairs key:value' \
+                        ' (default: %(default)s) (at least one must be '\
+                        ' specified. Deterministic binarization' \
+                        ' if option not present.')
     parser.add_argument('--src-format', metavar='FMT',
                         choices=[fun.__name__ 
                                  for fun in treeinput.INPUT_FORMATS],
@@ -369,9 +410,12 @@ class UsageAction(argparse.Action):
     """
     def __call__(self, parser, namespace, values, option_string=None):
         title_str = misc.bold("%s help" % sys.argv[0])
-        help_str = "\n\n%s\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n%s" \
+        help_str = "\n\n%s\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n" \
+                   "%s\n\n%s\n%s\n\n%s\n%s" \
             % (misc.bold('available grammar output types: '),
                misc.get_doc_opts(GRAMTYPES),
+               misc.bold('available markovization parameters: '),
+               misc.get_doc_opts(MARKOVPARAMS),                
                misc.bold('available input formats: '),
                misc.get_doc(treeinput.INPUT_FORMATS),
                misc.bold('available input options: '),
@@ -390,15 +434,7 @@ def run(args):
     print("reading from '%s' in format '%s' and encoding '%s'" 
           % (args.src, args.src_format, args.src_enc), file=sys.stderr)
     print("extracting grammar (%s)" % args.gramtype, file=sys.stderr)
-    markov_deg = (-1, -1)
-    if args.markov is not None:
-        m = re.compile(r'^\s*v(\d+)h(\d+)\s*$', 
-                       re.IGNORECASE).match(args.markov)
-        if m is None:
-            raise ValueError("could not understand markovization spec")
-        markov_deg = (int(m.group(1)), int(m.group(2)))
-        print("markovization with v %d, h %d" % markov_deg, file=sys.stderr)
-    grammar = {}
+    grammar = {} 
     cnt = 1
     for tree in getattr(treeinput, 
                         args.src_format)(args.src, args.src_enc, 
@@ -406,23 +442,38 @@ def run(args):
                                          (args.src_opts)):
         extract(tree, grammar)
         if cnt % 100 == 0:
-            print("\r%d" % cnt, file=sys.stderr)
+            print("\r%d" % cnt, end="", file=sys.stderr)
         cnt += 1
-    if args.gramtype == 'leftright':
-        reordering = reordering_none
-    elif args.gramtype == 'optimal':
-        reordering = reordering_optimal
-    grammar = binarize(grammar, reordering=reordering, markov_deg=markov_deg)
+    if not args.gramtype == 'treebank':
+        markov_opts = None
+        if args.markov is not None:
+            markov_opts = misc.options_dict(args.markov)
+            if not 'v' in markov_opts:
+                markov_opts['v'] = 1
+            if not 'h' in markov_opts:
+                markov_opts['h'] = 2
+            print("markovization with options %s" % str(markov_opts), 
+                  file=sys.stderr)
+        reordering = None
+        if args.gramtype == 'leftright':
+            reordering = reordering_none
+        elif args.gramtype == 'optimal':
+            reordering = reordering_optimal
+        grammar = binarize(grammar, reordering=reordering, markov_opts=markov_opts)
     sys.stderr.write("writing grammar in format '%s', encoding '%s', to '%s'\n"
                      % (args.dest_format, args.dest_enc, args.dest))
     globals()[args.dest_format](grammar, args.dest, 
                                 args.dest_enc, 
                                 **misc.options_dict(args.dest_opts))
-    sys.stderr.write("\n")
+    print("\n", file=sys.stderr)
 
 
-FORMATS = ['pmcfg', 'rcg']
+FORMATS = [pmcfg, rcg]
 FORMAT_OPTIONS = {}
 GRAMTYPES = { 'treebank' : 'Plain treebank grammar' , 
               'leftright' : 'Simple left-to-right binarization',
               'optimal' : 'Optimal binarization' }
+MARKOVPARAMS = { 'v' : 'vertical markovization (default 1)' ,
+                 'h' : 'horizontal markovization (default 2)' ,
+                 'nofanout' : 'No fan-out on markovization symbols in ' \
+                 'binarization non-terminals (default false)' }
