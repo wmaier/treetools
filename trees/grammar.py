@@ -8,6 +8,7 @@ Author: Wolfgang Maier <maierw@hhu.de>
 from __future__ import print_function
 import argparse
 import io
+import re
 import sys
 from collections import defaultdict,Counter
 from StringIO import StringIO
@@ -24,16 +25,51 @@ SEQUENCE = "->"
 RCG_RULEARROW = "-->"
 # other constants
 DEFAULT_BINLABEL = "@"
+DEFAULT_BINSUFFIX = "X"
+DEFAULT_MARKOV_HORIZONTALSEP = "-"
+DEFAULT_MARKOV_VERTICALSEP = "^"
 DEFAULT_VERT = "VERT"
 
 
-def unique_label():
-    """Generator which delivers unique binarization labels.
+class LabelGenerator(object):
+    """Generator which delivers unique binarization labels. For
+    other kinds of labels, overwrite next().
     """
-    n = 1
-    while True:
-        yield "%s%dX" % (DEFAULT_BINLABEL, n)
-        n += 1
+    def __init__(self, *args, **kwargs):
+        """Allow parameters, also from subclasses.
+        """
+        self.args = args
+        self.kwargs = kwargs
+        self.n = 0
+        
+    def next(self, **params):
+        """Deliver next unique label (wihtout fan-out)
+        """
+        self.n += 1
+        return "%s%d%s" % (DEFAULT_BINLABEL, self.n, DEFAULT_BINSUFFIX)
+
+
+class MarkovLabelGenerator(LabelGenerator):
+    """Generator which delivers binarization lables with markovization
+    information. 
+    """
+    def next(self, **params):
+        vert = ""
+        if self.kwargs['markov_deg'][0] > 0:
+            for i, label in enumerate(params['vert']):
+                if not i < self.kwargs['markov_deg'][0]:
+                    break
+                vert += DEFAULT_MARKOV_VERTICALSEP + params['vert'][i]
+        horiz = ""
+        if self.kwargs['markov_deg'][1] > 0:
+            i = params['pos'] + 1
+            cnt = 0
+            while (i >= 0 and cnt < self.kwargs['markov_deg'][1]):
+                i -= 1
+                cnt += 1
+                horiz += DEFAULT_MARKOV_HORIZONTALSEP \
+                         + params['func'][params['pos'] + 1]
+        return "%s%s%s%s" % (DEFAULT_BINLABEL, vert, horiz, DEFAULT_BINSUFFIX)
 
 
 def linsub(lin, src, dest, replace):
@@ -87,55 +123,84 @@ def linsub(lin, src, dest, replace):
     return tuple(result)
 
 
-def binarization_ltor(grammar):
-    """Simple left-to-right binarization.
+def binarize_rule_ltor(func, lin, rule_cnt, vert, grammar, label_gen, result):
+    """Left-to-right binarization of a single rule.
     """
-    label_gen = unique_label()
+    rule_cnt = sum(grammar[func][lin].values())
+    if len(func[1:]) <= 2:
+        if not func in result:
+            result[func] = {}
+        if not lin in result[func]:
+            result[func][lin] = {}
+        result[func][lin][DEFAULT_VERT] = rule_cnt
+    else:
+        this_lin = lin
+        sub_lin = linsub(lin, lambda x: x > 0, lambda x: 1, True)
+        bin_label = label_gen.next(func=func, pos=0, vert=vert)
+        bin_func = tuple([func[0], func[1], bin_label])
+        if not bin_func in result:
+            result[bin_func] = {}
+        if not sub_lin in result[bin_func]:
+            result[bin_func][sub_lin] = {} 
+        result[bin_func][sub_lin][DEFAULT_VERT] = rule_cnt
+        for i in range(1, len(func) - 3):
+            this_lin = linsub(this_lin, lambda x: x >= 0, 
+                              lambda x: x - 1, False)
+            this_lin = linsub(this_lin, lambda x: x == -1,
+                              lambda x: None, False)
+            sub_lin = linsub(this_lin, lambda x: x > 0, lambda x: 1, True)
+            next_label = label_gen.next(func=func, pos=i, vert=vert)
+            bin_func = tuple([bin_label, func[i + 1], next_label])
+            bin_label = next_label
+            if not bin_func in result:
+                result[bin_func] = {}
+            if not sub_lin in result[bin_func]:
+                result[bin_func][sub_lin] = {}
+            result[bin_func][sub_lin][DEFAULT_VERT] = rule_cnt
+        bin_func = tuple([bin_label, func[-2], func[-1]])
+        this_lin = linsub(this_lin, lambda x: x >= 0, lambda x: x - 1, False)
+        this_lin = linsub(this_lin, lambda x: x == -1, lambda x: None, False)
+        if not bin_func in result:
+            result[bin_func] = {}
+        if not this_lin in result[bin_func]:
+            result[bin_func][this_lin] = {}
+        result[bin_func][this_lin][DEFAULT_VERT] = rule_cnt
+
+
+def reordering_none(func, lin):
+    """No reordering.
+    """
+    return func, lin
+
+
+def reordering_optimal(func, lin):
+    """Rule-optimal binarization (Kallmeyer 2010).
+    """
+    return func, lin
+
+
+def binarize(grammar, **args):
+    """Grammar binarization.
+    """
     result = {}
-    for func in grammar:
-        for lin in grammar[func]:
-            rule_cnt = sum(grammar[func][lin].values())
-            if len(func[1:]) <= 2:
-                if not func in result:
-                    result[func] = {}
-                if not lin in result[func]:
-                    result[func][lin] = {}
-                result[func][lin][DEFAULT_VERT] = rule_cnt
-            else:
-                this_lin = lin
-                sub_lin = linsub(lin, lambda x: x > 0, lambda x: 1, True)
-                bin_label = label_gen.next()
-                bin_func = tuple([func[0], func[1], bin_label])
-                if not bin_func in result:
-                    result[bin_func] = {}
-                if not sub_lin in result[bin_func]:
-                    result[bin_func][sub_lin] = {} 
-                result[bin_func][sub_lin][DEFAULT_VERT] = rule_cnt
-                for i in range(1, len(func) - 3):
-                    this_lin = linsub(this_lin, lambda x: x >= 0, 
-                                      lambda x: x - 1, False)
-                    this_lin = linsub(this_lin, lambda x: x == -1,
-                                      lambda x: None, False)
-                    sub_lin = linsub(this_lin, lambda x: x > 0, 
-                                     lambda x: 1, True)
-                    next_label = label_gen.next()
-                    bin_func = tuple([bin_label, func[i + 1], next_label])
-                    bin_label = next_label
-                    if not bin_func in result:
-                        result[bin_func] = {}
-                    if not sub_lin in result[bin_func]:
-                        result[bin_func][sub_lin] = {}
-                    result[bin_func][sub_lin][DEFAULT_VERT] = rule_cnt
-                bin_func = tuple([bin_label, func[-2], func[-1]])
-                this_lin = linsub(this_lin, lambda x: x >= 0,
-                                  lambda x: x - 1, False)
-                this_lin = linsub(this_lin, lambda x: x == -1, 
-                                  lambda x: None, False)
-                if not bin_func in result:
-                    result[bin_func] = {}
-                if not this_lin in result[bin_func]:
-                    result[bin_func][this_lin] = {}
-                result[bin_func][this_lin][DEFAULT_VERT] = rule_cnt
+    if 'markov_deg' in args:
+        label_gen = MarkovLabelGenerator(markov_deg=args['markov_deg'])
+        for func in grammar:
+            for lin in grammar[func]:
+                for vert in grammar[func][lin]:
+                    rule_cnt = grammar[func][lin][vert]
+                    func, lin = args['reordering'](func, lin)
+                    binarize_rule_ltor(func, lin, rule_cnt, vert,
+                                       grammar, label_gen, result)
+    else:
+        label_gen = LabelGenerator()
+        vert = DEFAULT_VERT
+        for func in grammar:
+            for lin in grammar[func]:
+                rule_cnt = sum(grammar[func][lin].values())
+                func, lin = args['reordering'](func, lin)
+                binarize_rule_ltor(func, lin, rule_cnt, vert,
+                                   grammar, label_gen, result)
     return result
 
 
@@ -266,6 +331,8 @@ def add_parser(subparsers):
     parser.add_argument('gramtype', metavar='T', choices=[t for t in GRAMTYPES],
                         help='type of output grammar (default: %(default)s)', 
                         default='treebank')
+    parser.add_argument('--markov', metavar='M', help='markovization vXhX',
+                        default=None)
     parser.add_argument('--src-format', metavar='FMT',
                         choices=[fun.__name__ 
                                  for fun in treeinput.INPUT_FORMATS],
@@ -320,9 +387,17 @@ class UsageAction(argparse.Action):
 def run(args):
     """Run the grammar extraction.
     """
-    sys.stderr.write("reading from '%s' in format '%s' and encoding '%s'\n" 
-                     % (args.src, args.src_format, args.src_enc))
-    sys.stderr.write("extracting grammar (%s)\n" % args.gramtype)
+    print("reading from '%s' in format '%s' and encoding '%s'" 
+          % (args.src, args.src_format, args.src_enc), file=sys.stderr)
+    print("extracting grammar (%s)" % args.gramtype, file=sys.stderr)
+    markov_deg = (-1, -1)
+    if args.markov is not None:
+        m = re.compile(r'^\s*v(\d+)h(\d+)\s*$', 
+                       re.IGNORECASE).match(args.markov)
+        if m is None:
+            raise ValueError("could not understand markovization spec")
+        markov_deg = (int(m.group(1)), int(m.group(2)))
+        print("markovization with v %d, h %d" % markov_deg, file=sys.stderr)
     grammar = {}
     cnt = 1
     for tree in getattr(treeinput, 
@@ -331,10 +406,13 @@ def run(args):
                                          (args.src_opts)):
         extract(tree, grammar)
         if cnt % 100 == 0:
-            sys.stderr.write("\r%d" % cnt)
+            print("\r%d" % cnt, file=sys.stderr)
         cnt += 1
-    if args.gramtype == "leftright":
-        grammar = binarization_ltor(grammar)
+    if args.gramtype == 'leftright':
+        reordering = reordering_none
+    elif args.gramtype == 'optimal':
+        reordering = reordering_optimal
+    grammar = binarize(grammar, reordering=reordering, markov_deg=markov_deg)
     sys.stderr.write("writing grammar in format '%s', encoding '%s', to '%s'\n"
                      % (args.dest_format, args.dest_enc, args.dest))
     globals()[args.dest_format](grammar, args.dest, 
@@ -346,4 +424,5 @@ def run(args):
 FORMATS = ['pmcfg', 'rcg']
 FORMAT_OPTIONS = {}
 GRAMTYPES = { 'treebank' : 'Plain treebank grammar' , 
-              'leftright' : 'Simple left-to-right binarization' }
+              'leftright' : 'Simple left-to-right binarization',
+              'optimal' : 'Optimal binarization' }
