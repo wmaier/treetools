@@ -215,6 +215,14 @@ def brackets(tree, stream, **params):
     stream.write(u"\n")
 
 
+def terminals(tree, stream, **params):
+    """All terminals of the tree on one line separated by whitespace.
+    """
+    for terminal in trees.terminals(tree):
+        print(terminal.data['word'], end=u" ", file=stream)
+    print(u"", file=stream)
+
+
 def tigerxml(tree, stream, **params):
     """A single sentence as TIGER XML. The IDs should probably 
     be more fancy.
@@ -249,7 +257,7 @@ def tigerxml(tree, stream, **params):
     stream.write(u"</s>\n")
 
 
-OUTPUT_FORMATS = [export, brackets, tigerxml]
+OUTPUT_FORMATS = [export, brackets, tigerxml, terminals]
 OUTPUT_OPTIONS = {'boyd_split_marking' : 'Boyd split: Mark split nodes with *',
                   'boyd_split_numbering' : 'Boyd split: Number split nodes',
                   'brackets_emptyroot' : 'Omit root label as in Penn Treebank',
