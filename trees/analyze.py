@@ -8,7 +8,32 @@ Author: Wolfgang Maier <maierw@hhu.de>
 from __future__ import division, print_function
 import argparse
 import sys
+from collections import Counter
 from . import trees, treeinput, misc
+
+
+class PosTags(object):
+    """Accumulates statistics concerning gap degree over several trees.
+    """
+    def __init__(self):
+        self.tags = []
+
+    def run(self, tree):
+        """Collect and count POS tags (preterminal labels) in a single tree.
+        """
+        for term in trees.terminals(tree):
+            self.tags.append(term.data['label'])
+
+    def done(self):
+        """Print summary and write tags. To be extended.
+        """
+        tags_cnt = Counter(self.tags)
+        print("*** POS tag summary ***")
+        print()
+        print("%d different tags" % len(tags_cnt))
+#        print("Per tag: ")
+#        for tag in tags_cnt:
+#            print("%s %d" % (tag, tags_cnt[tag]))
 
 
 def gap_degree_node(n):
@@ -162,4 +187,4 @@ def run(args):
     sys.stderr.write("\n")
 
 
-TASKS = [GapDegree]
+TASKS = [GapDegree, PosTags]
