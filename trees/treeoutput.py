@@ -220,7 +220,7 @@ def terminals(tree, stream, **params):
     """
     for terminal in trees.terminals(tree):
         print(terminal.data['word'], end=u" ", file=stream)
-        if 'terminals_pos' in params:
+        if 'terminals_tnt' in params:
             print("%s\t%s" % (terminal.data['word'],
                               terminal.data['label']), file=stream)
         else:
@@ -270,4 +270,5 @@ OUTPUT_OPTIONS = {'boyd_split_marking' : 'Boyd split: Mark split nodes with *',
                   'gf' : 'Append grammatical function labels to node labels',
                   'gf_separator' : 'Separator to use for gf option',
                   'gf_terminals' : 'If gf is set, use func. labels on terms.',
-                  'mark_heads_marking' : 'Output head marking'}
+                  'mark_heads_marking' : 'Output head marking', 
+                  'terminals_tnt' : 'Terminals output in TnT format'}
