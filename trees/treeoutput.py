@@ -220,6 +220,11 @@ def terminals(tree, stream, **params):
     """
     for terminal in trees.terminals(tree):
         print(terminal.data['word'], end=u" ", file=stream)
+        if 'terminals_pos' in params:
+            print("%s\t%s" % (terminal.data['word'],
+                              terminal.data['label']), file=stream)
+        else:
+            print(terminal.data['word'], end=u" ", file=stream)
     print(u"", file=stream)
 
 
