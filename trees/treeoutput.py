@@ -1,4 +1,4 @@
-""" 
+"""
 treetools: Tools for transforming treebank trees.
 
 This module handles tree writing in different formats.
@@ -14,13 +14,13 @@ from . import trees, analyze
 
 def parse_split_specification(split_spec, size):
     """Parse the specification of part sizes for output splitting.
-    The specification must be given as list of part size specifications 
+    The specification must be given as list of part size specifications
     separated by underscores where each part size specification is either a
     number suffixed by '#' (denoting an absolute size) or '%%' (denoting
     a percentage), or the keyword 'rest' which may occur once (denoting
     the part which receives the difference between the given number of
     trees and the sum of trees distributed into other parts given by the
-    numerical part size specifications). 
+    numerical part size specifications).
     """
     parts = []
     rest_index = None # remember where the 'rest' part is
@@ -64,10 +64,10 @@ def decorate_label(tree, **params):
         gf_separator = unicode(params['gf_separator'])
     gf_string = ""
     if 'gf' in params and not tree.data['edge'].startswith("-") \
-       and (trees.has_children(tree) 
+       and (trees.has_children(tree)
             or 'gf_terminals' in params):
         gf_string = "%s%s" % (gf_separator, tree.data['edge'])
-    head = "" 
+    head = ""
     if 'mark_heads_marking' in params and tree.data['head']:
         head = trees.DEFAULT_HEAD_MARKER
     split_marker = ""
@@ -94,7 +94,7 @@ def replace_parens(tree):
 
 def export_tabs(length):
     """Number of tabs after a single field in export format, given the
-    length of the field. 
+    length of the field.
     """
     if length < 8:
         return "\t\t\t"
@@ -112,23 +112,23 @@ def export_format(subtree, **params):
     label = decorate_label(subtree, **params)
     if not 'export_four' in params:
         return u"%s%s%s\t%s%s%s\t%d\n" \
-            % (subtree.data['word'], 
-               export_tabs(len(subtree.data['word'])), 
-               label, 
-               subtree.data['morph'], 
-               export_tabs(len(subtree.data['morph']) + 8), 
-               subtree.data['edge'], 
+            % (subtree.data['word'],
+               export_tabs(len(subtree.data['word'])),
+               label,
+               subtree.data['morph'],
+               export_tabs(len(subtree.data['morph']) + 8),
+               subtree.data['edge'],
                subtree.parent.data['num'])
     else:
         return u"%s%s%s%s%s\t%s%s%s\t%d\n" \
-            % (subtree.data['word'], 
-               export_tabs(len(subtree.data['word'])), 
-               subtree.data['lemma'], 
-               export_tabs(len(subtree.data['lemma'])), 
-               label, 
-               subtree.data['morph'], 
-               export_tabs(len(subtree.data['morph']) + 8), 
-               subtree.data['edge'], 
+            % (subtree.data['word'],
+               export_tabs(len(subtree.data['word'])),
+               subtree.data['lemma'],
+               export_tabs(len(subtree.data['lemma'])),
+               label,
+               subtree.data['morph'],
+               export_tabs(len(subtree.data['morph']) + 8),
+               subtree.data['edge'],
                subtree.parent.data['num'])
 
 
@@ -163,8 +163,8 @@ def compute_export_numbering(tree):
     tree.data['num'] = 0
 
 
-def export(tree, stream, **params): 
-    """Export format as in Brants (1997). 
+def export(tree, stream, **params):
+    """Export format as in Brants (1997).
     """
     # check parameters
     tree_id = tree.data['sid']
@@ -229,7 +229,7 @@ def terminals(tree, stream, **params):
 
 
 def tigerxml(tree, stream, **params):
-    """A single sentence as TIGER XML. The IDs should probably 
+    """A single sentence as TIGER XML. The IDs should probably
     be more fancy.
     """
     compute_export_numbering(tree)
@@ -249,12 +249,12 @@ def tigerxml(tree, stream, **params):
     stream.write(u"  <nonterminals>\n")
     for subtree in trees.postorder(tree):
         if trees.has_children(subtree):
-            stream.write(u"    <nt id=\"%d\" cat=%s>\n" 
-                         % (subtree.data['num'], 
+            stream.write(u"    <nt id=\"%d\" cat=%s>\n"
+                         % (subtree.data['num'],
                             quoteattr(subtree.data['label'])))
             for child in trees.children(subtree):
                 stream.write(u"      <edge label=%s idref=\"%d\" />\n"
-                             % (quoteattr(child.data['edge']), 
+                             % (quoteattr(child.data['edge']),
                                 child.data['num']))
             stream.write(u"    </nt>\n")
     stream.write(u"  </nonterminals>\n")
@@ -270,5 +270,5 @@ OUTPUT_OPTIONS = {'boyd_split_marking' : 'Boyd split: Mark split nodes with *',
                   'gf' : 'Append grammatical function labels to node labels',
                   'gf_separator' : 'Separator to use for gf option',
                   'gf_terminals' : 'If gf is set, use func. labels on terms.',
-                  'mark_heads_marking' : 'Output head marking', 
+                  'mark_heads_marking' : 'Output head marking',
                   'terminals_tnt' : 'Terminals output in TnT format'}

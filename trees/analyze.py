@@ -1,4 +1,4 @@
-""" 
+"""
 treetools: Tools for transforming treebank trees.
 
 This module provides functions and classes for analyzing trees.
@@ -36,13 +36,13 @@ class PosTags(object):
 #            print("%s %d" % (tag, tags_cnt[tag]))
 
 
-def gap_degree_node(n):
+def gap_degree_node(node):
     """Compute gap degree for a single node.
     """
-    if not trees.has_children(n):
+    if not trees.has_children(node):
         return 0
     node_gap_deg = 0
-    terms = trees.terminals(n)
+    terms = trees.terminals(node)
     for i, _ in enumerate(terms[:-1]):
         if terms[i].data['num'] + 1 < terms[i + 1].data['num']:
             node_gap_deg += 1
@@ -93,14 +93,14 @@ class GapDegree(object):
         print()
         print("Per tree:")
         for gapdeg in sorted(self.gaps_per_tree.keys()):
-            print(fmt.format(gapdeg, 
+            print(fmt.format(gapdeg,
                              self.gaps_per_tree[gapdeg],
                              "trees",
                              (self.gaps_per_tree[gapdeg] / tree_cnt) * 100))
         print()
         print("Per node (non-terminals only):")
         for gapdeg in sorted(self.gaps_per_node.keys()):
-            print(fmt.format(gapdeg, 
+            print(fmt.format(gapdeg,
                              self.gaps_per_node[gapdeg],
                              "nodes",
                              (self.gaps_per_node[gapdeg] / node_cnt * 100)))
@@ -117,34 +117,34 @@ def gap_degree(tree):
 def add_parser(subparsers):
     """Add an argument parser to the subparsers of treetools.py.
     """
-    parser = subparsers.add_parser('analyze', 
-                                   usage='%(prog)s src task [options] ', 
-                                   formatter_class=argparse. 
+    parser = subparsers.add_parser('analyze',
+                                   usage='%(prog)s src task [options] ',
+                                   formatter_class=argparse.
                                    RawDescriptionHelpFormatter,
                                    description='analysis of treebank trees')
     parser.add_argument('src', help='input file')
     parser.add_argument('task', help='task to perform')
     # # for the future
-    # parser.add_argument('--params', nargs='+', metavar='P', 
+    # parser.add_argument('--params', nargs='+', metavar='P',
     #                     help='space separated list of task ' \
     #                         'parameters P of the form (default: ' \
-    #                         '%(default)s)', 
+    #                         '%(default)s)',
     #                     default=[])
     parser.add_argument('--src-format', metavar='FMT',
-                        choices=[fun.__name__ 
+                        choices=[fun.__name__
                                  for fun in treeinput.INPUT_FORMATS],
-                        help='input format (default: %(default)s)', 
+                        help='input format (default: %(default)s)',
                         default='export')
-    parser.add_argument('--src-enc', metavar='ENCODING', 
-                        help='input encoding (default: %(default)s)', 
+    parser.add_argument('--src-enc', metavar='ENCODING',
+                        help='input encoding (default: %(default)s)',
                         default='utf-8')
     parser.add_argument('--src-opts', nargs='+', metavar='O',
                         help='space separated list of options O for reading ' \
                             'input of the form key:value ' \
-                            '(default: %(default)s)', 
+                            '(default: %(default)s)',
                         default=[])
     parser.add_argument('--usage', nargs=0, help='show detailed information ' \
-                        'about available tasks and input format/options', 
+                        'about available tasks and input format/options',
                         action=UsageAction)
     parser.set_defaults(func=run)
     return parser
@@ -170,13 +170,13 @@ class UsageAction(argparse.Action):
 def run(args):
     """Run the task on trees.
     """
-    sys.stderr.write("reading from '%s' in format '%s' and encoding '%s'\n" 
+    sys.stderr.write("reading from '%s' in format '%s' and encoding '%s'\n"
                      % (args.src, args.src_format, args.src_enc))
     sys.stderr.write("running %s\n" % args.task)
     cnt = 1
     task_instance = globals()[args.task]()
-    for tree in getattr(treeinput, 
-                        args.src_format)(args.src, args.src_enc, 
+    for tree in getattr(treeinput,
+                        args.src_format)(args.src, args.src_enc,
                                          **misc.options_dict \
                                          (args.src_opts)):
         tree = task_instance.run(tree)

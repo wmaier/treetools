@@ -1,7 +1,7 @@
-""" 
+"""
 treetools: Tools for transforming treebank trees.
 
-This module provides basic data structures and functions for handling trees. 
+This module provides basic data structures and functions for handling trees.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
@@ -26,11 +26,11 @@ class Tree(object):
     num key in the data dict which denotes the position
     index. Repeated or unspecified indices are an error. Note that
     comparison between Trees is done solely on the basis of the unique
-    ID. 
+    ID.
     """
     # unique id generator
     newid = itertools.count().next
-    
+
     def __init__(self, data):
         """Construct a new tree and copy given data dict.
         """
@@ -100,7 +100,7 @@ def terminals(tree):
 
 
 def terminal_blocks(tree):
-    """Return an array of arrays of terminals representing the 
+    """Return an array of arrays of terminals representing the
     continuous blocks covered by the root of the tree given as
     argument."""
     blocks = [[]]
@@ -124,7 +124,7 @@ def right_sibling(tree):
 
 
 def lca(tree_a, tree_b):
-    """Return the least common ancestor of two trees and None if there 
+    """Return the least common ancestor of two trees and None if there
     is none.
     """
     dom_a = [tree_a]

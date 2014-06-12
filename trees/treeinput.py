@@ -1,9 +1,9 @@
-""" 
+"""
 treetools: Tools for transforming treebank trees.
 
-This module handles reading of trees. Tree readers are implemented 
-as generators reading from a file with a given encoding and yielding 
-trees. 
+This module handles reading of trees. Tree readers are implemented
+as generators reading from a file with a given encoding and yielding
+trees.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
@@ -14,7 +14,7 @@ import string
 import sys
 import xml.etree.ElementTree as ET
 from StringIO import StringIO
-from . import trees 
+from . import trees
 
 
 BRACKETS = { "(" : "LRB", ")" : "RRB" }
@@ -22,7 +22,7 @@ DIGITS = re.compile(r'\d+')
 
 
 def tigerxml_build_tree(s):
-    """Build a tree from a <s> element in TIGER XML. If there is 
+    """Build a tree from a <s> element in TIGER XML. If there is
     no unique VROOT, add one.
     """
     idref_to_tree = dict()
@@ -60,7 +60,7 @@ def tigerxml_build_tree(s):
     for subtree in idref_to_tree.values():
         if subtree.parent is None:
             if root is None:
-                root = subtree 
+                root = subtree
             else:
                 raise ValueError("more than one root node")
     top = root
@@ -95,18 +95,18 @@ def tigerxml(in_file, _, **params):
                 tree.data['sid'] = tree_id
                 yield tree
             except ValueError as error:
-                print("\nskipping sentence %d: %s\n" % (tree_id, error), 
+                print("\nskipping sentence %d: %s\n" % (tree_id, error),
                       file=sys.stderr)
 
 
 def brackets_split_label(label, gf_separator, trunc_equals):
-    """Take a label, try to split it at first occurrence of 
+    """Take a label, try to split it at first occurrence of
     gf separator, return tuple with label and gf. Numbers at the
-    end of the label (with the default separator character "-" 
-    prepended) are taken to be co-indexation marks and re-glued 
-    to the label, "'" at the end of the label is taken to be 
-    head marking and also kept. If no separator present (or only 
-    co-indexation), default edge is returned.""" 
+    end of the label (with the default separator character "-"
+    prepended) are taken to be co-indexation marks and re-glued
+    to the label, "'" at the end of the label is taken to be
+    head marking and also kept. If no separator present (or only
+    co-indexation), default edge is returned."""
     edge = trees.DEFAULT_EDGE
     if trunc_equals:
         equals_pos = label.find("=")
@@ -120,7 +120,7 @@ def brackets_split_label(label, gf_separator, trunc_equals):
     coindex_sep = label.rfind(trees.DEFAULT_GF_SEPARATOR)
     if coindex_sep > -1:
         if label[coindex_sep + 1:].isdigit():
-            coindex = "%s%s" % (trees.DEFAULT_GF_SEPARATOR, 
+            coindex = "%s%s" % (trees.DEFAULT_GF_SEPARATOR,
                                 label[coindex_sep + 1:])
             label = label[:coindex_sep]
     sep = label.find(gf_separator)
@@ -131,7 +131,7 @@ def brackets_split_label(label, gf_separator, trunc_equals):
 
 
 def bracket_lexer(stream):
-    """Lexes input coming from stream in opening and closing brackets, 
+    """Lexes input coming from stream in opening and closing brackets,
     whitespace, and remaining characters. Works as generator."""
     tokenbuf = StringIO()
     whitespacebuf = StringIO()
@@ -168,15 +168,15 @@ def bracket_lexer(stream):
 
 def brackets(in_file, in_encoding, **params):
     """Read bracketed trees with any kind of indentation by lexing
-    input into whitespace, left/right brackets, and other tokens (aka 
-    labels/words). 
+    input into whitespace, left/right brackets, and other tokens (aka
+    labels/words).
     States:
-       0   expect sentence 
+       0   expect sentence
        1   expect whitespace or label (phrase label)
        2   expect whitespace or left bracket (next child)
        3   expect whitespace, word or left bracket (word or next child)
        4   expect whitespace or right bracket (end of phrase after word)
-       5   expect whitespace or left bracket or right bracket 
+       5   expect whitespace or left bracket or right bracket
            (next child or parent)
        9   expect possibly empty label (root label)
     """
@@ -246,16 +246,16 @@ def brackets(in_file, in_encoding, **params):
                     state = 3
                 else:
                     raise ValueError("unknown state")
-            elif lexclass == "TOKEN": 
+            elif lexclass == "TOKEN":
                 if state == 0:
                     pass
                 elif state in [1, 9]:
                     # phrase label, 9 when root label, 1 otherwise
                     if split_gf:
-                        label, edge = brackets_split_label(lextoken, 
+                        label, edge = brackets_split_label(lextoken,
                                                            gf_separator,
-                                                           trunc_equals) 
-                    else: 
+                                                           trunc_equals)
+                    else:
                         label = lextoken
                         edge = trees.DEFAULT_EDGE
                     queue[-1].data['label'] = label
@@ -264,7 +264,7 @@ def brackets(in_file, in_encoding, **params):
                     state = 2
                 elif state == 3:
                     queue[-1].data['word'] = lextoken
-                    queue[-1].data['num'] = term_cnt 
+                    queue[-1].data['num'] = term_cnt
                     term_cnt += 1
                     state = 4
                 elif state == 2:
@@ -309,7 +309,7 @@ def export_parse_line(line, **params):
     if len(fields) < trees.NUMBER_OF_FIELDS:
         raise ValueError("too few fields")
     # throw away after parent number and assign to fields
-    fields = dict(zip(trees.FIELDS, fields[:trees.NUMBER_OF_FIELDS])) 
+    fields = dict(zip(trees.FIELDS, fields[:trees.NUMBER_OF_FIELDS]))
     fields['parent_num'] = int(fields['parent_num'])
     if not (500 <= fields['parent_num'] < 1000 or fields['parent_num'] == 0):
         raise ValueError("parent field must be 0 or between 500 and 999")
@@ -322,9 +322,9 @@ def export_parse_line(line, **params):
 
 
 def export(in_file, in_encoding, **params):
-    """Read export format (3 or 4). Ignores all fields after the parent number 
+    """Read export format (3 or 4). Ignores all fields after the parent number
     since not all export treebanks respect the original export definition
-    from Brants (1997) (see TueBa-D/Z 8). 
+    from Brants (1997) (see TueBa-D/Z 8).
     """
     in_sentence = False
     sentence = []
@@ -363,7 +363,7 @@ def export(in_file, in_encoding, **params):
                         if not fields['parent_num'] in children_by_num:
                             children_by_num[fields['parent_num']] = []
                         children_by_num[fields['parent_num']].append(num)
-                    tree = export_build_tree(0, node_by_num, children_by_num) 
+                    tree = export_build_tree(0, node_by_num, children_by_num)
                     tree.data['sid'] = tree_cnt if 'continuous' in params \
                         else last_id
                     yield tree
@@ -377,5 +377,5 @@ INPUT_OPTIONS = { 'brackets_gf' : 'Brackets: Try to split grammatical ' \
                   'brackets_gf_separator' : 'Brackets: Separator to use for ' \
                   ' gf option (default %s)' % trees.DEFAULT_GF_SEPARATOR,
                   'continuous' : 'Export/TIGERXML: number sentences by ' \
-                  'counting, don\'t use #BOS', 
+                  'counting, don\'t use #BOS',
                   'trunc_equals' : 'trucate label at first "=" sign'}

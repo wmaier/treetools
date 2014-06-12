@@ -1,4 +1,4 @@
-""" 
+"""
 treetools: Tools for transforming treebank trees.
 
 This module provides misc utility functions.
@@ -11,9 +11,9 @@ def get_doc(funs):
     """Generate a string from the names and docstrings of a list of given
     functions.
     """
-    return "\n".join(["%s\n%s\n%s" % (bold(fun.__name__), 
+    return "\n".join(["%s\n%s\n%s" % (bold(fun.__name__),
                                       bold("-" * len(fun.__name__)),
-                                      str(fun.__doc__)) 
+                                      str(fun.__doc__))
                       for fun in funs])
 
 
@@ -36,7 +36,7 @@ def get_doc_opts(opts):
 
 def options_dict(options):
     """Given a list of key/value pairs with the key separated from the resp.
-    value by a colon, return a dict with the pairs in which 
+    value by a colon, return a dict with the pairs in which
        - True is inserted for each key with no value
        - int() is called on all values for which isdigit() holds
     """
