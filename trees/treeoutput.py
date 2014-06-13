@@ -79,19 +79,6 @@ def decorate_label(tree, **params):
     return u"%s%s%s%s%s" % (label, gf_string, head, split_marker, split_number)
 
 
-def replace_parens(tree):
-    """Replace bracket characters in node data before bracketing output.
-    """
-    for arg in ['word', 'lemma', 'label', 'edge', 'morph']:
-        tree.data[arg] = tree.data[arg].replace("(", "LRB")
-        tree.data[arg] = tree.data[arg].replace(")", "RRB")
-        tree.data[arg] = tree.data[arg].replace("[", "LSB")
-        tree.data[arg] = tree.data[arg].replace("]", "RSB")
-        tree.data[arg] = tree.data[arg].replace("{", "LCB")
-        tree.data[arg] = tree.data[arg].replace("}", "RCB")
-    return tree
-
-
 def export_tabs(length):
     """Number of tabs after a single field in export format, given the
     length of the field.
@@ -200,7 +187,7 @@ def write_brackets_subtree(tree, stream, **params):
         for child in trees.children(tree):
             write_brackets_subtree(child, stream, **params)
     else:
-        tree = replace_parens(tree)
+        tree = trees.replace_parens(tree)
         stream.write(decorate_label(tree, **params))
         stream.write(u" %s" % tree.data['word'])
     stream.write(u")")
@@ -209,7 +196,9 @@ def write_brackets_subtree(tree, stream, **params):
 def brackets(tree, stream, **params):
     """One bracketed tree per line. Tree must not be discontinuous.
     """
-    if analyze.gap_degree(tree) > 0:
+    gapdeg = max([analyze.gapdeg(tree) \
+                  for tree in trees.preorder(tree)])
+    if gapdeg > 0:
         raise ValueError("cannot write a discontinuous trees with brackets.")
     write_brackets_subtree(tree, stream, **params)
     stream.write(u"\n")
