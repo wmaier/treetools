@@ -46,10 +46,10 @@ def delete_leaf(tree, leaf):
     parent = leaf.parent
     parent.children.remove(leaf)
     while not parent == tree \
-            and trees.has_children(parent):
-        p = parent.parent
-        p.children.remove(parent)
-        parent = p
+          and trees.has_children(parent):
+        p_temp = parent.parent
+        p_temp.children.remove(parent)
+        parent = p_temp
     return parent
 
 
@@ -154,11 +154,12 @@ def boyd_split(tree):
         boyd_split_marking: leave asterisks on all block nodes
         boyd_split_numbering: marking + numbering of block nodes
     """
+    h_block = 'head_block'
     # postorder since we have to 'continuify' lower trees first
     for subtree in trees.postorder(tree):
         # set default values
         subtree.data['split'] = False
-        subtree.data['head_block'] = True
+        subtree.data[h_block] = True
         # split the children such that each sequence of children dominates
         # a continuous block of terminals
         blocks = []
@@ -183,7 +184,7 @@ def boyd_split(tree):
                 split.append(trees.Tree(subtree.data))
                 split[-1].data['split'] = True
                 split[-1].data['head'] = subtree.data['head']
-                split[-1].data['head_block'] = False
+                split[-1].data[h_block] = False
                 split[-1].data['block_number'] = (i + 1)
                 parent.children.append(split[-1])
                 split[-1].parent = parent
@@ -193,9 +194,9 @@ def boyd_split(tree):
                     # mark current block as head block if the current child has
                     # the head attribute set (if the current child is a split
                     # node, it must also be marked as covering head block)
-                    split[-1].data['head_block'] = split[-1].data['head_block'] \
+                    split[-1].data[h_block] = split[-1].data[h_block] \
                         or child.data['head'] and \
-                        ((not child.data['split']) or child.data['head_block'])
+                        ((not child.data['split']) or child.data[h_block])
                     # move child below new block node
                     subtree.children.remove(child)
                     split[-1].children.append(child)
@@ -281,7 +282,7 @@ def add_parser(subparsers):
                             '"rest" or a number suffixed by either "#" ' \
                             '(specifying an absolute number of sentences) ' \
                             'or "%%" (specifiying a percentage of all ' \
-                            'sentences) (default: no splitting).' ,
+                            'sentences) (default: no splitting).',
                         default='')
     parser.add_argument('--usage', nargs=0, help='show detailed information ' \
                         'about available algorithms, input options and ' \

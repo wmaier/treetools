@@ -154,7 +154,7 @@ def dominance(tree):
         yield parent
 
 def label_strip_fanout(label):
-    """Assume the '\d+$' in a given label to be fanout and return
+    """Assume the d+$ in a given label to be fanout and return
     the stripped version of the label.
     """
     while label[-1].isdigit():

@@ -153,7 +153,7 @@ def compute_export_numbering(tree):
             levels[level].append(subtree)
     for level in levels:
         levels[level] = sorted(levels[level], \
-                                   key=lambda x: trees.terminals(x)[0].data['num'])
+                               key=lambda x: trees.terminals(x)[0].data['num'])
     num = 500
     for level_num in sorted(levels.keys()):
         level = levels[level_num]
@@ -209,7 +209,7 @@ def write_brackets_subtree(tree, stream, **params):
 def brackets(tree, stream, **params):
     """One bracketed tree per line. Tree must not be discontinuous.
     """
-    if (analyze.gap_degree(tree) > 0):
+    if analyze.gap_degree(tree) > 0:
         raise ValueError("cannot write a discontinuous trees with brackets.")
     write_brackets_subtree(tree, stream, **params)
     stream.write(u"\n")

@@ -17,7 +17,7 @@ from StringIO import StringIO
 from . import trees
 
 
-BRACKETS = { "(" : "LRB", ")" : "RRB" }
+BRACKETS = {"(" : "LRB", ")" : "RRB"}
 DIGITS = re.compile(r'\d+')
 
 
@@ -372,10 +372,10 @@ def export(in_file, in_encoding, **params):
                     sentence = []
 
 INPUT_FORMATS = [export, brackets, tigerxml]
-INPUT_OPTIONS = { 'brackets_gf' : 'Brackets: Try to split grammatical ' \
-                  'functions from label at last occurrence of gf separator',
-                  'brackets_gf_separator' : 'Brackets: Separator to use for ' \
-                  ' gf option (default %s)' % trees.DEFAULT_GF_SEPARATOR,
-                  'continuous' : 'Export/TIGERXML: number sentences by ' \
-                  'counting, don\'t use #BOS',
-                  'trunc_equals' : 'trucate label at first "=" sign'}
+INPUT_OPTIONS = {'brackets_gf' : 'Brackets: Try to split grammatical ' \
+                 'functions from label at last occurrence of gf separator',
+                 'brackets_gf_separator' : 'Brackets: Separator to use for ' \
+                 ' gf option (default %s)' % trees.DEFAULT_GF_SEPARATOR,
+                 'continuous' : 'Export/TIGERXML: number sentences by ' \
+                 'counting, don\'t use #BOS',
+                 'trunc_equals' : 'trucate label at first "=" sign'}

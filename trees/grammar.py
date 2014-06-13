@@ -8,9 +8,8 @@ Author: Wolfgang Maier <maierw@hhu.de>
 from __future__ import print_function
 import argparse
 import io
-import re
 import sys
-from collections import defaultdict,Counter
+from collections import defaultdict, Counter
 from StringIO import StringIO
 from . import analyze, trees, treeinput, misc
 
@@ -35,10 +34,10 @@ def compute_fan_out(func, lin):
     """Given a function and the corresponding lineratization,
     return an array with the fan-out of each non-terminal in the
     given function."""
-    c = Counter([rhsref + 1 for arg in lin for (rhsref, _) in arg])
-    result = [None] * (len(c) + 1)
-    for i in c:
-        result[i] = c[i]
+    cnt = Counter([rhsref + 1 for arg in lin for (rhsref, _) in arg])
+    result = [None] * (len(cnt) + 1)
+    for i in cnt:
+        result[i] = cnt[i]
     result[0] = len(lin)
     return result
 
@@ -77,7 +76,7 @@ class MarkovLabelGenerator(LabelGenerator):
         if self.kwargs['p']['h'] > 0:
             i = params['pos'] + 1
             cnt = 0
-            while (i >= 1 and cnt < self.kwargs['p']['h']):
+            while i >= 1 and cnt < self.kwargs['p']['h']:
                 i -= 1
                 cnt += 1
                 if 'nofanout' in self.kwargs['p']:
@@ -92,8 +91,8 @@ class MarkovLabelGenerator(LabelGenerator):
 
 def linsub(lin, src, dest, replace):
     """Linearization vector substitution, operations 1.-3. of Maier (2013),
-    p. 115. 'src' and 'dest' are functions. Creates a new two-dimensional list from
-    a given two-dimensional list with linearization definitions. For all
+    p. 115. 'src' and 'dest' are functions. Creates a new two-dimensional list
+    given a two-dimensional list with linearization definitions. For all
     elements for which dest holds, the corresponding element is replaced with
     yield of dest for this element. If replace is true, then replacement is
     not performed if the last call to dest has yielded the same value. If dest
@@ -265,7 +264,7 @@ def pmcfg(grammar, dest, dest_enc, **opts):
                 dest_stream.write(u" fun%d %d\n" % (func_id, count))
                 func_id += 1
         for lindef_id in sorted(id_to_lindef, key=int):
-            lindef = ' '.join(["%d:%d" % (i,j) for (i,j)
+            lindef = ' '.join(["%d:%d" % (i, j) for (i, j)
                                in id_to_lindef[lindef_id]])
             dest_stream.write(u" s%s %s %s\n" % (lindef_id, SEQUENCE, lindef))
 
@@ -348,7 +347,7 @@ def extract(tree, grammar):
             if not func in grammar:
                 grammar[func] = {}
             if not lin in grammar[func]:
-                grammar[func][lin] =  {}
+                grammar[func][lin] = {}
             if not vert in grammar[func][lin]:
                 grammar[func][lin][vert] = 0
             grammar[func][lin][vert] += 1
@@ -359,7 +358,8 @@ def add_parser(subparsers):
     """Add an argument parser to the subparsers of treetools.py.
     """
     parser = subparsers.add_parser('grammar',
-                                   usage='%(prog)s src dest gramtype [options] ',
+                                   usage='%(prog)s src dest gramtype ' \
+                                   '[options] ',
                                    formatter_class=argparse.
                                    RawDescriptionHelpFormatter,
                                    description='grammar extraction from' \
@@ -459,7 +459,8 @@ def run(args):
             reordering = reordering_none
         elif args.gramtype == 'optimal':
             reordering = reordering_optimal
-        grammar = binarize(grammar, reordering=reordering, markov_opts=markov_opts)
+        grammar = binarize(grammar, reordering=reordering,
+                           markov_opts=markov_opts)
     sys.stderr.write("writing grammar in format '%s', encoding '%s', to '%s'\n"
                      % (args.dest_format, args.dest_enc, args.dest))
     globals()[args.dest_format](grammar, args.dest,
@@ -470,10 +471,10 @@ def run(args):
 
 FORMATS = [pmcfg, rcg]
 FORMAT_OPTIONS = {}
-GRAMTYPES = { 'treebank' : 'Plain treebank grammar' ,
-              'leftright' : 'Simple left-to-right binarization',
-              'optimal' : 'Optimal binarization' }
-MARKOVPARAMS = { 'v' : 'vertical markovization (default 1)' ,
-                 'h' : 'horizontal markovization (default 2)' ,
-                 'nofanout' : 'No fan-out on markovization symbols in ' \
-                 'binarization non-terminals (default false)' }
+GRAMTYPES = {'treebank' : 'Plain treebank grammar',
+             'leftright' : 'Simple left-to-right binarization',
+             'optimal' : 'Optimal binarization'}
+MARKOVPARAMS = {'v' : 'vertical markovization (default 1)',
+                'h' : 'horizontal markovization (default 2)',
+                'nofanout' : 'No fan-out on markovization symbols in ' \
+                'binarization non-terminals (default false)'}
