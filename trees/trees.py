@@ -5,6 +5,7 @@ This module provides basic data structures and functions for handling trees.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
+from __future__ import print_function
 import itertools
 from copy import deepcopy
 
@@ -87,10 +88,25 @@ def has_children(tree):
     return len(tree.children) > 0
 
 
+def unordered_terminals(tree):
+    """Return all terminal children of this subtree.
+    """
+    if len(tree.children) == 0:
+        return [tree]
+    else:
+        result = []
+        for child in tree.children:
+            result.extend(unordered_terminals(child))
+        return result
+
+
 def terminals(tree):
     """Return all terminal children of this subtree.
     """
     if len(tree.children) == 0:
+        if not 'num' in tree.data:
+            raise ValueError("no number in node data of terminal %s/%s" \
+                             % (tree.data['word'], tree.data['label']))
         return [tree]
     else:
         result = []
@@ -129,12 +145,12 @@ def lca(tree_a, tree_b):
     """
     dom_a = [tree_a]
     parent = tree_a
-    while not parent.parent == None:
+    while not parent.parent is None:
         parent = parent.parent
         dom_a.append(parent)
     dom_b = [tree_b]
     parent = tree_b
-    while not parent.parent == None:
+    while not parent.parent is None:
         parent = parent.parent
         dom_b.append(parent)
     i = 0
@@ -149,9 +165,32 @@ def dominance(tree):
     """
     parent = tree
     yield parent
-    while not parent.parent == None:
+    while not parent.parent is None:
         parent = parent.parent
         yield parent
+
+
+def replace_parens(tree):
+    """Replace bracket characters in node data before bracketing output.
+    """
+    for arg in ['word', 'lemma', 'label', 'edge', 'morph']:
+        if not tree.data[arg] is None:
+            tree.data[arg] = tree.data[arg].replace("(", "LRB")
+            tree.data[arg] = tree.data[arg].replace(")", "RRB")
+            tree.data[arg] = tree.data[arg].replace("[", "LSB")
+            tree.data[arg] = tree.data[arg].replace("]", "RSB")
+            tree.data[arg] = tree.data[arg].replace("{", "LCB")
+            tree.data[arg] = tree.data[arg].replace("}", "RCB")
+    return tree
+
+
+def replace_parens_all(tree):
+    """Apply replace_parens() to all children of the tree.
+    """
+    for subtree in preorder(tree):
+        replace_parens(subtree)
+    return tree
+
 
 def label_strip_fanout(label):
     """Assume the d+$ in a given label to be fanout and return
@@ -159,4 +198,28 @@ def label_strip_fanout(label):
     """
     while label[-1].isdigit():
         label = label[:-1]
+    return label
+
+
+def ptb_get_coindex(label):
+    """Return co-index from PTB-style node label, None if none found.
+    """
+    ind = label.rfind(DEFAULT_COINDEX_SEPARATOR) + 1
+    if ind > 0:
+        coind = label[ind:]
+        if coind.isdigit():
+            return int(coind)
+    return None
+
+
+def ptb_strip_coindex(label):
+    """Return label with co-index stripped, original label
+    if no co-index present.
+    """
+    ind = label.rfind(DEFAULT_COINDEX_SEPARATOR) + 1
+    if ind > 0:
+        coind = label[ind:]
+        if coind.isdigit():
+            slabel = label[:ind-1]
+            return slabel
     return label
