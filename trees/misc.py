@@ -5,6 +5,8 @@ This module provides misc utility functions.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
+import tempfile
+import gzip
 
 
 def get_doc(funs):
@@ -57,3 +59,20 @@ def bold(text):
     """For getting bold text on the command line (ANSI).
     """
     return u'\033[1m%s\033[0m' % text
+
+
+def gunzip(in_file):
+    """If filename ends with .gz, unzip file to temp file and
+    return name of temporary file. This is ugly, but proper streaming
+    support for zipped files does not seem to exist in Python 2.
+    """
+    if in_file.endswith('.gz'):
+        with tempfile.NamedTemporaryFile(mode='w+b', delete=False) as tempf, \
+                gzip.open(in_file) as gzipf:
+            data = gzipf.read()
+            tempf.write(data)
+            tempf.flush()
+            in_file = tempf.name
+    return in_file
+
+
