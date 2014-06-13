@@ -1,17 +1,15 @@
 """
 treetools: Tools for transforming treebank trees.
 
-This module provides functions and classes for grammar extraction
+This module provides functions and classes for grammar extraction.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
 from __future__ import print_function
 import argparse
-import io
 import sys
-from collections import defaultdict, Counter
-from StringIO import StringIO
-from . import analyze, trees, treeinput, misc
+from collections import Counter
+from . import analyze, trees, treeinput, misc, grammaroutput, grammaranalysis
 
 
 # PMCFG format constants
@@ -28,18 +26,6 @@ DEFAULT_BINSUFFIX = "X"
 DEFAULT_MARKOV_HORIZONTALSEP = "-"
 DEFAULT_MARKOV_VERTICALSEP = "^"
 DEFAULT_VERT = "VERT"
-
-
-def compute_fan_out(func, lin):
-    """Given a function and the corresponding lineratization,
-    return an array with the fan-out of each non-terminal in the
-    given function."""
-    cnt = Counter([rhsref + 1 for arg in lin for (rhsref, _) in arg])
-    result = [None] * (len(cnt) + 1)
-    for i in cnt:
-        result[i] = cnt[i]
-    result[0] = len(lin)
-    return result
 
 
 class LabelGenerator(object):
@@ -67,7 +53,7 @@ class MarkovLabelGenerator(LabelGenerator):
     def next(self, **params):
         vert = ""
         if self.kwargs['p']['v'] > 0:
-            for i, label in enumerate(params['vert']):
+            for i, _ in enumerate(params['vert']):
                 if not i < self.kwargs['p']['v']:
                     break
                 vert += "%s%s" % (DEFAULT_MARKOV_VERTICALSEP,
@@ -92,7 +78,7 @@ class MarkovLabelGenerator(LabelGenerator):
 def linsub(lin, src, dest, replace):
     """Linearization vector substitution, operations 1.-3. of Maier (2013),
     p. 115. 'src' and 'dest' are functions. Creates a new two-dimensional list
-    given a two-dimensional list with linearization definitions. For all
+    from a given two-dimensional list with linearization definitions. For all
     elements for which dest holds, the corresponding element is replaced with
     yield of dest for this element. If replace is true, then replacement is
     not performed if the last call to dest has yielded the same value. If dest
@@ -106,7 +92,7 @@ def linsub(lin, src, dest, replace):
     for arg in lin:
         repl_arg = []
         # iterate through second dimension of list (lhs arg elements)
-        for i, (rhspos, _) in enumerate(arg):
+        for (rhspos, _) in arg:
             # if we have a replacement candidate
             if src(rhspos):
                 this_dest = dest(rhspos)
@@ -143,7 +129,7 @@ def linsub(lin, src, dest, replace):
 def binarize_rule(func, lin, rule_cnt, vert, grammar, label_gen, result):
     """Left-to-right binarization of a single rule.
     """
-    fanout = compute_fan_out(func, lin)
+    fanout = grammaranalysis.fan_out(lin)
     rule_cnt = sum(grammar[func][lin].values())
     if len(func[1:]) <= 2:
         if not func in result:
@@ -189,19 +175,20 @@ def binarize_rule(func, lin, rule_cnt, vert, grammar, label_gen, result):
 def reordering_none(func, lin):
     """No reordering.
     """
-    return func, lin
+    raise ValueError("not yet implemented")
 
 
 def reordering_optimal(func, lin):
     """Rule-optimal binarization (Kallmeyer 2010).
     """
-    return func, lin
+    raise ValueError("not yet implemented")
 
 
 def binarize(grammar, **args):
     """Grammar binarization.
     """
     result = {}
+    # with markovization?
     if args['markov_opts'] is not None:
         nofanout = 'nofanout' in args['markov_opts']
         nf_vert = []
@@ -228,6 +215,7 @@ def binarize(grammar, **args):
                     binarize_rule(func, lin, rule_cnt, vert,
                                   grammar, label_gen, result)
     else:
+        # without markovization
         label_gen = LabelGenerator()
         vert = DEFAULT_VERT
         for func in grammar:
@@ -239,71 +227,7 @@ def binarize(grammar, **args):
     return result
 
 
-def pmcfg(grammar, dest, dest_enc, **opts):
-    """Write grammar in PMCFG format.
-    """
-    lindef_to_id = {}
-    id_to_lindef = {}
-    func_id = 1
-    lindef_id = 1
-    with io.open("%s.pmcfg" % dest, 'w', encoding=dest_enc) as dest_stream:
-        for func in grammar:
-            for lin in grammar[func]:
-                count = sum(grammar[func][lin].values())
-                dest_stream.write(u" fun%d %s %s %s %s\n"
-                                  % (func_id, RULE, func[0], RULEARROW,
-                                     ' '.join(func[1:])))
-                dest_stream.write(u" fun%d %s" % (func_id, LINEARIZATION))
-                for lindef in lin:
-                    if not lindef in lindef_to_id:
-                        lindef_to_id[lindef] = lindef_id
-                        id_to_lindef[lindef_id] = lindef
-                        lindef_id += 1
-                    dest_stream.write(u" s%s" % lindef_to_id[lindef])
-                dest_stream.write(u"\n")
-                dest_stream.write(u" fun%d %d\n" % (func_id, count))
-                func_id += 1
-        for lindef_id in sorted(id_to_lindef, key=int):
-            lindef = ' '.join(["%d:%d" % (i, j) for (i, j)
-                               in id_to_lindef[lindef_id]])
-            dest_stream.write(u" s%s %s %s\n" % (lindef_id, SEQUENCE, lindef))
-
-
-def rcg(grammar, dest, dest_enc, **opts):
-    """Write grammar in rparse rcg format, with count field.
-    """
-    with io.open("%s.rcg" % dest, 'w', encoding=dest_enc) as dest_stream:
-        for func in grammar:
-            for lin in grammar[func]:
-                count = sum(grammar[func][lin].values())
-                varcnt = 0
-                lhsargs = StringIO()
-                lhsarity = 1
-                rhsargs = defaultdict(dict)
-                rhsarity = defaultdict(int)
-                for i, arg in enumerate(lin):
-                    if not i == 0:
-                        lhsargs.write(u",")
-                        lhsarity += 1
-                    for var in arg:
-                        lhsargs.write(u"[%d]" % varcnt)
-                        rhsargs[var[0]][var[1]] = varcnt
-                        varcnt += 1
-                rhsargs = [rhsargs[i] for i in sorted(rhsargs, key=int)]
-                for i, rhs_el in enumerate(rhsargs):
-                    rhsargs[i] = ''.join([u"[%d]" % rhs_el[pos] for pos
-                                          in sorted(rhs_el, key=int)])
-                    rhsarity[i] = len(rhs_el)
-                lhs = u"%s%d(%s)" % (func[0], lhsarity, lhsargs.getvalue())
-                lhsargs.close()
-                rhs = ' '.join([u"%s%d(%s)" % (func[i + 1], rhsarity[i],
-                                              rhsargs[i])
-                                for i in range(len(func[1:]))])
-                dest_stream.write(u"C:%d %s %s %s\n"
-                                  % (count, lhs, RCG_RULEARROW, rhs))
-
-
-def extract(tree, grammar):
+def extract(tree, grammar, lexicon):
     """Extract a PMCFG. We remember "bare" CFG productions, together with
     possible linearizations, together with vertical contexts from the tree
     (for later markovization). So far no extraction of rules from pre-terminal
@@ -351,6 +275,13 @@ def extract(tree, grammar):
             if not vert in grammar[func][lin]:
                 grammar[func][lin][vert] = 0
             grammar[func][lin][vert] += 1
+        else:
+            # lexicon
+            word = subtree.data['word']
+            label = subtree.data['label']
+            if not word in lexicon:
+                lexicon[word] = Counter([])
+            lexicon[word].update([label])
     return grammar
 
 
@@ -358,8 +289,8 @@ def add_parser(subparsers):
     """Add an argument parser to the subparsers of treetools.py.
     """
     parser = subparsers.add_parser('grammar',
-                                   usage='%(prog)s src dest gramtype ' \
-                                   '[options] ',
+                                   usage='%(prog)s src dest ' \
+                                   'gramtype [options] ',
                                    formatter_class=argparse.
                                    RawDescriptionHelpFormatter,
                                    description='grammar extraction from' \
@@ -412,18 +343,30 @@ class UsageAction(argparse.Action):
         title_str = misc.bold("%s help" % sys.argv[0])
         help_str = "\n\n%s\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n" \
                    "%s\n\n%s\n%s\n\n%s\n%s" \
-            % (misc.bold('available grammar output types: '),
+            % (misc.bold("%s\n%s\n" %
+                         ('available grammar output types: ',
+                          '=============================== ')),
                misc.get_doc_opts(GRAMTYPES),
-               misc.bold('available markovization parameters: '),
+               misc.bold("%s\n%s\n" %
+                         ('available markovization parameters: ',
+                          '=================================== ')),
                misc.get_doc_opts(MARKOVPARAMS),
-               misc.bold('available input formats: '),
+               misc.bold("%s\n%s\n" %
+                         ('available input formats: ',
+                          '======================== ')),
                misc.get_doc(treeinput.INPUT_FORMATS),
-               misc.bold('available input options: '),
+               misc.bold("%s\n%s\n" %
+                         ('available input options: ',
+                          '======================== ')),
                misc.get_doc_opts(treeinput.INPUT_OPTIONS),
-               misc.bold('available dest formats: '),
-               misc.get_doc(FORMATS),
-               misc.bold('available dest options: '),
-               misc.get_doc_opts(FORMAT_OPTIONS))
+               misc.bold("%s\n%s\n" %
+                         ('available dest formats: ',
+                          '======================= ')),
+               misc.get_doc(grammaroutput.FORMATS),
+               misc.bold("%s\n%s\n" %
+                         ('available dest options: ',
+                          '======================= ')),
+               misc.get_doc_opts(grammaroutput.FORMAT_OPTIONS))
         print("\n%s%s" % (title_str, help_str))
         sys.exit()
 
@@ -435,12 +378,13 @@ def run(args):
           % (args.src, args.src_format, args.src_enc), file=sys.stderr)
     print("extracting grammar (%s)" % args.gramtype, file=sys.stderr)
     grammar = {}
+    lexicon = {}
     cnt = 1
     for tree in getattr(treeinput,
                         args.src_format)(args.src, args.src_enc,
                                          **misc.options_dict \
                                          (args.src_opts)):
-        extract(tree, grammar)
+        extract(tree, grammar, lexicon)
         if cnt % 100 == 0:
             print("\r%d" % cnt, end="", file=sys.stderr)
         cnt += 1
@@ -461,16 +405,16 @@ def run(args):
             reordering = reordering_optimal
         grammar = binarize(grammar, reordering=reordering,
                            markov_opts=markov_opts)
-    sys.stderr.write("writing grammar in format '%s', encoding '%s', to '%s'\n"
+    sys.stderr.write("\nwriting grammar in format '%s', encoding '%s', to '%s'"
                      % (args.dest_format, args.dest_enc, args.dest))
-    globals()[args.dest_format](grammar, args.dest,
-                                args.dest_enc,
-                                **misc.options_dict(args.dest_opts))
+    sys.stderr.write("\n")
+    getattr(grammaroutput, args.dest_format) \
+        (grammar, lexicon, args.dest,
+         args.dest_enc,
+         **misc.options_dict(args.dest_opts))
     print("\n", file=sys.stderr)
 
 
-FORMATS = [pmcfg, rcg]
-FORMAT_OPTIONS = {}
 GRAMTYPES = {'treebank' : 'Plain treebank grammar',
              'leftright' : 'Simple left-to-right binarization',
              'optimal' : 'Optimal binarization'}
