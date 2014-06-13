@@ -10,47 +10,9 @@ from __future__ import print_function, with_statement
 import argparse
 import sys
 import io
+import os
+from collections import defaultdict
 from . import trees, treeinput, treeoutput, misc
-
-
-def ptb_get_coindex(label):
-    """Return co-index from PTB-style node label, -1 if none found.
-    """
-    ind = label.rfind(trees.DEFAULT_COINDEX_SEPARATOR) + 1
-    if ind > 0:
-        coind = label[ind:]
-        if coind.isdigit():
-            return int(coind)
-    return -1
-
-
-def ptb_strip_coindex(label):
-    """Return label with co-index stripped, original label
-    if no co-index present.
-    """
-    ind = label.rfind(trees.DEFAULT_COINDEX_SEPARATOR) + 1
-    if ind > 0:
-        coind = label[ind:]
-        if coind.isdigit():
-            slabel = label[:ind-1]
-            return slabel
-    return label
-
-
-def delete_leaf(tree, leaf):
-    """Delete a leaf node and recursively all of its ancestors
-    which do not have siblings. Root of the tree with the leaf
-    must be given as well. Return the first node with siblings
-    or the (given) root.
-    """
-    parent = leaf.parent
-    parent.children.remove(leaf)
-    while not parent == tree \
-          and trees.has_children(parent):
-        p_temp = parent.parent
-        p_temp.children.remove(parent)
-        parent = p_temp
-    return parent
 
 
 def root_attach(tree):
@@ -63,7 +25,10 @@ def root_attach(tree):
     attached yet) in order to find the rightmost terminal. If the VROOT child
     constitutes the start or end of the sentence, or if the least common
     ancestor as described above is VROOT, it is not moved.
+
     Prerequisite: none
+    Parameters: none
+    Output options: none
     """
     tree_terms = trees.terminals(tree)
     # numbers of leftmost and rightmost terminal
@@ -117,7 +82,9 @@ def negra_mark_heads(tree):
     heuristic. If there is child with a HD edge, it will be marked. Otherwise,
     the rightmost child with a NK edge will be marked. If there is no such
     child, the leftmost child will be marked.
+
     Prerequisite: none
+    Parameters: none
     Output options:
         mark_heads_marking: Mark heads with an '
     """
@@ -149,7 +116,9 @@ def boyd_split(tree):
     daugther has been split itself. For head finding a simple heuristic
     is used. The algorithm is documented in Boyd (2007) (ACL-LAW workshop).
     The algorithm relies on a previous application of head marking.
+
     Prerequisites: A previous application of root_attach() and head marking.
+    Parameters: none
     Output options:
         boyd_split_marking: leave asterisks on all block nodes
         boyd_split_numbering: marking + numbering of block nodes
@@ -209,7 +178,10 @@ def raising(tree):
     branches. This algorithm relies on a previous application of the Boyd
     splitting and removes all those newly introduced nodes which are *not*
     marked as head block (see above).
+
     Prerequisite: Previous application of boyd_split().
+    Parameters: none
+    Output options: none
     """
     removal = []
     for subtree in trees.preorder(tree):
@@ -240,6 +212,10 @@ def add_parser(subparsers):
                                        'treebank trees.')
     parser.add_argument('src', help='input file')
     parser.add_argument('dest', help='output file')
+    parser.add_argument('--counting', metavar='n', type=int,
+                        help='display number of processed sentences every n ' \
+                            ' sentences (default: %(default)s)',
+                        default=100)
     parser.add_argument('--trans', nargs='+', metavar='T',
                         help='transformations to apply (default: %(default)s)',
                         default=[])
@@ -298,15 +274,25 @@ class UsageAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         title_str = misc.bold("%s help" % sys.argv[0])
         help_str = "\n\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n" \
-                   % (misc.bold('available transformations: '),
+                   % (misc.bold("%s\n%s" %
+                                ('available transformations: ',
+                                 '========================== ')),
                       misc.get_doc(TRANSFORMATIONS),
-                      misc.bold('available input formats: '),
+                      misc.bold("%s\n%s" %
+                                ('available input formats: ',
+                                 '======================== ')),
                       misc.get_doc(treeinput.INPUT_FORMATS),
-                      misc.bold('available input options: '),
+                      misc.bold("%s\n%s" %
+                                ('available input options: ',
+                                 '======================== ')),
                       misc.get_doc_opts(treeinput.INPUT_OPTIONS),
-                      misc.bold('available output formats: '),
+                      misc.bold("%s\n%s" %
+                                ('available output formats: ',
+                                 '========================= ')),
                       misc.get_doc(treeoutput.OUTPUT_FORMATS),
-                      misc.bold('available output options: '),
+                      misc.bold("%s\n%s" %
+                                ('available output options: ',
+                                 '========================= ')),
                       misc.get_doc_opts(treeoutput.OUTPUT_OPTIONS))
         print("\n%s%s" % (title_str, help_str))
         sys.exit()
@@ -323,24 +309,35 @@ def run(args):
     if not args.split == "":
         sys.stderr.write("splitting output like this: %s\n" % args.split)
     cnt = 1
+    params = misc.options_dict(args.params)
     if args.split == '':
-        with io.open(args.dest, 'w', encoding=args.dest_enc) as dest_stream:
-            for tree in getattr(treeinput,
-                                args.src_format)(args.src, args.src_enc,
-                                                 **misc.options_dict \
-                                                 (args.src_opts)):
-                for algorithm in args.trans:
-                    tree = globals()[algorithm](tree,
-                                                **misc.options_dict \
-                                                (args.params))
-                getattr(treeoutput, args.dest_format)(tree, dest_stream,
-                                                      **misc.options_dict \
-                                                      (args.dest_opts))
-                if cnt % 100 == 0:
-                    sys.stderr.write("\r%d" % cnt)
-                cnt += 1
-        sys.stderr.write("\n")
+        files = []
+        if os.path.isdir(args.src):
+            for srcfile in os.listdir(args.src):
+                srcfile = os.path.join(args.src, srcfile)
+                destfile = "%s.dest" % srcfile
+                files.append((srcfile, destfile))
+        else:
+            files.append((args.src, args.dest))
+        for src, dest in files:
+            print("%s --> %s" % (src, dest), file=sys.stderr)
+            with io.open(dest, 'w', encoding=args.dest_enc) as dest_stream:
+                for tree in getattr(treeinput,
+                                    args.src_format)(src, args.src_enc,
+                                                     **misc.options_dict \
+                                                         (args.src_opts)):
+                    for algorithm in args.trans:
+                        tree = globals()[algorithm](tree, **params)
+                    getattr(treeoutput, args.dest_format)(tree, dest_stream,
+                                                          **misc.options_dict \
+                                                         (args.dest_opts))
+                    if cnt % args.counting == 0:
+                        sys.stderr.write("\r%d" % cnt)
+                    cnt += 1
+            sys.stderr.write("\n")
     else:
+        if os.path.isdir(args.src):
+            raise ValueError("cannot split input when reading entire directory")
         cnt = 1
         tree_list = []
         sys.stderr.write("reading...\n")
@@ -349,10 +346,9 @@ def run(args):
                                                         (args.src_opts)):
             for algorithm in args.trans:
                 tree = globals()[algorithm](tree,
-                                            **misc.options_dict \
-                                            (args.params))
+                                            **misc.options_dict(args.params))
             tree_list.append(tree)
-            if cnt % 100 == 0:
+            if cnt % args.counting == 0:
                 sys.stderr.write("\r%d" % cnt)
             cnt += 1
         sys.stderr.write("\n")
@@ -367,7 +363,7 @@ def run(args):
                     getattr(treeoutput, args.dest_format) \
                         (tree_iter.next(), dest_stream, \
                          **misc.options_dict(args.dest_opts))
-                    if tree_ind % 100 == 0:
+                    if tree_ind % args.counting == 0:
                         sys.stderr.write("\r%d" % tree_ind)
                 sys.stderr.write("\n")
 
