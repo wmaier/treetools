@@ -14,7 +14,7 @@ import string
 import sys
 import xml.etree.ElementTree as ET
 from StringIO import StringIO
-from . import trees
+from . import trees, misc
 
 
 BRACKETS = {"(" : "LRB", ")" : "RRB"}
@@ -93,6 +93,8 @@ def tigerxml(in_file, _, **params):
             try:
                 tree = tigerxml_build_tree(s_element)
                 tree.data['sid'] = tree_id
+                if 'replace_parens' in params:
+                    tree = trees.replace_parens_all(tree)
                 yield tree
             except ValueError as error:
                 print("\nskipping sentence %d: %s\n" % (tree_id, error),
@@ -106,7 +108,8 @@ def brackets_split_label(label, gf_separator, trunc_equals):
     prepended) are taken to be co-indexation marks and re-glued
     to the label, "'" at the end of the label is taken to be
     head marking and also kept. If no separator present (or only
-    co-indexation), default edge is returned."""
+    co-indexation), default edge is returned.
+    """
     edge = trees.DEFAULT_EDGE
     if trunc_equals:
         equals_pos = label.find("=")
@@ -180,7 +183,7 @@ def brackets(in_file, in_encoding, **params):
            (next child or parent)
        9   expect possibly empty label (root label)
     """
-    split_gf = 'brackets_gf' in params
+    in_file = misc.gunzip(in_file)
     gf_separator = trees.DEFAULT_GF_SEPARATOR
     if 'brackets_gf_separator' in params:
         gf_separator = params['brackets_gf_separator']
@@ -213,7 +216,20 @@ def brackets(in_file, in_encoding, **params):
             elif lexclass == "RRB":
                 if state in [0]:
                     pass
-                elif state in [4, 5]:
+                elif state in [2, 4, 5]:
+                    if state == 2:
+                        if not 'brackets_tolerant' in params:
+                            raise ValueError("expected whitespace or (, got )")
+                        else:
+                            print("being tolerant", file=sys.stderr)
+                            # last token was a word
+                            queue[-1].data['word'] = queue[-1].data['label']
+                            # queue[-1].data['label'] = queue[-2].data['label']
+                            queue[-1].data['label'] = trees.DEFAULT_LABEL
+                            queue[-1].data['edge'] = trees.DEFAULT_EDGE
+                            queue[-1].data['morph'] = trees.DEFAULT_MORPH
+                            queue[-1].data['num'] = term_cnt
+                            term_cnt += 1
                     level -= 1
                     if len(queue) > 1:
                         # close phrase
@@ -224,6 +240,8 @@ def brackets(in_file, in_encoding, **params):
                         # close sentence
                         queue[0].data['sid'] = cnt
                         cnt += 1
+                        if 'replace_parens' in params:
+                            queue[0] = trees.replace_parens_all(queue[0])
                         yield queue[0]
                         queue = []
                         state = 0
@@ -231,8 +249,6 @@ def brackets(in_file, in_encoding, **params):
                         state = 5
                 elif state == 1:
                     raise ValueError("expected label, got )")
-                elif state == 2:
-                    raise ValueError("expected whitespace or (, got )")
                 elif state in [3, 9]:
                     raise ValueError("expected whitespace, label or (, got )")
                 else:
@@ -251,7 +267,7 @@ def brackets(in_file, in_encoding, **params):
                     pass
                 elif state in [1, 9]:
                     # phrase label, 9 when root label, 1 otherwise
-                    if split_gf:
+                    if 'brackets_gf' in params:
                         label, edge = brackets_split_label(lextoken,
                                                            gf_separator,
                                                            trunc_equals)
@@ -326,6 +342,7 @@ def export(in_file, in_encoding, **params):
     since not all export treebanks respect the original export definition
     from Brants (1997) (see TueBa-D/Z 8).
     """
+    in_file = misc.gunzip(in_file)
     in_sentence = False
     sentence = []
     last_id = None
@@ -366,6 +383,8 @@ def export(in_file, in_encoding, **params):
                     tree = export_build_tree(0, node_by_num, children_by_num)
                     tree.data['sid'] = tree_cnt if 'continuous' in params \
                         else last_id
+                    if 'replace_parens' in params:
+                        tree = trees.replace_parens_all(tree)
                     yield tree
                     tree_cnt += 1
                     in_sentence = False
@@ -373,9 +392,12 @@ def export(in_file, in_encoding, **params):
 
 INPUT_FORMATS = [export, brackets, tigerxml]
 INPUT_OPTIONS = {'brackets_gf' : 'Brackets: Try to split grammatical ' \
-                 'functions from label at last occurrence of gf separator',
+                     'functions from label at last occurrence of gf separator',
                  'brackets_gf_separator' : 'Brackets: Separator to use for ' \
-                 ' gf option (default %s)' % trees.DEFAULT_GF_SEPARATOR,
+                     ' gf option (default %s)' % trees.DEFAULT_GF_SEPARATOR,
+                 'brackets_tolerant' : 'Brackets: Allow empty phrase ' \
+                     'labels aside from root',
                  'continuous' : 'Export/TIGERXML: number sentences by ' \
-                 'counting, don\'t use #BOS',
+                     'counting, don\'t use #BOS',
+                 'replace_parens' : 'Replace parens by LRB, RRB, etc. ',
                  'trunc_equals' : 'trucate label at first "=" sign'}
