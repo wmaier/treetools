@@ -9,7 +9,7 @@ from __future__ import division, print_function
 import sys
 from math import floor
 from xml.sax.saxutils import quoteattr
-from . import trees, analyze
+from . import trees, treeanalysis
 
 
 def parse_split_specification(split_spec, size):
@@ -196,7 +196,7 @@ def write_brackets_subtree(tree, stream, **params):
 def brackets(tree, stream, **params):
     """One bracketed tree per line. Tree must not be discontinuous.
     """
-    gapdeg = max([analyze.gapdeg(tree) \
+    gapdeg = max([treeanalysis.gapdeg(tree) \
                   for tree in trees.preorder(tree)])
     if gapdeg > 0:
         raise ValueError("cannot write a discontinuous trees with brackets.")
