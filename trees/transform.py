@@ -152,6 +152,8 @@ def boyd_split(tree):
                 # the new node:
                 split.append(trees.Tree(subtree.data))
                 split[-1].data['split'] = True
+                if not 'head' in split[-1].data:
+                    raise ValueError("heads not marked?")
                 split[-1].data['head'] = subtree.data['head']
                 split[-1].data[h_block] = False
                 split[-1].data['block_number'] = (i + 1)

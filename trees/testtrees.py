@@ -13,9 +13,9 @@ import copy
 from StringIO import StringIO
 from . import trees, treeinput, transform
 
-PARENS_SAMPLE = """
+BRACKETS_SAMPLE = """
 ((S(WP Who)(VB did)(NNP Fritz)(VP(VB tell)(NNP Hans)(SBAR(IN that)
-(NP(NNP Manfred))(VP(VB likes))))))
+(NP(NNP Manfred))(VP(VB likes)))))(? ?))
 """
 EXPORT_SAMPLE = """
 #BOS 1
@@ -58,6 +58,32 @@ PREORDER_WORDS_RAISING = [None, u'#504', u'Who', u'did', u'Fritz',
                           u'likes', u'?']
 
 
+class ContTreeTests(unittest.TestCase):
+
+    def setUp(self):
+        with tempfile.NamedTemporaryFile(delete=False) as temp:
+            self.brackets_tempfile_name = temp.name
+            temp.write(BRACKETS_SAMPLE)
+            temp.flush()
+        params = {}
+        bracketsreader = treeinput.brackets(self.brackets_tempfile_name, 
+                                        'utf8', **params)
+        self.tree = bracketsreader.next()
+        
+    def test_nodes(self):
+        terms = trees.terminals(self.tree)
+        self.assertEqual(len(terms), 9)
+        nodes = [node for node in trees.preorder(self.tree)]
+        self.assertEqual(len(nodes), 15)
+        labels = [node.data['label'] for node in nodes]
+        words = [node.data['word'] for node in nodes]
+        self.assertTrue(labels, PREORDER_LABELS_RAISING)
+        self.assertTrue(words, PREORDER_WORDS_RAISING)
+
+    def tearDown(self):
+        os.remove(self.brackets_tempfile_name)
+
+
 class DiscontTreeTests(unittest.TestCase):
 
     def setUp(self):
@@ -71,8 +97,9 @@ class DiscontTreeTests(unittest.TestCase):
         self.tree = exportreader.next()
         self.tree_root_attach = copy.deepcopy(self.tree)
         self.tree_root_attach = transform.root_attach(self.tree_root_attach)
-        self.tree_boyd = copy.deepcopy(self.tree_root_attach)
-        self.tree_boyd = transform.negra_mark_heads(self.tree_boyd)
+        self.tree_negra_mark_heads = copy.deepcopy(self.tree_root_attach)
+        self.tree_negra_mark_heads = transform.negra_mark_heads(self.tree_negra_mark_heads)
+        self.tree_boyd = copy.deepcopy(self.tree_negra_mark_heads)
         self.tree_boyd = transform.boyd_split(self.tree_boyd)
         self.tree_raising = copy.deepcopy(self.tree_boyd)
         self.tree_raising = transform.raising(self.tree_raising)
@@ -96,6 +123,7 @@ class DiscontTreeTests(unittest.TestCase):
         words = [node.data['word'] for node in nodes]
         self.assertTrue(labels, PREORDER_LABELS)
         self.assertTrue(words, PREORDER_WORDS)
+        self.assertRaises(ValueError, transform.boyd_split, self.tree_root_attach)
 
     def test_boyd(self):
         nodes = [node for node in trees.preorder(self.tree_boyd)]
