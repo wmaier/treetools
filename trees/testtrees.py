@@ -1,10 +1,22 @@
+"""
+treetools: Tools for transforming treebank trees.
+
+Unit tests
+
+Author: Wolfgang Maier <maierw@hhu.de>
+"""
 import unittest
 import tempfile
 import os
+import sys
+import copy
 from StringIO import StringIO
 from . import trees, treeinput, transform
 
-
+PARENS_SAMPLE = """
+((S(WP Who)(VB did)(NNP Fritz)(VP(VB tell)(NNP Hans)(SBAR(IN that)
+(NP(NNP Manfred))(VP(VB likes))))))
+"""
 EXPORT_SAMPLE = """
 #BOS 1
 Who			WP	--		--	501
@@ -15,8 +27,8 @@ Hans			NNP	--		--	503
 that			IN	--       	HD	502
 Manfred  		NNP	--		HD	500
 likes			VB	--		HD	501
-?			?(	--		--	0
-#500			NP=X	--		--	502
+?			?	--		--	0
+#500			NP	--		--	502
 #501			VP	--		--	502
 #502			SBAR	--		--	503
 #503			VP	--		--	504
@@ -25,18 +37,25 @@ likes			VB	--		HD	501
 """
 PREORDER_LABELS = [u'VROOT', u'S', u'VP', u'SBAR', u'VP', u'WP',
                    u'VB', u'IN', u'NP', u'NNP', u'VB', u'NNP',
-                   u'VB', u'NNP', u'?LRB']
+                   u'VB', u'NNP', u'?']
 PREORDER_WORDS = [None, u'#504', u'#503', u'#502', u'#501',
                   u'Who', u'likes', u'that', u'#500', u'Manfred',
                   u'tell', u'Hans', u'did', u'Fritz', u'?']
 PREORDER_LABELS_BOYD = [u'VROOT', u'S', u'VP', u'SBAR', u'VP', 
                         u'WP', u'VB', u'NNP', u'VP', u'VB', 
                         u'NNP', u'SBAR', u'IN', u'NP', u'NNP', 
-                        u'VP', u'VB', u'?LRB'] 
+                        u'VP', u'VB', u'?'] 
 PREORDER_WORDS_BOYD = [None, u'#504', u'#503', u'#502', u'#501', 
                        u'Who', u'did', u'Fritz', u'#503', u'tell', 
                        u'Hans', u'#502', u'that', u'#500', 
                        u'Manfred', u'#501', u'likes', u'?']
+PREORDER_LABELS_RAISING = [u'VROOT', u'S', u'WP', u'VB', u'NNP', 
+                           u'VP', u'VB', u'NNP', u'SBAR', u'IN', 
+                           u'NP', u'NNP', u'VP', u'VB', u'?']
+PREORDER_WORDS_RAISING = [None, u'#504', u'Who', u'did', u'Fritz', 
+                          u'#503', u'tell', u'Hans', u'#502', 
+                          u'that', u'#500', u'Manfred', u'#501', 
+                          u'likes', u'?']
 
 
 class DiscontTreeTests(unittest.TestCase):
@@ -46,14 +65,17 @@ class DiscontTreeTests(unittest.TestCase):
             self.export_tempfile_name = temp.name
             temp.write(EXPORT_SAMPLE)
             temp.flush()
-        params = {'replace_parens' : True, 'trunc_equals' : True}
+        params = {}
         exportreader = treeinput.export(self.export_tempfile_name, 
                                         'utf8', **params)
         self.tree = exportreader.next()
-        self.tree_root_attach = transform.root_attach(self.tree)
-        self.tree_boyd = transform.negra_mark_heads(self.tree_root_attach)
+        self.tree_root_attach = copy.deepcopy(self.tree)
+        self.tree_root_attach = transform.root_attach(self.tree_root_attach)
+        self.tree_boyd = copy.deepcopy(self.tree_root_attach)
+        self.tree_boyd = transform.negra_mark_heads(self.tree_boyd)
         self.tree_boyd = transform.boyd_split(self.tree_boyd)
-        self.tree_raising = transform.raising(self.tree_boyd)
+        self.tree_raising = copy.deepcopy(self.tree_boyd)
+        self.tree_raising = transform.raising(self.tree_raising)
 
     def test_nodes(self):
         terms = trees.terminals(self.tree)
@@ -62,9 +84,6 @@ class DiscontTreeTests(unittest.TestCase):
         self.assertEqual(len(nodes), 15)
         labels = [node.data['label'] for node in nodes]
         words = [node.data['word'] for node in nodes]
-        print labels
-        print PREORDER_LABELS
-        sys.exit()
         self.assertTrue(all([a == b for (a,b) in zip(labels, 
                                                      PREORDER_LABELS)]))
         self.assertTrue(all([a == b for (a,b) in zip(words,
@@ -77,7 +96,6 @@ class DiscontTreeTests(unittest.TestCase):
         self.assertEqual(len(nodes), 15)
         labels = [node.data['label'] for node in nodes]
         words = [node.data['word'] for node in nodes]
-        print labels
         self.assertTrue(all([a == b for (a,b) in zip(labels, 
                                                      PREORDER_LABELS)]))
         self.assertTrue(all([a == b for (a,b) in zip(words,
@@ -96,7 +114,10 @@ class DiscontTreeTests(unittest.TestCase):
         nodes = [node for node in trees.preorder(self.tree_raising)]
         labels = [node.data['label'] for node in nodes]
         words = [node.data['word'] for node in nodes]
-        print words
+        self.assertTrue(all([a == b for (a,b) in zip(labels, 
+                                                     PREORDER_LABELS_RAISING)]))
+        self.assertTrue(all([a == b for (a,b) in zip(words,
+                                                     PREORDER_WORDS_RAISING)]))
 
     def tearDown(self):
         os.remove(self.export_tempfile_name)

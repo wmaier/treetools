@@ -331,9 +331,9 @@ def export_parse_line(line, **params):
         raise ValueError("parent field must be 0 or between 500 and 999")
     # options?
     if 'trunc_equals' in params:
-        equals_pos = line.find("=")
+        equals_pos = fields['label'].find("=")
         if equals_pos > -1:
-            line = line[:equals_pos]
+            fields['label'] = fields['label'][:equals_pos]
     return fields
 
 
