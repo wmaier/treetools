@@ -84,10 +84,8 @@ class DiscontTreeTests(unittest.TestCase):
         self.assertEqual(len(nodes), 15)
         labels = [node.data['label'] for node in nodes]
         words = [node.data['word'] for node in nodes]
-        self.assertTrue(all([a == b for (a,b) in zip(labels, 
-                                                     PREORDER_LABELS)]))
-        self.assertTrue(all([a == b for (a,b) in zip(words,
-                                                     PREORDER_WORDS)]))
+        self.assertTrue(labels, PREORDER_LABELS)
+        self.assertTrue(words, PREORDER_WORDS)
 
     def test_root_attach(self):
         terms = trees.terminals(self.tree_root_attach)
@@ -96,28 +94,22 @@ class DiscontTreeTests(unittest.TestCase):
         self.assertEqual(len(nodes), 15)
         labels = [node.data['label'] for node in nodes]
         words = [node.data['word'] for node in nodes]
-        self.assertTrue(all([a == b for (a,b) in zip(labels, 
-                                                     PREORDER_LABELS)]))
-        self.assertTrue(all([a == b for (a,b) in zip(words,
-                                                     PREORDER_WORDS)]))
+        self.assertTrue(labels, PREORDER_LABELS)
+        self.assertTrue(words, PREORDER_WORDS)
 
     def test_boyd(self):
         nodes = [node for node in trees.preorder(self.tree_boyd)]
         labels = [node.data['label'] for node in nodes]
         words = [node.data['word'] for node in nodes]
-        self.assertTrue(all([a == b for (a,b) in zip(labels, 
-                                                     PREORDER_LABELS_BOYD)]))
-        self.assertTrue(all([a == b for (a,b) in zip(words,
-                                                     PREORDER_WORDS_BOYD)]))
+        self.assertTrue(labels, PREORDER_LABELS_BOYD)
+        self.assertTrue(words, PREORDER_WORDS_BOYD)
 
     def test_raising(self):
         nodes = [node for node in trees.preorder(self.tree_raising)]
         labels = [node.data['label'] for node in nodes]
         words = [node.data['word'] for node in nodes]
-        self.assertTrue(all([a == b for (a,b) in zip(labels, 
-                                                     PREORDER_LABELS_RAISING)]))
-        self.assertTrue(all([a == b for (a,b) in zip(words,
-                                                     PREORDER_WORDS_RAISING)]))
+        self.assertTrue(labels, PREORDER_LABELS_RAISING)
+        self.assertTrue(words, PREORDER_WORDS_RAISING)
 
     def tearDown(self):
         os.remove(self.export_tempfile_name)
