@@ -5,7 +5,7 @@ treetools: Tools for transforming treebank trees.
 Author: Wolfgang Maier <maierw@hhu.de>
 """
 import argparse
-from trees import transform, analyze, grammar
+from trees import transform, treeanalysis, grammar
 
 def main():
     """Parse command line arguments and run appropriate action.
@@ -17,7 +17,7 @@ def main():
     subparsers = parser.add_subparsers(help='Subcommands',
                                        dest='subparser_name')
     transform.add_parser(subparsers)
-    analyze.add_parser(subparsers)
+    treeanalysis.add_parser(subparsers)
     grammar.add_parser(subparsers)
     args = parser.parse_args()
     args.func(args)

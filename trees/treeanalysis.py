@@ -117,7 +117,7 @@ def gap_degree(tree):
 def add_parser(subparsers):
     """Add an argument parser to the subparsers of treetools.py.
     """
-    parser = subparsers.add_parser('analyze',
+    parser = subparsers.add_parser('treeanalysis',
                                    usage='%(prog)s src task [options] ',
                                    formatter_class=argparse.
                                    RawDescriptionHelpFormatter,

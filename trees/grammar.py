@@ -9,7 +9,8 @@ from __future__ import print_function
 import argparse
 import sys
 from collections import Counter
-from . import analyze, trees, treeinput, misc, grammaroutput, grammaranalysis
+from . import trees, treeinput, treeanalysis
+from . import misc, grammaroutput, grammaranalysis
 
 
 # PMCFG format constants
@@ -266,7 +267,7 @@ def extract(tree, grammar, lexicon):
             lin = tuple(lin)
             # vertical context for markovization (with fan-outs)
             vert = tuple(["%s%d" % (dom.data['label'],
-                                    analyze.gap_degree_node(dom) + 1)
+                                    treeanalysis.gap_degree_node(dom) + 1)
                           for dom in trees.dominance(subtree)])
             if not func in grammar:
                 grammar[func] = {}
