@@ -84,25 +84,7 @@ class ContTreeTests(unittest.TestCase):
         os.remove(self.brackets_tempfile_name)
 
 
-class DiscontTreeTests(unittest.TestCase):
-
-    def setUp(self):
-        with tempfile.NamedTemporaryFile(delete=False) as temp:
-            self.export_tempfile_name = temp.name
-            temp.write(EXPORT_SAMPLE)
-            temp.flush()
-        params = {}
-        exportreader = treeinput.export(self.export_tempfile_name, 
-                                        'utf8', **params)
-        self.tree = exportreader.next()
-        self.tree_root_attach = copy.deepcopy(self.tree)
-        self.tree_root_attach = transform.root_attach(self.tree_root_attach)
-        self.tree_negra_mark_heads = copy.deepcopy(self.tree_root_attach)
-        self.tree_negra_mark_heads = transform.negra_mark_heads(self.tree_negra_mark_heads)
-        self.tree_boyd = copy.deepcopy(self.tree_negra_mark_heads)
-        self.tree_boyd = transform.boyd_split(self.tree_boyd)
-        self.tree_raising = copy.deepcopy(self.tree_boyd)
-        self.tree_raising = transform.raising(self.tree_raising)
+class DiscontTreeTests(object):
 
     def test_nodes(self):
         terms = trees.terminals(self.tree)
@@ -138,6 +120,27 @@ class DiscontTreeTests(unittest.TestCase):
         words = [node.data['word'] for node in nodes]
         self.assertTrue(labels, PREORDER_LABELS_RAISING)
         self.assertTrue(words, PREORDER_WORDS_RAISING)
+
+
+class ExportFormatTests(unittest.TestCase, DiscontTreeTests):
+
+    def setUp(self):
+        with tempfile.NamedTemporaryFile(delete=False) as temp:
+            self.export_tempfile_name = temp.name
+            temp.write(EXPORT_SAMPLE)
+            temp.flush()
+        params = {}
+        exportreader = treeinput.export(self.export_tempfile_name, 
+                                        'utf8', **params)
+        self.tree = exportreader.next()
+        self.tree_root_attach = copy.deepcopy(self.tree)
+        self.tree_root_attach = transform.root_attach(self.tree_root_attach)
+        self.tree_negra_mark_heads = copy.deepcopy(self.tree_root_attach)
+        self.tree_negra_mark_heads = transform.negra_mark_heads(self.tree_negra_mark_heads)
+        self.tree_boyd = copy.deepcopy(self.tree_negra_mark_heads)
+        self.tree_boyd = transform.boyd_split(self.tree_boyd)
+        self.tree_raising = copy.deepcopy(self.tree_boyd)
+        self.tree_raising = transform.raising(self.tree_raising)
 
     def tearDown(self):
         os.remove(self.export_tempfile_name)
