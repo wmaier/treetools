@@ -1,15 +1,15 @@
 """
 treetools: Tools for transforming treebank trees.
 
-Unit tests
+Unit tests (pytest)
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
-import unittest
+import pytest
 import tempfile
 import os
 import sys
-import copy
+from copy import deepcopy
 from StringIO import StringIO
 from . import trees, treeinput, transform
 
@@ -84,131 +84,191 @@ TIGERXML_SAMPLE = """<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 </body>
 </corpus>
 """
-WORDS = [ u'Who', u'did', u'Fritz',  u'tell', u'Hans', 
-          u'that', u'Manfred', u'likes', u'?']
-PREORDER_LABELS = [u'VROOT', u'S', u'VP', u'SBAR', u'VP', u'WP',
+WORDS = [u'Who', u'did', u'Fritz', u'tell', u'Hans',
+         u'that', u'Manfred', u'likes', u'?']
+PREORDER_LABELS_DISCONT = [u'VROOT', u'S', u'VP', u'SBAR', u'VP', u'WP',
                    u'VB', u'IN', u'NP', u'NNP', u'VB', u'NNP',
                    u'VB', u'NNP', u'?']
-PREORDER_LABELS_BOYD = [u'VROOT', u'S', u'VP', u'SBAR', u'VP', 
-                        u'WP', u'VB', u'NNP', u'VP', u'VB', 
-                        u'NNP', u'SBAR', u'IN', u'NP', u'NNP', 
-                        u'VP', u'VB', u'?'] 
-PREORDER_LABELS_RAISING = [u'VROOT', u'S', u'WP', u'VB', u'NNP', 
-                           u'VP', u'VB', u'NNP', u'SBAR', u'IN', 
+PREORDER_RIGHT_SIBLINGS_DISCONT = [None, u'?', u'VB', u'VB', u'IN', u'VB', 
+                           None, u'NP', None, None, u'NNP', None, 
+                           u'NNP', None, None]
+PREORDER_LABELS_BOYD = [u'VROOT', u'S', u'VP', u'SBAR', u'VP',
+                        u'WP', u'VB', u'NNP', u'VP', u'VB',
+                        u'NNP', u'SBAR', u'IN', u'NP', u'NNP',
+                        u'VP', u'VB', u'?']
+PREORDER_LABELS_CONT = [u'VROOT', u'S', u'WP', u'VB', u'NNP',
+                           u'VP', u'VB', u'NNP', u'SBAR', u'IN',
                            u'NP', u'NNP', u'VP', u'VB', u'?']
+PREORDER_RIGHT_SIBLINGS_CONT = [None, u'?', u'VB', u'NNP', u'VP', 
+                                None, u'NNP', u'SBAR', None, u'NP', 
+                                u'VP', None, None, None, None]
 
 
-class ContTreeTests(unittest.TestCase):
-
-    def setUp(self):
-        with tempfile.NamedTemporaryFile(delete=False) as temp:
-            self.brackets_tempfile_name = temp.name
-            temp.write(BRACKETS_SAMPLE)
-            temp.flush()
-        params = {}
-        bracketsreader = treeinput.brackets(self.brackets_tempfile_name, 
-                                        'utf8', **params)
-        self.tree = bracketsreader.next()
-        
-    def test_nodes(self):
-        terms = trees.terminals(self.tree)
-        self.assertEqual(len(terms), 9)
-        nodes = [node for node in trees.preorder(self.tree)]
-        self.assertEqual(len(nodes), 15)
-        labels = [node.data['label'] for node in nodes]
-        words = [node.data['word'] for node in terms]
-        self.assertEqual(labels, PREORDER_LABELS_RAISING)
-        self.assertEqual(words, WORDS)
-
-    def tearDown(self):
-        os.remove(self.brackets_tempfile_name)
+def test_cont_general(cont_tree):
+    """General tests concerning continuous trees.
+    """
+    tree = cont_tree
+    terms = trees.terminals(tree)
+    uterms = trees.unordered_terminals(tree)
+    nodes = [node for node in trees.preorder(tree)]
+    labels = [node.data['label'] for node in nodes]
+    words = [node.data['word'] for node in terms]
+    uwords = [node.data['word'] for node in uterms]
+    assert len(terms) == 9
+    assert len(uterms) == 9
+    assert len(nodes) == 15
+    assert labels == PREORDER_LABELS_CONT
+    assert words == WORDS
+    assert set(uwords) == set(WORDS)
 
 
-class DiscontTreeTests(object):
-
-    def test_nodes(self):
-        terms = trees.terminals(self.tree)
-        nodes = [node for node in trees.preorder(self.tree)]
-        labels = [node.data['label'] for node in nodes]
-        words = [node.data['word'] for node in terms]
-        self.assertEqual(len(terms), 9)
-        self.assertEqual(len(nodes), 15)
-        self.assertEqual(labels, PREORDER_LABELS)
-        self.assertEqual(words, WORDS)
-
-    def test_root_attach(self):
-        terms = trees.terminals(self.tree_root_attach)
-        nodes = [node for node in trees.preorder(self.tree_root_attach)]
-        labels = [node.data['label'] for node in nodes]
-        words = [node.data['word'] for node in terms]
-        self.assertEqual(labels, PREORDER_LABELS)
-        self.assertEqual(words, WORDS)
-        self.assertRaises(ValueError, transform.boyd_split, self.tree_root_attach)
-
-    def test_boyd(self):
-        terms = trees.terminals(self.tree_boyd)
-        nodes = [node for node in trees.preorder(self.tree_boyd)]
-        labels = [node.data['label'] for node in nodes]
-        words = [node.data['word'] for node in terms]
-        self.assertEqual(labels, PREORDER_LABELS_BOYD)
-        self.assertEqual(words, WORDS)
-
-    def test_raising(self):
-        terms = trees.terminals(self.tree_raising)
-        nodes = [node for node in trees.preorder(self.tree_raising)]
-        labels = [node.data['label'] for node in nodes]
-        words = [node.data['word'] for node in terms]
-        self.assertEqual(labels, PREORDER_LABELS_RAISING)
-        self.assertEqual(words, WORDS)
+def test_discont_general(discont_tree):
+    """General tests concerning discontinuous trees.
+    """
+    tree = discont_tree
+    nodes = [node for node in trees.preorder(tree)]
+    labels = [node.data['label'] for node in nodes]
+    terms = trees.terminals(tree)
+    words = [node.data['word'] for node in terms]
+    uterms = trees.unordered_terminals(tree)
+    uwords = [node.data['word'] for node in uterms]
+    assert len(terms) == 9
+    assert len(uterms) == 9
+    assert len(nodes) == 15
+    assert labels == PREORDER_LABELS_DISCONT
+    assert words == WORDS
+    assert set(uwords) == set(WORDS)
 
 
-class ExportFormatTests(unittest.TestCase, DiscontTreeTests):
-
-    def setUp(self):
-        with tempfile.NamedTemporaryFile(delete=False) as temp:
-            self.export_tempfile_name = temp.name
-            temp.write(EXPORT_SAMPLE)
-            temp.flush()
-        params = {}
-        exportreader = treeinput.export(self.export_tempfile_name, 
-                                        'utf8', **params)
-        self.tree = exportreader.next()
-        self.tree_root_attach = copy.deepcopy(self.tree)
-        self.tree_root_attach = transform.root_attach(self.tree_root_attach)
-        self.tree_negra_mark_heads = copy.deepcopy(self.tree_root_attach)
-        self.tree_negra_mark_heads = transform.negra_mark_heads(self.tree_negra_mark_heads)
-        self.tree_boyd = copy.deepcopy(self.tree_negra_mark_heads)
-        self.tree_boyd = transform.boyd_split(self.tree_boyd)
-        self.tree_raising = copy.deepcopy(self.tree_boyd)
-        self.tree_raising = transform.raising(self.tree_raising)
-
-    def tearDown(self):
-        os.remove(self.export_tempfile_name)
+def test_lca(discont_tree, cont_tree):
+    """Least common ancestor.
+    """
+    tree = discont_tree
+    ctree = cont_tree
+    terms = trees.terminals(tree)
+    cterms = trees.terminals(ctree)
+    root_children = trees.children(tree)
+    croot_children = trees.children(ctree)
+    lca = trees.lca(terms[0], terms[1])
+    clca = trees.lca(cterms[0], cterms[1])
+    assert terms[0].data['word'] == 'Who'
+    assert cterms[0].data['word'] == 'Who'
+    assert terms[1].data['word'] == 'did'
+    assert cterms[1].data['word'] == 'did'
+    assert root_children[0].data['label'] == 'S'
+    assert croot_children[0].data['label'] == 'S'
+    assert root_children[0] == lca
+    assert croot_children[0] == clca
 
 
-class TigerxmlFormatTests(unittest.TestCase, DiscontTreeTests):
-
-    def setUp(self):
-        with tempfile.NamedTemporaryFile(delete=False) as temp:
-            self.tigerxml_tempfile_name = temp.name
-            temp.write(TIGERXML_SAMPLE)
-            temp.flush()
-        params = {}
-        tigerxmlreader = treeinput.tigerxml(self.tigerxml_tempfile_name, 
-                                        'utf8', **params)
-        self.tree = tigerxmlreader.next()
-        self.tree_root_attach = copy.deepcopy(self.tree)
-        self.tree_root_attach = transform.root_attach(self.tree_root_attach)
-        self.tree_negra_mark_heads = copy.deepcopy(self.tree_root_attach)
-        self.tree_negra_mark_heads = transform.negra_mark_heads(self.tree_negra_mark_heads)
-        self.tree_boyd = copy.deepcopy(self.tree_negra_mark_heads)
-        self.tree_boyd = transform.boyd_split(self.tree_boyd)
-        self.tree_raising = copy.deepcopy(self.tree_boyd)
-        self.tree_raising = transform.raising(self.tree_raising)
-
-    def tearDown(self):
-        os.remove(self.tigerxml_tempfile_name)
+def test_right_sibling(discont_tree, cont_tree):
+    tree = discont_tree
+    rs = []
+    for node in trees.preorder(discont_tree):
+        sibling = trees.right_sibling(node)
+        if sibling is None:
+            rs.append(sibling)
+        else:
+            rs.append(sibling.data['label'])
+    ctree = cont_tree
+    crs = []
+    for node in trees.preorder(cont_tree):
+        sibling = trees.right_sibling(node)
+        if sibling is None:
+            crs.append(sibling)
+        else:
+            crs.append(sibling.data['label'])
+    assert rs == PREORDER_RIGHT_SIBLINGS_DISCONT
+    assert crs == PREORDER_RIGHT_SIBLINGS_CONT
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_root_attach(discont_tree):
+    """See transform.root_attach
+    """
+    tree = discont_tree
+    tree = transform.root_attach(tree)
+    nodes = [node for node in trees.preorder(tree)]
+    labels = [node.data['label'] for node in nodes]
+    terms = trees.terminals(tree)
+    words = [node.data['word'] for node in terms]
+    uterms = trees.unordered_terminals(tree)
+    uwords = [node.data['word'] for node in uterms]
+    assert labels == PREORDER_LABELS_DISCONT
+    assert words == WORDS
+    assert set(uwords) == set(WORDS)
+    with pytest.raises(ValueError):
+        transform.boyd_split(tree)
+
+
+def test_boyd(discont_tree):
+    """See transform.boyd_split
+    """
+    tree = discont_tree
+    tree = transform.root_attach(tree)
+    tree = transform.negra_mark_heads(tree)
+    tree = transform.boyd_split(tree)
+    nodes = [node for node in trees.preorder(tree)]
+    labels = [node.data['label'] for node in nodes]
+    terms = trees.terminals(tree)
+    words = [node.data['word'] for node in terms]
+    uterms = trees.unordered_terminals(tree)
+    uwords = [node.data['word'] for node in uterms]
+    assert labels == PREORDER_LABELS_BOYD
+    assert words == WORDS
+    assert set(uwords) == set(WORDS)
+
+
+def test_raising(discont_tree):
+    """See transform.raising
+    """
+    tree = discont_tree
+    tree = transform.root_attach(tree)
+    tree = transform.negra_mark_heads(tree)
+    tree = transform.boyd_split(tree)
+    tree = transform.raising(tree)
+    nodes = [node for node in trees.preorder(tree)]
+    labels = [node.data['label'] for node in nodes]
+    terms = trees.terminals(tree)
+    words = [node.data['word'] for node in terms]
+    uterms = trees.unordered_terminals(tree)
+    uwords = [node.data['word'] for node in uterms]
+    assert labels == PREORDER_LABELS_CONT
+    assert words == WORDS
+    assert set(uwords) == set(WORDS)
+
+
+@pytest.fixture(scope='function',
+                params=[(treeinput.tigerxml, TIGERXML_SAMPLE),
+                        (treeinput.export, EXPORT_SAMPLE)])
+def discont_tree(request):
+    """Load discontinuous tree samples
+    """
+    tempfile_name = None
+    with tempfile.NamedTemporaryFile(delete=False) as temp:
+        tempfile_name = temp.name
+        temp.write(request.param[1])
+        temp.flush()
+    params = {'quiet' : True}
+    reader = request.param[0](tempfile_name, 'utf8', **params)
+    def fin():
+        os.remove(tempfile_name)
+    request.addfinalizer(fin)
+    return reader.next()
+
+
+@pytest.fixture(scope='function',
+                params=[(treeinput.brackets, BRACKETS_SAMPLE)])
+def cont_tree(request):
+    """Load continuous tree samples
+    """
+    tempfile_name = None
+    with tempfile.NamedTemporaryFile(delete=False) as temp:
+        tempfile_name = temp.name
+        temp.write(request.param[1])
+        temp.flush()
+    params = {'quiet' : True}
+    reader = request.param[0](tempfile_name, 'utf8', **params)
+    def fin():
+        os.remove(tempfile_name)
+    return reader.next()
+
