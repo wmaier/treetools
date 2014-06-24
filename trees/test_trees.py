@@ -89,6 +89,7 @@ WORDS = [u'Who', u'did', u'Fritz', u'tell', u'Hans', u'that', u'Manfred',
 DISCONT_LABELS_PREORDER = [u'VROOT', u'S', u'VP', u'SBAR', u'VP', u'WP',
                            u'VB', u'IN', u'NP', u'NNP', u'VB', u'NNP',
                            u'VB', u'NNP', u'?']
+DISCONT_HEADS_PREORDER = []
 DISCONT_RIGHTSIB_PREORDER = [None, u'?', u'VB', u'VB', u'IN', u'VB', 
                              None, u'NP', None, None, u'NNP', None, 
                              u'NNP', None, None]
@@ -104,6 +105,8 @@ CONT_RIGHTSIB_PREORDER = [None, u'?', u'VB', u'NNP', u'VP',
                           u'VP', None, None, None, None]
 DISCONT_BLOCKS_VP = [[1], [4,5,6,7,8]]
 CONT_BLOCKS_VP = [[4,5,6,7,8]]
+DISCONT_DOM_FIRST = [u'WP', u'VP', u'SBAR', u'VP',  u'S', u'VROOT']
+CONT_DOM_FIRST = [u'WP', u'S', u'VROOT']
 
 
 def test_cont_general(cont_tree):
@@ -201,6 +204,17 @@ def test_terminal_blocks(discont_tree, cont_tree):
                       in trees.terminal_blocks(node)]
             assert blocks == [set(block) for block in CONT_BLOCKS_VP]
             break
+
+
+def test_dominance(discont_tree, cont_tree):
+    """trees.dominance
+    """
+    dterms = trees.terminals(discont_tree)
+    ddom = [node.data['label'] for node in trees.dominance(dterms[0])]
+    cterms = trees.terminals(cont_tree)
+    cdom = [node.data['label'] for node in trees.dominance(cterms[0])]
+    assert ddom == DISCONT_DOM_FIRST
+    assert cdom == CONT_DOM_FIRST
 
 
 def test_root_attach(discont_tree):
