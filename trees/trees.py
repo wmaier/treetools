@@ -132,6 +132,8 @@ def terminal_blocks(tree):
 def right_sibling(tree):
     """Return the right sibling of this tree if it exists and None otherwise.
     """
+    if tree.parent is None:
+        return None
     siblings = children(tree.parent)
     for (index, _) in enumerate(siblings[:-1]):
         if siblings[index] == tree:

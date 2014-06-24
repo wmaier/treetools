@@ -79,10 +79,12 @@ def tigerxml(in_file, _, **params):
     """Read trees from TIGER XML. The encoding argument is ignored here.
     """
     with io.open(in_file, mode='rb') as stream:
-        print("parsing xml...", file=sys.stderr)
+        if not 'quiet' in params:
+            print("parsing xml...", file=sys.stderr)
         corpus = ET.parse(stream)
         tree_cnt = 0
-        print("reading sentences", file=sys.stderr)
+        if not 'quiet' in params:
+            print("reading sentences", file=sys.stderr)
         for s_element in corpus.getroot().find('body').findall('s'):
             tree_cnt += 1
             # take last number (assume there always is one)
@@ -97,8 +99,9 @@ def tigerxml(in_file, _, **params):
                     tree = trees.replace_parens_all(tree)
                 yield tree
             except ValueError as error:
-                print("\nskipping sentence %d: %s\n" % (tree_id, error),
-                      file=sys.stderr)
+                if not 'quiet' in params:
+                    print("\nskipping sentence %d: %s\n" % (tree_id, error),
+                          file=sys.stderr)
 
 
 def brackets_split_label(label, gf_separator, trunc_equals):
@@ -221,7 +224,8 @@ def brackets(in_file, in_encoding, **params):
                         if not 'brackets_tolerant' in params:
                             raise ValueError("expected whitespace or (, got )")
                         else:
-                            print("being tolerant", file=sys.stderr)
+                            if not 'quiet' in params:
+                                print("being tolerant", file=sys.stderr)
                             # last token was a word
                             queue[-1].data['word'] = queue[-1].data['label']
                             # queue[-1].data['label'] = queue[-2].data['label']
@@ -400,4 +404,5 @@ INPUT_OPTIONS = {'brackets_gf' : 'Brackets: Try to split grammatical ' \
                  'continuous' : 'Export/TIGERXML: number sentences by ' \
                      'counting, don\'t use #BOS',
                  'replace_parens' : 'Replace parens by LRB, RRB, etc. ',
-                 'trunc_equals' : 'trucate label at first "=" sign'}
+                 'trunc_equals' : 'trucate label at first "=" sign',
+                 'quiet' : 'no messages while reading'}
