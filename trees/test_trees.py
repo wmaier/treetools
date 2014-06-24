@@ -13,11 +13,11 @@ from copy import deepcopy
 from StringIO import StringIO
 from . import trees, treeinput, transform
 
-BRACKETS_SAMPLE = """
+SAMPLE_BRACKETS = """
 ((S(WP Who)(VB did)(NNP Fritz)(VP(VB tell)(NNP Hans)(SBAR(IN that)
 (NP(NNP Manfred))(VP(VB likes)))))(? ?))
 """
-EXPORT_SAMPLE = """
+SAMPLE_EXPORT = """
 #BOS 1
 Who			WP	--		--	501
 did			VB	--       	HD	504
@@ -35,7 +35,7 @@ likes			VB	--		HD	501
 #504			S	--		--	0
 #EOS 1
 """
-TIGERXML_SAMPLE = """<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+SAMPLE_TIGERXML = """<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <corpus>
 <body>
 <s id="1">
@@ -84,24 +84,26 @@ TIGERXML_SAMPLE = """<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 </body>
 </corpus>
 """
-WORDS = [u'Who', u'did', u'Fritz', u'tell', u'Hans',
-         u'that', u'Manfred', u'likes', u'?']
-PREORDER_LABELS_DISCONT = [u'VROOT', u'S', u'VP', u'SBAR', u'VP', u'WP',
-                   u'VB', u'IN', u'NP', u'NNP', u'VB', u'NNP',
-                   u'VB', u'NNP', u'?']
-PREORDER_RIGHT_SIBLINGS_DISCONT = [None, u'?', u'VB', u'VB', u'IN', u'VB', 
-                           None, u'NP', None, None, u'NNP', None, 
-                           u'NNP', None, None]
-PREORDER_LABELS_BOYD = [u'VROOT', u'S', u'VP', u'SBAR', u'VP',
-                        u'WP', u'VB', u'NNP', u'VP', u'VB',
-                        u'NNP', u'SBAR', u'IN', u'NP', u'NNP',
-                        u'VP', u'VB', u'?']
-PREORDER_LABELS_CONT = [u'VROOT', u'S', u'WP', u'VB', u'NNP',
-                           u'VP', u'VB', u'NNP', u'SBAR', u'IN',
-                           u'NP', u'NNP', u'VP', u'VB', u'?']
-PREORDER_RIGHT_SIBLINGS_CONT = [None, u'?', u'VB', u'NNP', u'VP', 
-                                None, u'NNP', u'SBAR', None, u'NP', 
-                                u'VP', None, None, None, None]
+WORDS = [u'Who', u'did', u'Fritz', u'tell', u'Hans', u'that', u'Manfred', 
+         u'likes', u'?']
+DISCONT_LABELS_PREORDER = [u'VROOT', u'S', u'VP', u'SBAR', u'VP', u'WP',
+                           u'VB', u'IN', u'NP', u'NNP', u'VB', u'NNP',
+                           u'VB', u'NNP', u'?']
+DISCONT_RIGHTSIB_PREORDER = [None, u'?', u'VB', u'VB', u'IN', u'VB', 
+                             None, u'NP', None, None, u'NNP', None, 
+                             u'NNP', None, None]
+DISCONT_LABELSBOYD_PREORDER = [u'VROOT', u'S', u'VP', u'SBAR', u'VP',
+                               u'WP', u'VB', u'NNP', u'VP', u'VB',
+                               u'NNP', u'SBAR', u'IN', u'NP', u'NNP',
+                               u'VP', u'VB', u'?']
+CONT_LABELS_PREORDER = [u'VROOT', u'S', u'WP', u'VB', u'NNP',
+                        u'VP', u'VB', u'NNP', u'SBAR', u'IN',
+                        u'NP', u'NNP', u'VP', u'VB', u'?']
+CONT_RIGHTSIB_PREORDER = [None, u'?', u'VB', u'NNP', u'VP', 
+                          None, u'NNP', u'SBAR', None, u'NP', 
+                          u'VP', None, None, None, None]
+DISCONT_BLOCKS_VP = [[1], [4,5,6,7,8]]
+CONT_BLOCKS_VP = [[4,5,6,7,8]]
 
 
 def test_cont_general(cont_tree):
@@ -117,7 +119,7 @@ def test_cont_general(cont_tree):
     assert len(terms) == 9
     assert len(uterms) == 9
     assert len(nodes) == 15
-    assert labels == PREORDER_LABELS_CONT
+    assert labels == CONT_LABELS_PREORDER
     assert words == WORDS
     assert set(uwords) == set(WORDS)
 
@@ -135,13 +137,13 @@ def test_discont_general(discont_tree):
     assert len(terms) == 9
     assert len(uterms) == 9
     assert len(nodes) == 15
-    assert labels == PREORDER_LABELS_DISCONT
+    assert labels == DISCONT_LABELS_PREORDER
     assert words == WORDS
     assert set(uwords) == set(WORDS)
 
 
 def test_lca(discont_tree, cont_tree):
-    """Least common ancestor.
+    """trees.lca
     """
     tree = discont_tree
     ctree = cont_tree
@@ -162,6 +164,8 @@ def test_lca(discont_tree, cont_tree):
 
 
 def test_right_sibling(discont_tree, cont_tree):
+    """trees.right_sibling
+    """
     tree = discont_tree
     rs = []
     for node in trees.preorder(discont_tree):
@@ -178,8 +182,25 @@ def test_right_sibling(discont_tree, cont_tree):
             crs.append(sibling)
         else:
             crs.append(sibling.data['label'])
-    assert rs == PREORDER_RIGHT_SIBLINGS_DISCONT
-    assert crs == PREORDER_RIGHT_SIBLINGS_CONT
+    assert rs == DISCONT_RIGHTSIB_PREORDER
+    assert crs == CONT_RIGHTSIB_PREORDER
+
+
+def test_terminal_blocks(discont_tree, cont_tree):
+    """trees.terminal_blocks
+    """
+    for node in trees.preorder(discont_tree):
+        if node.data['label'] == 'VP':
+            blocks = [set([term.data['num'] for term in block]) for block 
+                      in trees.terminal_blocks(node)]
+            assert blocks == [set(block) for block in DISCONT_BLOCKS_VP]
+            break
+    for node in trees.preorder(cont_tree):
+        if node.data['label'] == 'VP':
+            blocks = [set([term.data['num'] for term in block]) for block 
+                      in trees.terminal_blocks(node)]
+            assert blocks == [set(block) for block in CONT_BLOCKS_VP]
+            break
 
 
 def test_root_attach(discont_tree):
@@ -193,7 +214,7 @@ def test_root_attach(discont_tree):
     words = [node.data['word'] for node in terms]
     uterms = trees.unordered_terminals(tree)
     uwords = [node.data['word'] for node in uterms]
-    assert labels == PREORDER_LABELS_DISCONT
+    assert labels == DISCONT_LABELS_PREORDER
     assert words == WORDS
     assert set(uwords) == set(WORDS)
     with pytest.raises(ValueError):
@@ -213,7 +234,7 @@ def test_boyd(discont_tree):
     words = [node.data['word'] for node in terms]
     uterms = trees.unordered_terminals(tree)
     uwords = [node.data['word'] for node in uterms]
-    assert labels == PREORDER_LABELS_BOYD
+    assert labels == DISCONT_LABELSBOYD_PREORDER
     assert words == WORDS
     assert set(uwords) == set(WORDS)
 
@@ -232,14 +253,14 @@ def test_raising(discont_tree):
     words = [node.data['word'] for node in terms]
     uterms = trees.unordered_terminals(tree)
     uwords = [node.data['word'] for node in uterms]
-    assert labels == PREORDER_LABELS_CONT
+    assert labels == CONT_LABELS_PREORDER
     assert words == WORDS
     assert set(uwords) == set(WORDS)
 
 
 @pytest.fixture(scope='function',
-                params=[(treeinput.tigerxml, TIGERXML_SAMPLE),
-                        (treeinput.export, EXPORT_SAMPLE)])
+                params=[(treeinput.tigerxml, SAMPLE_TIGERXML),
+                        (treeinput.export, SAMPLE_EXPORT)])
 def discont_tree(request):
     """Load discontinuous tree samples
     """
@@ -257,7 +278,7 @@ def discont_tree(request):
 
 
 @pytest.fixture(scope='function',
-                params=[(treeinput.brackets, BRACKETS_SAMPLE)])
+                params=[(treeinput.brackets, SAMPLE_BRACKETS)])
 def cont_tree(request):
     """Load continuous tree samples
     """
