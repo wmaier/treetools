@@ -13,6 +13,7 @@ import re
 import string
 import sys
 import xml.etree.ElementTree as ET
+from collections import namedtuple
 from StringIO import StringIO
 from . import trees, misc
 
@@ -21,14 +22,14 @@ BRACKETS = {"(" : "LRB", ")" : "RRB"}
 DIGITS = re.compile(r'\d+')
 
 
-def tigerxml_build_tree(s):
+def tigerxml_build_tree(s_element, **params):
     """Build a tree from a <s> element in TIGER XML. If there is
     no unique VROOT, add one.
     """
     idref_to_tree = dict()
     # handle terminals
     term_cnt = 1
-    for node in s.find('graph').find('terminals').findall('t'):
+    for node in s_element.find('graph').find('terminals').findall('t'):
         subtree = trees.Tree(trees.make_node_data())
         subtree.data['word'] = node.get('word')
         subtree.data['label'] = node.get('pos')
@@ -39,7 +40,7 @@ def tigerxml_build_tree(s):
         term_cnt += 1
         idref_to_tree[node.get('id')] = subtree
     # handle non-terminals
-    for node in s.find('graph').find('nonterminals').findall('nt'):
+    for node in s_element.find('graph').find('nonterminals').findall('nt'):
         subtree = trees.Tree(trees.make_node_data())
         subtree.data['label'] = node.get('cat')
         subtree.data['morph'] = trees.DEFAULT_MORPH
@@ -47,7 +48,7 @@ def tigerxml_build_tree(s):
         subtree.data['lemma'] = trees.DEFAULT_LEMMA
         idref_to_tree[node.get('id')] = subtree
     # set edge labels and link the tree
-    for node in s.find('graph').find('nonterminals').findall('nt'):
+    for node in s_element.find('graph').find('nonterminals').findall('nt'):
         subtree = idref_to_tree[node.get('id')]
         for edge in node.findall('edge'):
             child = idref_to_tree[edge.get('idref')]
@@ -72,6 +73,15 @@ def tigerxml_build_tree(s):
         top.data['edge'] = trees.DEFAULT_EDGE
         top.data['lemma'] = trees.DEFAULT_LEMMA
         root.parent = top
+    # split gf as postprocessing step if applicable
+    if 'gf_split' in params:
+        for subtree in trees.preorder(top):
+            label_parts = parse_label(subtree.data['label'], \
+                                      gf_separator=gf_separator)
+            subtree.data['label'] = label_parts.label \
+                                    + label_parts.coindex \
+                                    + label_parts.headmarker
+            subtree.data['edge'] = label_parts.gf
     return top
 
 
@@ -93,7 +103,7 @@ def tigerxml(in_file, _, **params):
             tree_id = tree_cnt if 'continuous' in params \
                 else int(xml_id)
             try:
-                tree = tigerxml_build_tree(s_element)
+                tree = tigerxml_build_tree(s_element, **params)
                 tree.data['sid'] = tree_id
                 if 'replace_parens' in params:
                     tree = trees.replace_parens_all(tree)
@@ -104,36 +114,56 @@ def tigerxml(in_file, _, **params):
                           file=sys.stderr)
 
 
-def brackets_split_label(label, gf_separator, trunc_equals):
-    """Take a label, try to split it at first occurrence of
-    gf separator, return tuple with label and gf. Numbers at the
-    end of the label (with the default separator character "-"
-    prepended) are taken to be co-indexation marks and re-glued
-    to the label, "'" at the end of the label is taken to be
-    head marking and also kept. If no separator present (or only
-    co-indexation), default edge is returned.
+def parse_label(label, **params):
+    """Parse label assuming following format (no spaces):
+
+    LABEL (GF_SEP GF)? (COINDEX_SEP COINDEX)? HEADMARKER?
+
+    LABEL: \S+, GF_SEP: [#\-], GF: [^\-\=#\s]+
+    COINDEX_SEP: [\=\-] (PTB-style), CONINDEX: \d+
+
+    Single parts are returned as namedtuple. Non-presented parts
+    are returned with default values from tree.py (or empty). 
     """
-    edge = trees.DEFAULT_EDGE
-    if trunc_equals:
-        equals_pos = label.find("=")
-        if equals_pos > -1:
-            label = label[:equals_pos]
+    gf_separator = trees.DEFAULT_GF_SEPARATOR
+    if gf_separator in params:
+        gf_separator = params['gf_separator']
+    # start from the back
+    # head marker
     headmarker = ""
     if label[-1] == trees.DEFAULT_HEAD_MARKER:
         headmarker = label[-1]
         label = label[:-1]
+    # coindex or gapping sep (PTB)
     coindex = ""
-    coindex_sep = label.rfind(trees.DEFAULT_GF_SEPARATOR)
-    if coindex_sep > -1:
-        if label[coindex_sep + 1:].isdigit():
-            coindex = "%s%s" % (trees.DEFAULT_GF_SEPARATOR,
-                                label[coindex_sep + 1:])
-            label = label[:coindex_sep]
-    sep = label.find(gf_separator)
-    if sep > 0:
-        edge = label[sep + 1:]
-        label = label[:sep]
-    return ("%s%s%s" % (label, coindex, headmarker)), edge
+    gapindex = ""
+    coindex_sep_pos = None
+    gapping_sep_pos = None
+    for i, char in reversed(list(enumerate(label))):
+        if char == trees.DEFAULT_COINDEX_SEPARATOR and coindex_sep_pos == None:
+            coindex_sep_pos = i
+        if char == trees.DEFAULT_GAPPING_SEPARATOR and gapping_sep_pos == None:
+            gapping_sep_pos = i
+    if coindex_sep_pos is not None and label[coindex_sep_pos + 1:].isdigit():
+        coindex = label[coindex_sep_pos + 1:]
+        label = label[:coindex_sep_pos]
+    if gapping_sep_pos is not None and label[gapping_sep_pos + 1:].isdigit():
+        gapindex = label[gapindex_sep_pos + 1:]
+        label = label[:gapindex_sep_pos]
+    if len(label) == 0:
+        raise ValueError('label too short?')
+    # gf
+    gf = trees.DEFAULT_EDGE
+    gf_sep_pos = None
+    for i, char in reversed(list(enumerate(label))):
+        if char == gf_separator:
+            gf_sep_pos = i
+    if gf_sep_pos > 1:
+        gf = label[gf_sep_pos + 1:]
+        label = label[:gf_sep_pos]
+    is_trace = label[0] == '*' and label[-1] == '*'
+    Label = namedtuple('Label', 'label gf coindex headmarker')
+    return Label(label, gf, coindex, headmarker, is_trace)
 
 
 def bracket_lexer(stream):
@@ -188,9 +218,8 @@ def brackets(in_file, in_encoding, **params):
     """
     in_file = misc.gunzip(in_file)
     gf_separator = trees.DEFAULT_GF_SEPARATOR
-    if 'brackets_gf_separator' in params:
-        gf_separator = params['brackets_gf_separator']
-    trunc_equals = 'trunc_equals' in params
+    if 'gf_separator' in params:
+        gf_separator = params['gf_separator']
     queue = []
     state = 0
     level = 0
@@ -271,10 +300,13 @@ def brackets(in_file, in_encoding, **params):
                     pass
                 elif state in [1, 9]:
                     # phrase label, 9 when root label, 1 otherwise
-                    if 'brackets_gf' in params:
-                        label, edge = brackets_split_label(lextoken,
-                                                           gf_separator,
-                                                           trunc_equals)
+                    if 'gf_split' in params:
+                        label_parts = parse_label(lextoken, 
+                                                  gf_separator=gf_separator)
+                        label = label_parts.label \
+                                + label_parts.coindex \
+                                + label_parts.headmarker
+                        edge = label_parts.gf
                     else:
                         label = lextoken
                         edge = trees.DEFAULT_EDGE
@@ -322,6 +354,9 @@ def export_build_tree(num, node_by_num, children_by_num):
 
 def export_parse_line(line, **params):
     """ Parse a single export format line, i.e., one node."""
+    gf_separator = trees.DEFAULT_GF_SEPARATOR
+    if 'gf_separator' in params:
+        gf_separator = params['gf_separator']
     fields = line.split()
     # if it is export 3, insert dummy lemma
     if fields[4].isdigit():
@@ -334,10 +369,11 @@ def export_parse_line(line, **params):
     if not (500 <= fields['parent_num'] < 1000 or fields['parent_num'] == 0):
         raise ValueError("parent field must be 0 or between 500 and 999")
     # options?
-    if 'trunc_equals' in params:
-        equals_pos = fields['label'].find("=")
-        if equals_pos > -1:
-            fields['label'] = fields['label'][:equals_pos]
+    if 'gf_split' in params:
+        label_parts = parse_label(fields['label'], gf_separator=gf_separator)
+        fields['label'] = label_parts.label + label_parts.coindex \
+                          + label_parts.headmarker
+        fields['edge'] = label_parts.gf
     return fields
 
 
@@ -394,15 +430,15 @@ def export(in_file, in_encoding, **params):
                     in_sentence = False
                     sentence = []
 
+
 INPUT_FORMATS = [export, brackets, tigerxml]
-INPUT_OPTIONS = {'brackets_gf' : 'Brackets: Try to split grammatical ' \
+INPUT_OPTIONS = {'gf_split' : 'Brackets: Try to split grammatical ' \
                      'functions from label at last occurrence of gf separator',
-                 'brackets_gf_separator' : 'Brackets: Separator to use for ' \
+                 'gf_separator' : 'Brackets: Separator to use for ' \
                      ' gf option (default %s)' % trees.DEFAULT_GF_SEPARATOR,
                  'brackets_tolerant' : 'Brackets: Allow empty phrase ' \
                      'labels aside from root',
                  'continuous' : 'Export/TIGERXML: number sentences by ' \
                      'counting, don\'t use #BOS',
                  'replace_parens' : 'Replace parens by LRB, RRB, etc. ',
-                 'trunc_equals' : 'trucate label at first "=" sign',
                  'quiet' : 'no messages while reading'}

@@ -12,6 +12,7 @@ from copy import deepcopy
 
 DEFAULT_GF_SEPARATOR = u"-"
 DEFAULT_COINDEX_SEPARATOR = u"-"
+DEFAULT_GAPPING_SEPARATOR = u"="
 DEFAULT_LEMMA = u"--"
 DEFAULT_EDGE = u"--"
 DEFAULT_MORPH = u"--"
