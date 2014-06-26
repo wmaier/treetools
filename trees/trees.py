@@ -8,17 +8,30 @@ Author: Wolfgang Maier <maierw@hhu.de>
 from __future__ import print_function
 import itertools
 from copy import deepcopy
+from collections import namedtuple
 
 
+# separators in labels
 DEFAULT_GF_SEPARATOR = u"-"
 DEFAULT_COINDEX_SEPARATOR = u"-"
 DEFAULT_GAPPING_SEPARATOR = u"="
-DEFAULT_LEMMA = u"--"
-DEFAULT_EDGE = u"--"
-DEFAULT_MORPH = u"--"
+# brackets related stuff
+# ... allowed as phrase brackets
+PHRASE_BRACKETS = ["(", ")"]
+# ... all kinds of brackets
+BRACKETS = {"(" : "LRB", ")" : "RRB",
+            "[" : "LSB", "]" : "RSB",
+            "{" : "LCB", "}" : "RCB"}
+# head marker
 DEFAULT_HEAD_MARKER = u"'"
+# fields and default values
 NUMBER_OF_FIELDS = 6
 FIELDS = ['word', 'lemma', 'label', 'morph', 'edge', 'parent_num']
+DEFAULT_WORD = u""
+DEFAULT_LEMMA = u"--"
+DEFAULT_LABEL = u"--"
+DEFAULT_MORPH = u"--"
+DEFAULT_EDGE = u"--"
 
 
 class Tree(object):
@@ -173,45 +186,81 @@ def dominance(tree):
         yield parent
 
 
-def replace_parens(tree):
-    """Replace bracket characters in node data before bracketing output.
+def parse_label(label, **params):
+    """Generic parsing of treebank label assuming following 
+    format (no spaces):
+
+    LABEL (GF_SEP GF)? ((COINDEX_SEP COINDEX)|(GAPINDEX_SEP GAPINDEX))? 
+    HEADMARKER?
+
+    LABEL: \S+, GF_SEP: [#\-], GF: [^\-\=#\s]+
+    COINDEX_SEP: \-, GAPINDEX_SEP: \=, CO/GAPINDEX: \d+
+
+    Single parts are returned as namedtuple. Non-presented parts
+    are returned with default values from tree.py (or empty). 
     """
-    for arg in ['word', 'lemma', 'label', 'edge', 'morph']:
-        if not tree.data[arg] is None:
-            tree.data[arg] = tree.data[arg].replace("(", "LRB")
-            tree.data[arg] = tree.data[arg].replace(")", "RRB")
-            tree.data[arg] = tree.data[arg].replace("[", "LSB")
-            tree.data[arg] = tree.data[arg].replace("]", "RSB")
-            tree.data[arg] = tree.data[arg].replace("{", "LCB")
-            tree.data[arg] = tree.data[arg].replace("}", "RCB")
-    return tree
-
-
-def replace_parens_all(tree):
-    """Apply replace_parens() to all children of the tree.
-    """
-    for subtree in preorder(tree):
-        replace_parens(subtree)
-    return tree
-
-
-def label_strip_fanout(label):
-    """Assume the d+$ in a given label to be fanout and return
-    the stripped version of the label.
-    """
-    while label[-1].isdigit():
+    gf_separator = trees.DEFAULT_GF_SEPARATOR
+    if gf_separator in params:
+        gf_separator = params['gf_separator']
+    # start from the back
+    # head marker
+    headmarker = ""
+    if label[-1] == trees.DEFAULT_HEAD_MARKER:
+        headmarker = label[-1]
         label = label[:-1]
-    return label
+    # coindex or gapping sep (PTB)
+    coindex = ""
+    gapindex = ""
+    coindex_sep_pos = None
+    gapping_sep_pos = None
+    for i, char in reversed(list(enumerate(label))):
+        if char == trees.DEFAULT_COINDEX_SEPARATOR and coindex_sep_pos == None:
+            coindex_sep_pos = i
+        if char == trees.DEFAULT_GAPPING_SEPARATOR and gapping_sep_pos == None:
+            gapping_sep_pos = i
+    if coindex_sep_pos is not None and label[coindex_sep_pos + 1:].isdigit():
+        coindex = label[coindex_sep_pos + 1:]
+        label = label[:coindex_sep_pos]
+    if gapping_sep_pos is not None and label[gapping_sep_pos + 1:].isdigit():
+        gapindex = label[gapindex_sep_pos + 1:]
+        label = label[:gapindex_sep_pos]
+    if len(label) == 0:
+        raise ValueError('label too short?')
+    # gf
+    gf = trees.DEFAULT_EDGE
+    gf_sep_pos = None
+    for i, char in reversed(list(enumerate(label))):
+        if char == gf_separator:
+            gf_sep_pos = i
+    if gf_sep_pos > 1:
+        gf = label[gf_sep_pos + 1:]
+        label = label[:gf_sep_pos]
+    is_trace = label[0] == '*' and label[-1] == '*'
+    Label = namedtuple('Label', 'label gf gf_separator coindex gapindex ' \
+                       'headmarker is_trace')
+    return Label(label, gf, gf_separator, coindex, gapindex, headmarker, is_trace)
 
 
-def ptb_strip_coindex(label):
-    """Return label with co-index stripped, original label
-    if no co-index present.
+def format_label(label):
+    """Glue parts of parsed label (parse_label) together.
     """
-    ind = label.rfind(DEFAULT_COINDEX_SEPARATOR) + 1
-    if ind > 0:
-        coind = label[ind:]
-        if coind.isdigit():
-            slabel = label[:ind-1]
-            return slabel
-    return label
+    if len(gapindex) > 0 and len(coindex) > 0:
+        raise ValueError("Cannot have gapping index and coindex on same label")
+    index = ""
+    if len(coindex) > 0:
+        index = trees.DEFAULT_COINDEX_SEPARATOR + label.coindex
+    elif len(gapindex) > 0:
+        index = trees.DEFAULT_GAPINDEX_SEPARATOR + label.gapindex
+    gf = label.gf_separator + label.gf
+    return label.label + gf + index + label.headmarker
+
+
+def replace_chars(tree, cands):
+    """Replace characters in node data before bracketing output given a 
+    dictionary.
+    """
+    for field in FIELDS:
+        if not tree.data[field] is None:
+            for cand in cands:
+                tree.data[field] = tree.data[field].replace(cand, cands[cand])
+    return tree
