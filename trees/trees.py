@@ -12,6 +12,7 @@ from copy import deepcopy
 
 DEFAULT_GF_SEPARATOR = u"-"
 DEFAULT_COINDEX_SEPARATOR = u"-"
+DEFAULT_GAPPING_SEPARATOR = u"="
 DEFAULT_LEMMA = u"--"
 DEFAULT_EDGE = u"--"
 DEFAULT_MORPH = u"--"
@@ -132,6 +133,8 @@ def terminal_blocks(tree):
 def right_sibling(tree):
     """Return the right sibling of this tree if it exists and None otherwise.
     """
+    if tree.parent is None:
+        return None
     siblings = children(tree.parent)
     for (index, _) in enumerate(siblings[:-1]):
         if siblings[index] == tree:
