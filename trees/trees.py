@@ -204,17 +204,6 @@ def label_strip_fanout(label):
     return label
 
 
-def ptb_get_coindex(label):
-    """Return co-index from PTB-style node label, None if none found.
-    """
-    ind = label.rfind(DEFAULT_COINDEX_SEPARATOR) + 1
-    if ind > 0:
-        coind = label[ind:]
-        if coind.isdigit():
-            return int(coind)
-    return None
-
-
 def ptb_strip_coindex(label):
     """Return label with co-index stripped, original label
     if no co-index present.
