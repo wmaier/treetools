@@ -17,10 +17,6 @@ from StringIO import StringIO
 from . import trees, misc
 
 
-BRACKETS = {"(" : "LRB", ")" : "RRB"}
-DIGITS = re.compile(r'\d+')
-
-
 def tigerxml_build_tree(s_element, **params):
     """Build a tree from a <s> element in TIGER XML. If there is
     no unique VROOT, add one.
@@ -87,6 +83,7 @@ def tigerxml_build_tree(s_element, **params):
 def tigerxml(in_file, _, **params):
     """Read trees from TIGER XML. The encoding argument is ignored here.
     """
+    digits = re.compile(r'\d+')
     with io.open(in_file, mode='rb') as stream:
         if not 'quiet' in params:
             print("parsing xml...", file=sys.stderr)
@@ -98,14 +95,15 @@ def tigerxml(in_file, _, **params):
             tree_cnt += 1
             # take last number (assume there always is one)
             xml_id = s_element.get('id')
-            xml_id = DIGITS.findall(xml_id)[-1]
+            xml_id = digits.findall(xml_id)[-1]
             tree_id = tree_cnt if 'continuous' in params \
                 else int(xml_id)
             try:
                 tree = tigerxml_build_tree(s_element, **params)
                 tree.data['sid'] = tree_id
                 if 'replace_parens' in params:
-                    tree = trees.replace_parens_all(tree)
+                    for subtree in trees.preorder(tree):
+                        subtree = trees.replace_chars(subtree, trees.BRACKETS)
                 yield tree
             except ValueError as error:
                 if not 'quiet' in params:
@@ -120,11 +118,13 @@ def bracket_lexer(stream):
     whitespacebuf = StringIO()
     character = stream.read(1)
     while not character == "":
+        # holds tokens
         tval = tokenbuf.getvalue()
+        # holds whitespace
         wval = whitespacebuf.getvalue()
         if len(tval) > 0 and len(wval) > 0:
             raise ValueError("something went wrong in the lexer")
-        if character in BRACKETS:
+        if character in trees.PHRASE_BRACKETS:
             if len(tval) > 0:
                 yield tval, "TOKEN"
                 tokenbuf.close()
@@ -133,7 +133,7 @@ def bracket_lexer(stream):
                 yield wval, "WS"
                 whitespacebuf.close()
                 whitespacebuf = StringIO()
-            yield character, BRACKETS[character]
+            yield character, trees.BRACKETS[character]
         elif character in string.whitespace:
             if len(tval) > 0:
                 yield tval, "TOKEN"
@@ -221,7 +221,8 @@ def brackets(in_file, in_encoding, **params):
                         queue[0].data['sid'] = cnt
                         cnt += 1
                         if 'replace_parens' in params:
-                            queue[0] = trees.replace_parens_all(queue[0])
+                            for subtree in trees.preorder(queue[0]):
+                                subtree = trees.replace_chars(subtree, trees.BRACKETS)
                         yield queue[0]
                         queue = []
                         state = 0
@@ -372,7 +373,8 @@ def export(in_file, in_encoding, **params):
                     tree.data['sid'] = tree_cnt if 'continuous' in params \
                         else last_id
                     if 'replace_parens' in params:
-                        tree = trees.replace_parens_all(tree)
+                        for subtree in trees.preorder(tree):
+                            subtree = trees.replace_chars(subtree, trees.BRACKETS)
                     yield tree
                     tree_cnt += 1
                     in_sentence = False

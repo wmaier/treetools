@@ -187,7 +187,7 @@ def write_brackets_subtree(tree, stream, **params):
         for child in trees.children(tree):
             write_brackets_subtree(child, stream, **params)
     else:
-        tree = trees.replace_parens(tree)
+        tree = trees.replace_chars(tree, trees.BRACKETS)
         stream.write(decorate_label(tree, **params))
         stream.write(u" %s" % tree.data['word'])
     stream.write(u")")
