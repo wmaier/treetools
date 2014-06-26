@@ -8,6 +8,7 @@ Author: Wolfgang Maier <maierw@hhu.de>
 from __future__ import print_function
 import itertools
 from copy import deepcopy
+from collections import namedtuple
 
 
 DEFAULT_GF_SEPARATOR = u"-"
@@ -173,6 +174,58 @@ def dominance(tree):
         yield parent
 
 
+def parse_label(label, **params):
+    """Parse label assuming following format (no spaces):
+
+    LABEL (GF_SEP GF)? (COINDEX_SEP COINDEX)? HEADMARKER?
+
+    LABEL: \S+, GF_SEP: [#\-], GF: [^\-\=#\s]+
+    COINDEX_SEP: [\=\-] (PTB-style), CONINDEX: \d+
+
+    Single parts are returned as namedtuple. Non-presented parts
+    are returned with default values from tree.py (or empty). 
+    """
+    gf_separator = trees.DEFAULT_GF_SEPARATOR
+    if gf_separator in params:
+        gf_separator = params['gf_separator']
+    # start from the back
+    # head marker
+    headmarker = ""
+    if label[-1] == trees.DEFAULT_HEAD_MARKER:
+        headmarker = label[-1]
+        label = label[:-1]
+    # coindex or gapping sep (PTB)
+    coindex = ""
+    gapindex = ""
+    coindex_sep_pos = None
+    gapping_sep_pos = None
+    for i, char in reversed(list(enumerate(label))):
+        if char == trees.DEFAULT_COINDEX_SEPARATOR and coindex_sep_pos == None:
+            coindex_sep_pos = i
+        if char == trees.DEFAULT_GAPPING_SEPARATOR and gapping_sep_pos == None:
+            gapping_sep_pos = i
+    if coindex_sep_pos is not None and label[coindex_sep_pos + 1:].isdigit():
+        coindex = label[coindex_sep_pos + 1:]
+        label = label[:coindex_sep_pos]
+    if gapping_sep_pos is not None and label[gapping_sep_pos + 1:].isdigit():
+        gapindex = label[gapindex_sep_pos + 1:]
+        label = label[:gapindex_sep_pos]
+    if len(label) == 0:
+        raise ValueError('label too short?')
+    # gf
+    gf = trees.DEFAULT_EDGE
+    gf_sep_pos = None
+    for i, char in reversed(list(enumerate(label))):
+        if char == gf_separator:
+            gf_sep_pos = i
+    if gf_sep_pos > 1:
+        gf = label[gf_sep_pos + 1:]
+        label = label[:gf_sep_pos]
+    is_trace = label[0] == '*' and label[-1] == '*'
+    Label = namedtuple('Label', 'label gf coindex headmarker')
+    return Label(label, gf, coindex, headmarker, is_trace)
+
+
 def replace_parens(tree):
     """Replace bracket characters in node data before bracketing output.
     """
@@ -193,15 +246,6 @@ def replace_parens_all(tree):
     for subtree in preorder(tree):
         replace_parens(subtree)
     return tree
-
-
-def label_strip_fanout(label):
-    """Assume the d+$ in a given label to be fanout and return
-    the stripped version of the label.
-    """
-    while label[-1].isdigit():
-        label = label[:-1]
-    return label
 
 
 def ptb_get_coindex(label):

@@ -13,7 +13,6 @@ import re
 import string
 import sys
 import xml.etree.ElementTree as ET
-from collections import namedtuple
 from StringIO import StringIO
 from . import trees, misc
 
@@ -76,7 +75,7 @@ def tigerxml_build_tree(s_element, **params):
     # split gf as postprocessing step if applicable
     if 'gf_split' in params:
         for subtree in trees.preorder(top):
-            label_parts = parse_label(subtree.data['label'], \
+            label_parts = trees.parse_label(subtree.data['label'], \
                                       gf_separator=gf_separator)
             subtree.data['label'] = label_parts.label \
                                     + label_parts.coindex \
@@ -112,58 +111,6 @@ def tigerxml(in_file, _, **params):
                 if not 'quiet' in params:
                     print("\nskipping sentence %d: %s\n" % (tree_id, error),
                           file=sys.stderr)
-
-
-def parse_label(label, **params):
-    """Parse label assuming following format (no spaces):
-
-    LABEL (GF_SEP GF)? (COINDEX_SEP COINDEX)? HEADMARKER?
-
-    LABEL: \S+, GF_SEP: [#\-], GF: [^\-\=#\s]+
-    COINDEX_SEP: [\=\-] (PTB-style), CONINDEX: \d+
-
-    Single parts are returned as namedtuple. Non-presented parts
-    are returned with default values from tree.py (or empty). 
-    """
-    gf_separator = trees.DEFAULT_GF_SEPARATOR
-    if gf_separator in params:
-        gf_separator = params['gf_separator']
-    # start from the back
-    # head marker
-    headmarker = ""
-    if label[-1] == trees.DEFAULT_HEAD_MARKER:
-        headmarker = label[-1]
-        label = label[:-1]
-    # coindex or gapping sep (PTB)
-    coindex = ""
-    gapindex = ""
-    coindex_sep_pos = None
-    gapping_sep_pos = None
-    for i, char in reversed(list(enumerate(label))):
-        if char == trees.DEFAULT_COINDEX_SEPARATOR and coindex_sep_pos == None:
-            coindex_sep_pos = i
-        if char == trees.DEFAULT_GAPPING_SEPARATOR and gapping_sep_pos == None:
-            gapping_sep_pos = i
-    if coindex_sep_pos is not None and label[coindex_sep_pos + 1:].isdigit():
-        coindex = label[coindex_sep_pos + 1:]
-        label = label[:coindex_sep_pos]
-    if gapping_sep_pos is not None and label[gapping_sep_pos + 1:].isdigit():
-        gapindex = label[gapindex_sep_pos + 1:]
-        label = label[:gapindex_sep_pos]
-    if len(label) == 0:
-        raise ValueError('label too short?')
-    # gf
-    gf = trees.DEFAULT_EDGE
-    gf_sep_pos = None
-    for i, char in reversed(list(enumerate(label))):
-        if char == gf_separator:
-            gf_sep_pos = i
-    if gf_sep_pos > 1:
-        gf = label[gf_sep_pos + 1:]
-        label = label[:gf_sep_pos]
-    is_trace = label[0] == '*' and label[-1] == '*'
-    Label = namedtuple('Label', 'label gf coindex headmarker')
-    return Label(label, gf, coindex, headmarker, is_trace)
 
 
 def bracket_lexer(stream):
@@ -301,7 +248,7 @@ def brackets(in_file, in_encoding, **params):
                 elif state in [1, 9]:
                     # phrase label, 9 when root label, 1 otherwise
                     if 'gf_split' in params:
-                        label_parts = parse_label(lextoken, 
+                        label_parts = trees.parse_label(lextoken, 
                                                   gf_separator=gf_separator)
                         label = label_parts.label \
                                 + label_parts.coindex \
@@ -370,7 +317,8 @@ def export_parse_line(line, **params):
         raise ValueError("parent field must be 0 or between 500 and 999")
     # options?
     if 'gf_split' in params:
-        label_parts = parse_label(fields['label'], gf_separator=gf_separator)
+        label_parts = trees.parse_label(fields['label'], 
+                                        gf_separator=gf_separator)
         fields['label'] = label_parts.label + label_parts.coindex \
                           + label_parts.headmarker
         fields['edge'] = label_parts.gf

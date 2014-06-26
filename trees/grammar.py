@@ -199,7 +199,7 @@ def binarize(grammar, **args):
             for func in grammar:
                 for lin in grammar[func]:
                     for vert in grammar[func][lin]:
-                        nf_vert.append(tuple([trees.label_strip_fanout(label)
+                        nf_vert.append(tuple([label_strip_fanout(label)
                                               for label in vert]))
             nf_vert_c = Counter(nf_vert)
         label_gen = MarkovLabelGenerator(p=args['markov_opts'])
@@ -209,7 +209,7 @@ def binarize(grammar, **args):
                     rule_cnt = grammar[func][lin][vert]
                     if nofanout:
                         # then use the corresponding counts/contexts
-                        vert = tuple([trees.label_strip_fanout(label)
+                        vert = tuple([label_strip_fanout(label)
                                       for label in vert])
                         rule_cnt = nf_vert_c[vert]
                     func, lin = args['reordering'](func, lin)
@@ -414,6 +414,15 @@ def run(args):
          args.dest_enc,
          **misc.options_dict(args.dest_opts))
     print("\n", file=sys.stderr)
+
+
+def label_strip_fanout(label):
+    """Assume the d+$ in a given label to be fanout and return
+    the stripped version of the label.
+    """
+    while label[-1].isdigit():
+        label = label[:-1]
+    return label
 
 
 GRAMTYPES = {'treebank' : 'Plain treebank grammar',
