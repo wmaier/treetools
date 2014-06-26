@@ -47,7 +47,9 @@ def ptb_transform(tree, **params):
     params['delete_traces'] = '-NONE-'
     tree = delete_traces(tree, **params)
     for node in trees.preorder(tree):
-        node.data['label'] = trees.ptb_strip_coindex(node.data['label'])
+        label = trees.parse_label(node.data['label'])
+        label.coindex = ""
+        node.data['label'] = trees.format_label(label)
     return tree
 
 
