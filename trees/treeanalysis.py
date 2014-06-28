@@ -36,6 +36,25 @@ class PosTags(object):
 #            print("%s %d" % (tag, tags_cnt[tag]))
 
 
+class SentenceCount(object):
+    """Accumulates statistics concerning gap degree over several trees.
+    """
+    def __init__(self):
+        self.cnt = 0
+
+    def run(self, tree):
+        """Collect and count POS tags (preterminal labels) in a single tree.
+        """
+        self.cnt += 1
+
+    def done(self):
+        """Print summary and write tags. To be extended.
+        """
+        print("*** Sentence count summary ***")
+        print()
+        print("%d sentences" % self.cnt)
+
+
 def gap_degree_node(node):
     """Compute gap degree for a single node.
     """
@@ -187,4 +206,4 @@ def run(args):
     sys.stderr.write("\n")
 
 
-TASKS = [GapDegree, PosTags]
+TASKS = [GapDegree, PosTags, SentenceCount]
