@@ -109,6 +109,47 @@ DISCONT_DOM_FIRST = [u'WP', u'VP', u'SBAR', u'VP',  u'S', u'VROOT']
 CONT_DOM_FIRST = [u'WP', u'S', u'VROOT']
 
 
+def test_labels():
+    """General test concerning the parsing of labels
+    LABEL (GF_SEP GF)? ((COINDEX_SEP COINDEX)|(GAPINDEX_SEP GAPINDEX))? 
+    HEADMARKER?
+
+    LABEL: \S+, GF_SEP: [#\-], GF: [^\-\=#\s]+
+    COINDEX_SEP: \-, GAPINDEX_SEP: \=, CO/GAPINDEX: \d+
+
+    Label = namedtuple('Label', 'label gf gf_separator coindex gapindex ' \
+                       'headmarker is_trace')
+    """
+    e = trees.parse_label("")
+    assert e.label == trees.DEFAULT_LABEL
+    assert e.gf == trees.DEFAULT_EDGE
+    assert e.gf_separator == trees.DEFAULT_GF_SEPARATOR
+    assert e.coindex == ""
+    assert e.gapindex == ""
+    assert not e.headmarker
+    assert not e.is_trace
+    e = trees.parse_label("-NONE-")
+    assert e.label == "-NONE-"
+    assert not e.is_trace
+    e = trees.parse_label("A--A=1---2")
+    assert e.label == "A--A=1--"
+    assert e.gf == trees.DEFAULT_EDGE
+    assert e.coindex == "2"
+    assert not e.is_trace
+    e = trees.parse_label("A--A-1--=2")
+    assert e.label == "A--A-1--"
+    assert e.gf == trees.DEFAULT_EDGE
+    assert e.coindex == ""
+    assert e.gapindex == "2"
+    assert not e.is_trace
+    e = trees.parse_label("*LAB*-GF=1'")
+    assert e.label == "*LAB*"
+    assert e.gf == "GF"
+    assert e.gapindex == "1"
+    assert e.headmarker 
+    assert e.is_trace
+
+
 def test_cont_general(cont_tree):
     """General tests concerning continuous trees.
     """
@@ -306,4 +347,3 @@ def cont_tree(request):
     def fin():
         os.remove(tempfile_name)
     return reader.next()
-
