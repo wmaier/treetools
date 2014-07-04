@@ -247,21 +247,30 @@ def parse_label(label, **params):
     return Label(label, gf, gf_separator, coindex, gapindex, headmarker, is_trace)
 
 
-def format_label(label):
+def format_label(label, **params):
     """Glue parts of parsed label (parse_label) together. To delete a certain
     component of the label, parse_label it, set the corresponding components
     to the empty string and then format_label it.
+    If param always_label is given, we also write the label if label == trees.
+    DEFAULT_LABEL. Same for gf and DEFAULT_EDGE.
     """
-    if len(gapindex) > 0 and len(coindex) > 0:
+    label_always = 'always_label' in params
+    edge_always = 'always_gf' in params
+    if len(label.gapindex) > 0 and len(label.coindex) > 0:
         raise ValueError("Cannot have gapping index and coindex on same label")
+    lab = ""
+    if not label.label == DEFAULT_LABEL or label_always:
+        lab = label.label
     index = ""
-    if len(coindex) > 0:
+    if len(label.coindex) > 0:
         index = DEFAULT_COINDEX_SEPARATOR + label.coindex
-    elif len(gapindex) > 0:
-        index = DEFAULT_GAPINDEX_SEPARATOR + label.gapindex
-    gf = label.gf_separator + label.gf
-    headmarker == "'" if label.headmarker else ""
-    return label.label + gf + index + label.headmarker
+    elif len(label.gapindex) > 0:
+        index = DEFAULT_GAPPING_SEPARATOR + label.gapindex
+    gf = ""
+    if not label.gf == DEFAULT_EDGE or edge_always:
+        gf = label.gf_separator + label.gf
+    headmarker = "'" if label.headmarker else ""
+    return lab + gf + index + headmarker
 
 
 def replace_chars(tree, cands):

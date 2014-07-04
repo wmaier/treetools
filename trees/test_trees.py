@@ -110,17 +110,10 @@ CONT_DOM_FIRST = [u'WP', u'S', u'VROOT']
 
 
 def test_labels():
-    """General test concerning the parsing of labels
-    LABEL (GF_SEP GF)? ((COINDEX_SEP COINDEX)|(GAPINDEX_SEP GAPINDEX))? 
-    HEADMARKER?
-
-    LABEL: \S+, GF_SEP: [#\-], GF: [^\-\=#\s]+
-    COINDEX_SEP: \-, GAPINDEX_SEP: \=, CO/GAPINDEX: \d+
-
-    Label = namedtuple('Label', 'label gf gf_separator coindex gapindex ' \
-                       'headmarker is_trace')
+    """General test concerning the parsing and output of labels
     """
-    e = trees.parse_label("")
+    label = ""
+    e = trees.parse_label(label)
     assert e.label == trees.DEFAULT_LABEL
     assert e.gf == trees.DEFAULT_EDGE
     assert e.gf_separator == trees.DEFAULT_GF_SEPARATOR
@@ -128,27 +121,40 @@ def test_labels():
     assert e.gapindex == ""
     assert not e.headmarker
     assert not e.is_trace
-    e = trees.parse_label("-NONE-")
+    olabel = trees.format_label(e)
+    assert olabel == label
+    label = "-NONE-"
+    e = trees.parse_label(label)
     assert e.label == "-NONE-"
     assert not e.is_trace
-    e = trees.parse_label("A--A=1---2")
+    olabel = trees.format_label(e)
+    assert olabel == label
+    label = "A--A=1---2"
+    e = trees.parse_label(label)
     assert e.label == "A--A=1--"
     assert e.gf == trees.DEFAULT_EDGE
     assert e.coindex == "2"
     assert not e.is_trace
-    e = trees.parse_label("A--A-1--=2")
+    olabel = trees.format_label(e)
+    assert olabel == label
+    label = "A--A-1--=2"
+    e = trees.parse_label(label)
     assert e.label == "A--A-1--"
     assert e.gf == trees.DEFAULT_EDGE
     assert e.coindex == ""
     assert e.gapindex == "2"
     assert not e.is_trace
-    e = trees.parse_label("*LAB*-GF=1'")
+    olabel = trees.format_label(e)
+    assert olabel == label
+    label = "*LAB*-GF=1'"
+    e = trees.parse_label(label)
     assert e.label == "*LAB*"
     assert e.gf == "GF"
     assert e.gapindex == "1"
     assert e.headmarker 
     assert e.is_trace
-
+    olabel = trees.format_label(e)
+    assert olabel == label
 
 def test_cont_general(cont_tree):
     """General tests concerning continuous trees.
