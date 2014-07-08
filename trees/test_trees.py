@@ -7,11 +7,12 @@ Author: Wolfgang Maier <maierw@hhu.de>
 """
 import pytest
 import tempfile
+import io
 import os
 import sys
 from copy import deepcopy
 from StringIO import StringIO
-from . import trees, treeinput, transform
+from . import trees, treeinput, treeoutput, transform
 
 SAMPLE_BRACKETS = """
 ((S(WP Who)(VB did)(NNP Fritz)(VP(VB tell)(NNP Hans)(SBAR(IN that)
@@ -21,22 +22,21 @@ SAMPLE_BRACKETS_TOL = """
 ((S(Who)(did)(Fritz)(VP(tell)(Hans)(SBAR(that)(NP(Manfred))(VP(likes)
 ))))(?))
 """
-SAMPLE_EXPORT = """
-#BOS 1
-Who			WP	--		--	501
-did			VB	--       	HD	504
-Fritz     		NNP	--		HD	504
-tell			VB	--		HD	503
-Hans			NNP	--		--	503
-that			IN	--       	HD	502
-Manfred  		NNP	--		HD	500
-likes			VB	--		HD	501
-?			?	--		--	0
-#500			NP	--		--	502
-#501			VP	--		--	502
-#502			SBAR	--		--	503
-#503			VP	--		--	504
-#504			S	--		--	0
+SAMPLE_EXPORT = """#BOS 1
+Who                     WP      --              --      500
+did                     VB      --              HD      504
+Fritz                   NNP     --              HD      504
+tell                    VB      --              HD      503
+Hans                    NNP     --              --      503
+that                    IN      --              HD      502
+Manfred                 NNP     --              HD      501
+likes                   VB      --              HD      500
+?                       ?       --              --      0
+#500                    VP      --              --      502
+#501                    NP      --              --      502
+#502                    SBAR    --              --      503
+#503                    VP      --              --      504
+#504                    S       --              --      0
 #EOS 1
 """
 SAMPLE_TIGERXML = """<?xml version="1.0" encoding="utf-8" standalone="yes"?>
@@ -161,6 +161,7 @@ def test_labels():
     olabel = trees.format_label(e)
     assert olabel == label
 
+
 def test_cont_general(cont_tree):
     """General tests concerning continuous trees.
     """
@@ -199,6 +200,43 @@ def test_discont_general(discont_tree):
     assert labels == DISCONT_LABELS_PREORDER
     assert words == WORDS
     assert set(uwords) == set(WORDS)
+
+
+def test_discont_output(discont_tree):
+    """Test tree output
+    """
+    stream = StringIO()
+    # export: check if all fields are the same
+    treeoutput.export(discont_tree, stream)
+    result = stream.getvalue()
+    original = SAMPLE_EXPORT
+    for result_line, original_line in zip(result.split('\n'), original.split('\n')):
+        for result_f, original_f in zip(result_line.split(), original_line.split()):
+            assert result_f == original_f
+    # tigerxml: check linewise if output is the same as sample
+    stream = StringIO()
+    treeoutput.tigerxml(discont_tree, stream)
+    result = stream.getvalue()
+    original = '\n'.join(SAMPLE_TIGERXML.split('\n')[3:-3])
+    for result_line, original_line in zip(result.split('\n'), original.split('\n')):
+        assert result_line == original_line
+
+
+def test_cont_output(cont_tree):
+    """Test continuous tree output
+    """
+    tree = cont_tree
+    # brackets
+    stream = StringIO()
+    original = SAMPLE_BRACKETS.replace('\n', '')
+    treeoutput.brackets(cont_tree, stream, brackets_emptyroot=True)
+    result = stream.getvalue().strip()
+    assert result == original
+    stream = StringIO()
+    original = original[:1] + trees.DEFAULT_ROOT + original[1:]
+    treeoutput.brackets(cont_tree, stream)
+    result = stream.getvalue().strip()
+    assert result == original
 
 
 def test_lca(discont_tree, cont_tree):

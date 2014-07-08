@@ -60,9 +60,9 @@ def tigerxml_build_tree(s_element, **params):
             else:
                 raise ValueError("more than one root node")
     top = root
-    if not root.data['label'] == "VROOT":
+    if not root.data['label'] == trees.DEFAULT_ROOT:
         top = trees.Tree(trees.make_node_data())
-        top.data['label'] = u"VROOT"
+        top.data['label'] = trees.DEFAULT_ROOT
         top.children.append(root)
         top.data['morph'] = trees.DEFAULT_MORPH
         top.data['edge'] = trees.DEFAULT_EDGE
@@ -183,7 +183,7 @@ def brackets(in_file, in_encoding, **params):
                 elif state == 9:
                     # happens when root label is empty (PTB style)
                     level += 1
-                    queue[-1].data['label'] = u"VROOT"
+                    queue[-1].data['label'] = trees.DEFAULT_ROOT
                     queue.append(trees.Tree(trees.make_node_data()))
                     state = 1
                 elif state == 1:
@@ -350,7 +350,7 @@ def export(in_file, in_encoding, **params):
                     node_by_num = {}
                     children_by_num = {}
                     node_by_num[0] = trees.make_node_data()
-                    node_by_num[0]['label'] = u"VROOT"
+                    node_by_num[0]['label'] = trees.DEFAULT_ROOT
                     node_by_num[0]['edge'] = trees.DEFAULT_EDGE
                     term_cnt = 1
                     for fields in [export_parse_line(line, **params) \

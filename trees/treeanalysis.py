@@ -128,9 +128,7 @@ class GapDegree(object):
 def gap_degree(tree):
     """Return the maximal gap degree of the nodes in the given tree.
     """
-    gapdeg = GapDegree()
-    gapdeg.run(tree)
-    return max(gapdeg.gaps_per_node.keys())
+    return max([gap_degree_node(subtree) for subtree in trees.preorder(tree)])
 
 
 def add_parser(subparsers):

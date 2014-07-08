@@ -32,6 +32,7 @@ DEFAULT_LEMMA = u"--"
 DEFAULT_LABEL = u"EMPTY"
 DEFAULT_MORPH = u"--"
 DEFAULT_EDGE = u"--"
+DEFAULT_ROOT = u"VROOT"
 
 
 class Tree(object):
@@ -184,6 +185,30 @@ def dominance(tree):
     while not parent.parent is None:
         parent = parent.parent
         yield parent
+
+
+def get_label(tree, **params):
+    """Compute subtree label decorations depending on given parameters.
+    """
+    label = tree.data['label']
+    gf_separator = DEFAULT_GF_SEPARATOR
+    if 'gf_separator' in params:
+        gf_separator = unicode(params['gf_separator'])
+    gf_string = ""
+    if 'gf' in params and not tree.data['edge'].startswith("-") \
+       and (has_children(tree)
+            or 'gf_terminals' in params):
+        gf_string = "%s%s" % (gf_separator, tree.data['edge'])
+    head = ""
+    if 'mark_heads_marking' in params and tree.data['head']:
+        head = DEFAULT_HEAD_MARKER
+    split_marker = ""
+    if 'boyd_split_marking' in params and tree.data['split']:
+        split_marker = "*"
+    split_number = ""
+    if 'boyd_split_numbering' in params and tree.data['split']:
+        split_number = tree.data['block_number']
+    return u"%s%s%s%s%s" % (label, gf_string, head, split_marker, split_number)
 
 
 def parse_label(label, **params):
