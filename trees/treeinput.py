@@ -197,11 +197,11 @@ def brackets(in_file, in_encoding, **params):
                     pass
                 elif state in [2, 4, 5]:
                     if state == 2:
-                        if not 'brackets_tolerant' in params:
+                        if not 'brackets_emptypos' in params:
                             raise ValueError("expected whitespace or (, got )")
                         else:
                             if not 'quiet' in params:
-                                print("being tolerant", file=sys.stderr)
+                                print("got empty POS", file=sys.stderr)
                             # last token was a word
                             queue[-1].data['word'] = queue[-1].data['label']
                             # queue[-1].data['label'] = queue[-2].data['label']
@@ -386,8 +386,7 @@ INPUT_OPTIONS = {'gf_split' : 'Brackets: Try to split grammatical ' \
                      'functions from label at last occurrence of gf separator',
                  'gf_separator' : 'Brackets: Separator to use for ' \
                      ' gf option (default %s)' % trees.DEFAULT_GF_SEPARATOR,
-                 'brackets_tolerant' : 'Brackets: Allow empty phrase ' \
-                     'labels aside from root',
+                 'brackets_emptypos' : 'Brackets: Allow empty POS tags',
                  'continuous' : 'Export/TIGERXML: number sentences by ' \
                      'counting, don\'t use #BOS',
                  'replace_parens' : 'Replace parens by LRB, RRB, etc. ',

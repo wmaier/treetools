@@ -17,6 +17,10 @@ SAMPLE_BRACKETS = """
 ((S(WP Who)(VB did)(NNP Fritz)(VP(VB tell)(NNP Hans)(SBAR(IN that)
 (NP(NNP Manfred))(VP(VB likes)))))(? ?))
 """
+SAMPLE_BRACKETS_TOL = """
+((S(Who)(did)(Fritz)(VP(tell)(Hans)(SBAR(that)(NP(Manfred))(VP(likes)
+))))(?))
+"""
 SAMPLE_EXPORT = """
 #BOS 1
 Who			WP	--		--	501
@@ -86,6 +90,7 @@ SAMPLE_TIGERXML = """<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 """
 WORDS = [u'Who', u'did', u'Fritz', u'tell', u'Hans', u'that', u'Manfred', 
          u'likes', u'?']
+POS = ['WP', 'VB', 'NNP', 'VB', 'NNP', 'IN', 'NNP', 'VB', '?']
 DISCONT_LABELS_PREORDER = [u'VROOT', u'S', u'VP', u'SBAR', u'VP', u'WP',
                            u'VB', u'IN', u'NP', u'NNP', u'VB', u'NNP',
                            u'VB', u'NNP', u'?']
@@ -166,6 +171,8 @@ def test_cont_general(cont_tree):
     labels = [node.data['label'] for node in nodes]
     words = [node.data['word'] for node in terms]
     uwords = [node.data['word'] for node in uterms]
+    assert all(['num' in node.data for node in terms])
+    assert all([node in uterms for node in terms])
     assert len(terms) == 9
     assert len(uterms) == 9
     assert len(nodes) == 15
@@ -184,6 +191,8 @@ def test_discont_general(discont_tree):
     words = [node.data['word'] for node in terms]
     uterms = trees.unordered_terminals(tree)
     uwords = [node.data['word'] for node in uterms]
+    assert all(['num' in node.data for node in terms])
+    assert all([node in uterms for node in terms])
     assert len(terms) == 9
     assert len(uterms) == 9
     assert len(nodes) == 15
@@ -320,8 +329,8 @@ def test_raising(discont_tree):
 
 
 @pytest.fixture(scope='function',
-                params=[(treeinput.tigerxml, SAMPLE_TIGERXML),
-                        (treeinput.export, SAMPLE_EXPORT)])
+                params=[(treeinput.tigerxml, SAMPLE_TIGERXML, {}),
+                        (treeinput.export, SAMPLE_EXPORT, {})])
 def discont_tree(request):
     """Load discontinuous tree samples
     """
@@ -330,8 +339,8 @@ def discont_tree(request):
         tempfile_name = temp.name
         temp.write(request.param[1])
         temp.flush()
-    params = {'quiet' : True}
-    reader = request.param[0](tempfile_name, 'utf8', **params)
+    request.param[2]['quiet'] = True
+    reader = request.param[0](tempfile_name, 'utf8', **request.param[2])
     def fin():
         os.remove(tempfile_name)
     request.addfinalizer(fin)
@@ -339,7 +348,9 @@ def discont_tree(request):
 
 
 @pytest.fixture(scope='function',
-                params=[(treeinput.brackets, SAMPLE_BRACKETS)])
+                params=[(treeinput.brackets, SAMPLE_BRACKETS, {}),
+                        (treeinput.brackets, SAMPLE_BRACKETS_TOL,
+                         {'brackets_emptypos' : True})])
 def cont_tree(request):
     """Load continuous tree samples
     """
@@ -348,8 +359,14 @@ def cont_tree(request):
         tempfile_name = temp.name
         temp.write(request.param[1])
         temp.flush()
-    params = {'quiet' : True}
-    reader = request.param[0](tempfile_name, 'utf8', **params)
+    request.param[2]['quiet'] = True
+    reader = request.param[0](tempfile_name, 'utf8', **request.param[2])
     def fin():
         os.remove(tempfile_name)
-    return reader.next()
+    tree = reader.next()
+    # 'fix' POS tags for brackets_emptypos mode
+    terms = trees.terminals(tree)
+    if all([term.data['label'] == trees.DEFAULT_LABEL for term in terms]):
+        for term, pos in zip(terms, POS):
+            term.data['label'] = pos
+    return tree
