@@ -191,6 +191,22 @@ def terminals(tree, stream, **params):
     print(u"", file=stream)
 
 
+def tigerxml_begin(stream, **params):
+    """The start of a tigerxml document. To be completed.
+    """
+    stream.write(u"<?xml version='1.0' encoding='%s'?>" \
+                 % params.dest_enc)
+    stream.write(u"<corpus>")
+    stream.write(u"<body>")
+
+
+def tigerxml_end(stream, **params):
+    """The end of a tigerxml document, to be completed.
+    """
+    stream.write(u"</corpus>")
+    stream.write(u"</body>")
+
+
 def tigerxml(tree, stream, **params):
     """A single sentence as TIGER XML. The IDs should probably
     be more fancy.

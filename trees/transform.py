@@ -327,12 +327,12 @@ def run(args):
                 for tree in getattr(treeinput,
                                     args.src_format)(src, args.src_enc,
                                                      **misc.options_dict \
-                                                         (args.src_opts)):
+                                                     (args.src_opts)):
                     for algorithm in args.trans:
                         tree = globals()[algorithm](tree, **params)
                     getattr(treeoutput, args.dest_format)(tree, dest_stream,
                                                           **misc.options_dict \
-                                                         (args.dest_opts))
+                                                          (args.dest_opts))
                     if cnt % args.counting == 0:
                         sys.stderr.write("\r%d" % cnt)
                     cnt += 1
@@ -370,4 +370,3 @@ def run(args):
                 sys.stderr.write("\n")
 
 TRANSFORMATIONS = [root_attach, negra_mark_heads, boyd_split, raising]
-
