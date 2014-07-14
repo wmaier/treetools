@@ -1,7 +1,7 @@
 """
 treetools: Tools for transforming treebank trees.
 
-Unit tests (pytest)
+Unit tests (pytest) for tree operations
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
