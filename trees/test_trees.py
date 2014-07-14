@@ -12,7 +12,7 @@ import os
 import sys
 from copy import deepcopy
 from StringIO import StringIO
-from . import trees, treeinput, treeoutput, transform
+from . import trees, treeinput, treeoutput, transform, treeanalysis
 
 SAMPLE_BRACKETS = """
 ((S(WP Who)(VB did)(NNP Fritz)(VP(VB tell)(NNP Hans)(SBAR(IN that)
@@ -364,6 +364,14 @@ def test_raising(discont_tree):
     assert labels == CONT_LABELS_PREORDER
     assert words == WORDS
     assert set(uwords) == set(WORDS)
+
+
+def test_analysis(discont_tree, cont_tree):
+    gapdegree = treeanalysis.GapDegree()
+    gapdegree.run(cont_tree)
+    gapdegree.run(discont_tree)
+    assert sum(gapdegree.gaps_per_tree.values()) == 2
+    assert sum(gapdegree.gaps_per_node.values()) == 12
 
 
 @pytest.fixture(scope='function',
