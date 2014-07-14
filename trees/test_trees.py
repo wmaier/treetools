@@ -91,6 +91,8 @@ SAMPLE_TIGERXML = """<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 WORDS = [u'Who', u'did', u'Fritz', u'tell', u'Hans', u'that', u'Manfred', 
          u'likes', u'?']
 POS = ['WP', 'VB', 'NNP', 'VB', 'NNP', 'IN', 'NNP', 'VB', '?']
+DISCONT_EXPORT_NUMBERING = [0, 504, 503, 502, 500, 1, 8, 6, 501, 7, 4, 5, 2, \
+                                3, 9]
 DISCONT_LABELS_PREORDER = [u'VROOT', u'S', u'VP', u'SBAR', u'VP', u'WP',
                            u'VB', u'IN', u'NP', u'NNP', u'VB', u'NNP',
                            u'VB', u'NNP', u'?']
@@ -213,6 +215,9 @@ def test_discont_output(discont_tree):
     for result_line, original_line in zip(result.split('\n'), original.split('\n')):
         for result_f, original_f in zip(result_line.split(), original_line.split()):
             assert result_f == original_f
+    treeoutput.compute_export_numbering(discont_tree)
+    numbers = [node.data['num'] for node in trees.preorder(discont_tree)]
+    assert numbers == DISCONT_EXPORT_NUMBERING
     # tigerxml: check linewise if output is the same as sample
     stream = StringIO()
     treeoutput.tigerxml(discont_tree, stream)
@@ -367,11 +372,32 @@ def test_raising(discont_tree):
 
 
 def test_analysis(discont_tree, cont_tree):
+    """See treeanalysis
+    """
     gapdegree = treeanalysis.GapDegree()
     gapdegree.run(cont_tree)
     gapdegree.run(discont_tree)
     assert sum(gapdegree.gaps_per_tree.values()) == 2
     assert sum(gapdegree.gaps_per_node.values()) == 12
+    assert gapdegree.gaps_per_tree[0] == 1
+    assert gapdegree.gaps_per_tree[1] == 1
+    assert gapdegree.gaps_per_node[0] == 9
+    assert gapdegree.gaps_per_node[1] == 3
+    assert treeanalysis.gap_degree(discont_tree) == 1
+    assert treeanalysis.gap_degree(cont_tree) == 0
+    treeoutput.compute_export_numbering(discont_tree)
+    for node in trees.preorder(discont_tree):
+        if node.data['num'] in [500, 502, 503]:
+            assert treeanalysis.gap_degree_node(node) == 1
+        else:
+            assert treeanalysis.gap_degree_node(node) == 0
+    postags = treeanalysis.PosTags()
+    postags.run(discont_tree)
+    assert postags.tags == POS 
+    sentencecount = treeanalysis.SentenceCount()
+    sentencecount.run(discont_tree)
+    sentencecount.run(cont_tree)
+    assert sentencecount.cnt == 2
 
 
 @pytest.fixture(scope='function',
