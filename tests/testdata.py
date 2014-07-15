@@ -1,3 +1,11 @@
+"""
+treetools: Tools for transforming treebank trees.
+
+Unit tests constants
+
+Author: Wolfgang Maier <maierw@hhu.de>
+"""
+
 SAMPLE_BRACKETS = """
 ((S(WP Who)(VB did)(NNP Fritz)(VP(VB tell)(NNP Hans)(SBAR(IN that)
 (NP(NNP Manfred))(VP(VB likes)))))(? ?))
@@ -74,7 +82,7 @@ likes                   VB      --              HD      500
 """
 WORDS = [u'Who', u'did', u'Fritz', u'tell', u'Hans', u'that', u'Manfred', 
          u'likes', u'?']
-POS = ['WP', 'VB', 'NNP', 'VB', 'NNP', 'IN', 'NNP', 'VB', '?']
+POS = [u'WP', u'VB', u'NNP', u'VB', u'NNP', u'IN', u'NNP', u'VB', u'?']
 DISCONT_EXPORT_NUMBERING = [0, 504, 503, 502, 500, 1, 8, 6, 501, 7, 4, 5, 2, \
                                 3, 9]
 DISCONT_LABELS_PREORDER = [u'VROOT', u'S', u'VP', u'SBAR', u'VP', u'WP',
@@ -98,3 +106,10 @@ DISCONT_BLOCKS_VP = [[1], [4,5,6,7,8]]
 CONT_BLOCKS_VP = [[4,5,6,7,8]]
 DISCONT_DOM_FIRST = [u'WP', u'VP', u'SBAR', u'VP',  u'S', u'VROOT']
 CONT_DOM_FIRST = [u'WP', u'S', u'VROOT']
+
+CONT_GRAMMAR_FUNCS = [(u'VROOT', u'S', u'?'),
+                      (u'S', u'WP', u'VB', u'NNP', u'VP'),
+                      (u'VP', u'VB', u'NNP', u'SBAR'),
+                      (u'SBAR', u'IN', u'NP', u'VP'),
+                      (u'NP', u'NNP'),
+                      (u'VP', u'VB')]

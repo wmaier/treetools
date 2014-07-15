@@ -8,7 +8,8 @@ Author: Wolfgang Maier <maierw@hhu.de>
 import pytest
 from StringIO import StringIO
 from trees import trees, treeinput, treeoutput, transform, treeanalysis
-from . import constants
+from . import testdata
+
 
 def test_labels():
     """General test concerning the parsing and output of labels
