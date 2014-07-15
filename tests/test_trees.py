@@ -12,7 +12,7 @@ import os
 import sys
 from copy import deepcopy
 from StringIO import StringIO
-from . import trees, treeinput, treeoutput, transform, treeanalysis
+from trees import trees, treeinput, treeoutput, transform, treeanalysis
 
 SAMPLE_BRACKETS = """
 ((S(WP Who)(VB did)(NNP Fritz)(VP(VB tell)(NNP Hans)(SBAR(IN that)
