@@ -13,15 +13,25 @@ from . import testdata
 def test_cont_grammar(cont_grammar):
     """Test grammar extraction from non-discontinuous trees
     """
-    funcs = cont_grammar.keys()
-    assert len(set(testdata.CONT_GRAMMAR_FUNCS) - set(funcs)) == 0
+    assert len(cont_grammar.keys()) \
+        == len(testdata.CONT_GRAMMAR_FUNCS)
+    assert all([func in testdata.CONT_GRAMMAR_FUNCS \
+                    for func in cont_grammar.keys()])
+    lins = [lin for lin in cont_grammar[func] for func in cont_grammar]
+    assert len(lins) == 6
+    assert all([lin == (((0, 0),),) for lin in lins])
 
 
 def test_discont_grammar(discont_grammar):
     """Test grammar extraction from discontinuous trees
     """
-    funcs = discont_grammar.keys()
-    assert len(set(testdata.DISCONT_GRAMMAR_FUNCS) - set(funcs)) == 0
+    assert len(discont_grammar.keys()) \
+        == len(testdata.DISCONT_GRAMMAR_FUNCS)
+    assert all([func in testdata.DISCONT_GRAMMAR_FUNCS \
+                    for func in discont_grammar.keys()])
+    lins = [lin for lin in discont_grammar[func] for func in discont_grammar]
+    assert len(lins) == len(testdata.DISCONT_GRAMMAR_LINS)
+    assert all([lin in testdata.DISCONT_GRAMMAR_LINS for lin in lins])
 
 
 @pytest.fixture(scope='function')

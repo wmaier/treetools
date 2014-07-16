@@ -113,9 +113,15 @@ CONT_GRAMMAR_FUNCS = [(u'VROOT', u'S', u'?'),
                       (u'SBAR', u'IN', u'NP', u'VP'),
                       (u'NP', u'NNP'),
                       (u'VP', u'VB')]
-DISCONT_GRAMMAR_FUNCS = [('VROOT', 'S', '?'), 
-                         ('S', 'VP', 'VB', 'NNP'), 
-                         ('SBAR', 'VP', 'IN', 'NP'), 
-                         ('VP', 'SBAR', 'VB', 'NNP'), 
-                         ('VP', 'WP', 'VB'),
-                         ('NP', 'NNP')]
+DISCONT_GRAMMAR_FUNCS = [(u'VROOT', u'S', u'?'), 
+                         (u'S', u'VP', u'VB', u'NNP'), 
+                         (u'SBAR', u'VP', u'IN', u'NP'), 
+                         (u'VP', u'SBAR', u'VB', u'NNP'), 
+                         (u'VP', u'WP', u'VB'), 
+                         (u'NP', u'NNP')]
+DISCONT_GRAMMAR_LINS = [(((0, 0), (1, 0), (2, 0), (0, 1)),),
+                        (((0, 0),), ((1, 0), (2, 0), (0, 1))),
+                        (((0, 0),), ((1, 0), (2, 0), (0, 1))),
+                        (((0, 0), (1, 0)),),
+                        (((0, 0),), ((1, 0),)),
+                        (((0, 0),),)]
