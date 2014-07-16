@@ -17,6 +17,13 @@ def test_cont_grammar(cont_grammar):
     assert len(set(testdata.CONT_GRAMMAR_FUNCS) - set(funcs)) == 0
 
 
+def test_discont_grammar(discont_grammar):
+    """Test grammar extraction from discontinuous trees
+    """
+    funcs = discont_grammar.keys()
+    assert len(set(testdata.DISCONT_GRAMMAR_FUNCS) - set(funcs)) == 0
+
+
 @pytest.fixture(scope='function')
 def cont_grammar(cont_tree):
     gram = {}

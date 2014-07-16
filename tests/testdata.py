@@ -106,10 +106,16 @@ DISCONT_BLOCKS_VP = [[1], [4,5,6,7,8]]
 CONT_BLOCKS_VP = [[4,5,6,7,8]]
 DISCONT_DOM_FIRST = [u'WP', u'VP', u'SBAR', u'VP',  u'S', u'VROOT']
 CONT_DOM_FIRST = [u'WP', u'S', u'VROOT']
-
+# grammar stuff
 CONT_GRAMMAR_FUNCS = [(u'VROOT', u'S', u'?'),
                       (u'S', u'WP', u'VB', u'NNP', u'VP'),
                       (u'VP', u'VB', u'NNP', u'SBAR'),
                       (u'SBAR', u'IN', u'NP', u'VP'),
                       (u'NP', u'NNP'),
                       (u'VP', u'VB')]
+DISCONT_GRAMMAR_FUNCS = [('VROOT', 'S', '?'), 
+                         ('S', 'VP', 'VB', 'NNP'), 
+                         ('SBAR', 'VP', 'IN', 'NP'), 
+                         ('VP', 'SBAR', 'VB', 'NNP'), 
+                         ('VP', 'WP', 'VB'),
+                         ('NP', 'NNP')]
