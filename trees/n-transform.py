@@ -199,8 +199,6 @@ def punct_verylow(tree):
     return tree
 
 
-
-
 def delete_punctuation(tree):
     """Remove punctuation terminals and write them out.
 

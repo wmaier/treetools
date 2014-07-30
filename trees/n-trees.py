@@ -1,12 +1,3 @@
-C_QUOTES = [u"\"", u"'", u"''", u"`", u"``"]
-C_COMMA = [u".", u",", u";", u"?", u"!", u"--", u":", u"-", u"/", u"..."]
-C_OPENING_PARENS = [u"(", u"[", u"{", u"-LRB-", u"LRB"]
-C_CLOSING_PARENS = [u")", u"]", u"}", u"-RRB-", u"RRB"]
-C_PARENS = C_OPENING_PARENS + C_CLOSING_PARENS
-C_PAIRPUNCT = C_QUOTES + C_PARENS
-C_PUNCT = C_PAIRPUNCT + C_COMMA
-DEFAULT_LABEL = u"LABEL"
-
 
 def delete_terminal(tree, leaf):
     """Delete a leaf node and recursively all of its ancestors

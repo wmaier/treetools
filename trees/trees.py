@@ -15,13 +15,22 @@ from collections import namedtuple
 DEFAULT_GF_SEPARATOR = u"-"
 DEFAULT_COINDEX_SEPARATOR = u"-"
 DEFAULT_GAPPING_SEPARATOR = u"="
-# brackets related stuff
-# ... allowed as phrase brackets
-PHRASE_BRACKETS = ["(", ")"]
+# character constants
 # ... all kinds of brackets
-BRACKETS = {"(" : "LRB", ")" : "RRB",
-            "[" : "LSB", "]" : "RSB",
-            "{" : "LCB", "}" : "RCB"}
+OPENING_BRACKETS = {"(" : "LRB", "-LRB-" : "LRB",
+                    "[" : "LSB", "-LSB-" : "LSB",
+                    "{" : "LCB", "-LCB-" : "LCB"}
+CLOSING_BRACKETS = {")" : "RRB", "-RRB-" : "RRB",
+                    "]" : "RSB", "-RSB-" : "RSB",
+                    "}" : "RCB", "-RCB-" : "RCB"}
+BRACKETS = dict(OPENING_BRACKETS.items() + CLOSING_BRACKETS.items())
+# ... other stuff
+QUOTES = [u"\"", u"'", u"''", u"`", u"``"]
+COMMA = [u".", u",", u";", u"?", u"!", u"--", u":", u"-", u"/", u"..."]
+PAIRPUNCT = QUOTES + BRACKETS.keys()
+PUNCT = PAIRPUNCT + COMMA
+# phrase brackets
+PHRASE_BRACKETS = ["(", ")"]
 # head marker
 DEFAULT_HEAD_MARKER = u"'"
 # fields and default values
@@ -33,7 +42,6 @@ DEFAULT_LABEL = u"EMPTY"
 DEFAULT_MORPH = u"--"
 DEFAULT_EDGE = u"--"
 DEFAULT_ROOT = u"VROOT"
-
 
 class Tree(object):
     """A tree is represented by a unique ID per instance, a parent, a

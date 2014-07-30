@@ -139,6 +139,25 @@ def test_cont_output(cont_tree):
     assert result == original
 
 
+def test_add_topnode(discont_tree, cont_tree):
+    """transform.add_topnode
+    """
+    dtree = discont_tree
+    discont_nodes = [node for node in trees.preorder(dtree)]
+    dtree = transform.add_topnode(dtree)
+    discont_nodes_p = [node for node in trees.preorder(dtree)]
+    assert len(discont_nodes) == len(discont_nodes_p) - 1
+    assert discont_tree.parent == dtree
+    assert len(trees.children(dtree)) == 1
+    ctree = cont_tree
+    cont_nodes = [node for node in trees.preorder(ctree)]
+    ctree = transform.add_topnode(ctree)
+    cont_nodes_p = [node for node in trees.preorder(ctree)]
+    assert len(cont_nodes) == len(cont_nodes_p) - 1
+    assert cont_tree.parent == ctree
+    assert len(trees.children(ctree)) == 1
+
+
 def test_lca(discont_tree, cont_tree):
     """trees.lca
     """
