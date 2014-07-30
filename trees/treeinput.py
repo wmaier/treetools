@@ -60,9 +60,9 @@ def tigerxml_build_tree(s_element, **params):
             else:
                 raise ValueError("more than one root node")
     top = root
-    if not root.data['label'] == "VROOT":
+    if not root.data['label'] == trees.DEFAULT_ROOT:
         top = trees.Tree(trees.make_node_data())
-        top.data['label'] = u"VROOT"
+        top.data['label'] = trees.DEFAULT_ROOT
         top.children.append(root)
         top.data['morph'] = trees.DEFAULT_MORPH
         top.data['edge'] = trees.DEFAULT_EDGE
@@ -183,7 +183,7 @@ def brackets(in_file, in_encoding, **params):
                 elif state == 9:
                     # happens when root label is empty (PTB style)
                     level += 1
-                    queue[-1].data['label'] = u"VROOT"
+                    queue[-1].data['label'] = trees.DEFAULT_ROOT
                     queue.append(trees.Tree(trees.make_node_data()))
                     state = 1
                 elif state == 1:
@@ -197,11 +197,11 @@ def brackets(in_file, in_encoding, **params):
                     pass
                 elif state in [2, 4, 5]:
                     if state == 2:
-                        if not 'brackets_tolerant' in params:
+                        if not 'brackets_emptypos' in params:
                             raise ValueError("expected whitespace or (, got )")
                         else:
                             if not 'quiet' in params:
-                                print("being tolerant", file=sys.stderr)
+                                print("got empty POS", file=sys.stderr)
                             # last token was a word
                             queue[-1].data['word'] = queue[-1].data['label']
                             # queue[-1].data['label'] = queue[-2].data['label']
@@ -350,7 +350,7 @@ def export(in_file, in_encoding, **params):
                     node_by_num = {}
                     children_by_num = {}
                     node_by_num[0] = trees.make_node_data()
-                    node_by_num[0]['label'] = u"VROOT"
+                    node_by_num[0]['label'] = trees.DEFAULT_ROOT
                     node_by_num[0]['edge'] = trees.DEFAULT_EDGE
                     term_cnt = 1
                     for fields in [export_parse_line(line, **params) \
@@ -386,8 +386,7 @@ INPUT_OPTIONS = {'gf_split' : 'Brackets: Try to split grammatical ' \
                      'functions from label at last occurrence of gf separator',
                  'gf_separator' : 'Brackets: Separator to use for ' \
                      ' gf option (default %s)' % trees.DEFAULT_GF_SEPARATOR,
-                 'brackets_tolerant' : 'Brackets: Allow empty phrase ' \
-                     'labels aside from root',
+                 'brackets_emptypos' : 'Brackets: Allow empty POS tags',
                  'continuous' : 'Export/TIGERXML: number sentences by ' \
                      'counting, don\'t use #BOS',
                  'replace_parens' : 'Replace parens by LRB, RRB, etc. ',

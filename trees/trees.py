@@ -29,9 +29,10 @@ NUMBER_OF_FIELDS = 6
 FIELDS = ['word', 'lemma', 'label', 'morph', 'edge', 'parent_num']
 DEFAULT_WORD = u""
 DEFAULT_LEMMA = u"--"
-DEFAULT_LABEL = u"--"
+DEFAULT_LABEL = u"EMPTY"
 DEFAULT_MORPH = u"--"
 DEFAULT_EDGE = u"--"
+DEFAULT_ROOT = u"VROOT"
 
 
 class Tree(object):
@@ -186,6 +187,30 @@ def dominance(tree):
         yield parent
 
 
+def get_label(tree, **params):
+    """Compute subtree label decorations depending on given parameters.
+    """
+    label = tree.data['label']
+    gf_separator = DEFAULT_GF_SEPARATOR
+    if 'gf_separator' in params:
+        gf_separator = unicode(params['gf_separator'])
+    gf_string = ""
+    if 'gf' in params and not tree.data['edge'].startswith("-") \
+       and (has_children(tree)
+            or 'gf_terminals' in params):
+        gf_string = "%s%s" % (gf_separator, tree.data['edge'])
+    head = ""
+    if 'mark_heads_marking' in params and tree.data['head']:
+        head = DEFAULT_HEAD_MARKER
+    split_marker = ""
+    if 'boyd_split_marking' in params and tree.data['split']:
+        split_marker = "*"
+    split_number = ""
+    if 'boyd_split_numbering' in params and tree.data['split']:
+        split_number = tree.data['block_number']
+    return u"%s%s%s%s%s" % (label, gf_string, head, split_marker, split_number)
+
+
 def parse_label(label, **params):
     """Generic parsing of treebank label assuming following 
     format (no spaces):
@@ -199,14 +224,14 @@ def parse_label(label, **params):
     Single parts are returned as namedtuple. Non-presented parts
     are returned with default values from tree.py (or empty). 
     """
-    gf_separator = trees.DEFAULT_GF_SEPARATOR
+    gf_separator = DEFAULT_GF_SEPARATOR
     if gf_separator in params:
         gf_separator = params['gf_separator']
     # start from the back
     # head marker
     headmarker = ""
-    if label[-1] == trees.DEFAULT_HEAD_MARKER:
-        headmarker = label[-1]
+    if len(label) > 0 and label[-1] == DEFAULT_HEAD_MARKER:
+        headmarker = True
         label = label[:-1]
     # coindex or gapping sep (PTB)
     coindex = ""
@@ -214,45 +239,63 @@ def parse_label(label, **params):
     coindex_sep_pos = None
     gapping_sep_pos = None
     for i, char in reversed(list(enumerate(label))):
-        if char == trees.DEFAULT_COINDEX_SEPARATOR and coindex_sep_pos == None:
+        if char == DEFAULT_COINDEX_SEPARATOR and coindex_sep_pos == None:
             coindex_sep_pos = i
-        if char == trees.DEFAULT_GAPPING_SEPARATOR and gapping_sep_pos == None:
+        if char == DEFAULT_GAPPING_SEPARATOR and gapping_sep_pos == None:
             gapping_sep_pos = i
     if coindex_sep_pos is not None and label[coindex_sep_pos + 1:].isdigit():
         coindex = label[coindex_sep_pos + 1:]
         label = label[:coindex_sep_pos]
-    if gapping_sep_pos is not None and label[gapping_sep_pos + 1:].isdigit():
-        gapindex = label[gapindex_sep_pos + 1:]
-        label = label[:gapindex_sep_pos]
-    if len(label) == 0:
-        raise ValueError('label too short?')
+    if gapping_sep_pos is not None and label[gapping_sep_pos + 1:].isdigit() \
+       and coindex == "":
+        gapindex = label[gapping_sep_pos + 1:]
+        label = label[:gapping_sep_pos]
     # gf
-    gf = trees.DEFAULT_EDGE
+    gf = DEFAULT_EDGE
     gf_sep_pos = None
     for i, char in reversed(list(enumerate(label))):
+        # first separator from right to left counts
         if char == gf_separator:
             gf_sep_pos = i
-    if gf_sep_pos > 1:
+            break
+    if gf_sep_pos > 0 and gf_sep_pos < len(label) - 1:
         gf = label[gf_sep_pos + 1:]
         label = label[:gf_sep_pos]
-    is_trace = label[0] == '*' and label[-1] == '*'
+    if len(gf) == 0:
+        gf = DEFAULT_EDGE
+    if len(label) == 0:
+        label = DEFAULT_LABEL
+    # is trace?
+    is_trace = len(label) > 0 and label[0] == '*' and label[-1] == '*'
     Label = namedtuple('Label', 'label gf gf_separator coindex gapindex ' \
                        'headmarker is_trace')
     return Label(label, gf, gf_separator, coindex, gapindex, headmarker, is_trace)
 
 
-def format_label(label):
-    """Glue parts of parsed label (parse_label) together.
+def format_label(label, **params):
+    """Glue parts of parsed label (parse_label) together. To delete a certain
+    component of the label, parse_label it, set the corresponding components
+    to the empty string and then format_label it.
+    If param always_label is given, we also write the label if label == trees.
+    DEFAULT_LABEL. Same for gf and DEFAULT_EDGE.
     """
-    if len(gapindex) > 0 and len(coindex) > 0:
+    label_always = 'always_label' in params
+    edge_always = 'always_gf' in params
+    if len(label.gapindex) > 0 and len(label.coindex) > 0:
         raise ValueError("Cannot have gapping index and coindex on same label")
+    lab = ""
+    if not label.label == DEFAULT_LABEL or label_always:
+        lab = label.label
     index = ""
-    if len(coindex) > 0:
-        index = trees.DEFAULT_COINDEX_SEPARATOR + label.coindex
-    elif len(gapindex) > 0:
-        index = trees.DEFAULT_GAPINDEX_SEPARATOR + label.gapindex
-    gf = label.gf_separator + label.gf
-    return label.label + gf + index + label.headmarker
+    if len(label.coindex) > 0:
+        index = DEFAULT_COINDEX_SEPARATOR + label.coindex
+    elif len(label.gapindex) > 0:
+        index = DEFAULT_GAPPING_SEPARATOR + label.gapindex
+    gf = ""
+    if not label.gf == DEFAULT_EDGE or edge_always:
+        gf = label.gf_separator + label.gf
+    headmarker = "'" if label.headmarker else ""
+    return lab + gf + index + headmarker
 
 
 def replace_chars(tree, cands):

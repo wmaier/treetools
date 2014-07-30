@@ -55,30 +55,6 @@ def parse_split_specification(split_spec, size):
     return parts
 
 
-def decorate_label(tree, **params):
-    """Compute subtree label decorations depending on given parameters.
-    """
-    label = tree.data['label']
-    gf_separator = trees.DEFAULT_GF_SEPARATOR
-    if 'gf_separator' in params:
-        gf_separator = unicode(params['gf_separator'])
-    gf_string = ""
-    if 'gf' in params and not tree.data['edge'].startswith("-") \
-       and (trees.has_children(tree)
-            or 'gf_terminals' in params):
-        gf_string = "%s%s" % (gf_separator, tree.data['edge'])
-    head = ""
-    if 'mark_heads_marking' in params and tree.data['head']:
-        head = trees.DEFAULT_HEAD_MARKER
-    split_marker = ""
-    if 'boyd_split_marking' in params and tree.data['split']:
-        split_marker = "*"
-    split_number = ""
-    if 'boyd_split_numbering' in params and tree.data['split']:
-        split_number = tree.data['block_number']
-    return u"%s%s%s%s%s" % (label, gf_string, head, split_marker, split_number)
-
-
 def export_tabs(length):
     """Number of tabs after a single field in export format, given the
     length of the field.
@@ -96,7 +72,7 @@ def export_format(subtree, **params):
     """
     if subtree.data['edge'] == None:
         subtree.data['edge'] = '--'
-    label = decorate_label(subtree, **params)
+    label = trees.get_label(subtree, **params)
     if not 'export_four' in params:
         return u"%s%s%s\t%s%s%s\t%d\n" \
             % (subtree.data['word'],
@@ -181,14 +157,14 @@ def write_brackets_subtree(tree, stream, **params):
     stream.write(u"(")
     if trees.has_children(tree):
         if not 'brackets_emptyroot' in params:
-            stream.write(decorate_label(tree, **params))
+            stream.write(trees.get_label(tree, **params))
         else:
             del params['brackets_emptyroot']
         for child in trees.children(tree):
             write_brackets_subtree(child, stream, **params)
     else:
         tree = trees.replace_chars(tree, trees.BRACKETS)
-        stream.write(decorate_label(tree, **params))
+        stream.write(trees.get_label(tree, **params))
         stream.write(u" %s" % tree.data['word'])
     stream.write(u")")
 
@@ -196,9 +172,7 @@ def write_brackets_subtree(tree, stream, **params):
 def brackets(tree, stream, **params):
     """One bracketed tree per line. Tree must not be discontinuous.
     """
-    gapdeg = max([treeanalysis.gapdeg(tree) \
-                  for tree in trees.preorder(tree)])
-    if gapdeg > 0:
+    if treeanalysis.gap_degree(tree) > 0:
         raise ValueError("cannot write a discontinuous trees with brackets.")
     write_brackets_subtree(tree, stream, **params)
     stream.write(u"\n")
@@ -215,6 +189,22 @@ def terminals(tree, stream, **params):
         else:
             print(terminal.data['word'], end=u" ", file=stream)
     print(u"", file=stream)
+
+
+def tigerxml_begin(stream, **params):
+    """The start of a tigerxml document. To be completed.
+    """
+    stream.write(u"<?xml version='1.0' encoding='%s'?>" \
+                 % params.dest_enc)
+    stream.write(u"<corpus>")
+    stream.write(u"<body>")
+
+
+def tigerxml_end(stream, **params):
+    """The end of a tigerxml document, to be completed.
+    """
+    stream.write(u"</corpus>")
+    stream.write(u"</body>")
 
 
 def tigerxml(tree, stream, **params):
