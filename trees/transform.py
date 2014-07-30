@@ -202,6 +202,25 @@ def raising(tree):
     return tree
 
 
+def add_topnode(tree, **params):
+    """Add a node with label TOP ensuring that there is a unary edge
+    on top of the tree.
+
+    Prerequisites: none
+    Parameters: none
+    Output options: none
+    """
+    top = trees.Tree(trees.make_node_data())
+    top.data['label'] = u"TOP"
+    top.children.append(tree)
+    top.data['morph'] = trees.DEFAULT_MORPH
+    top.data['edge'] = trees.DEFAULT_EDGE
+    top.data['lemma'] = trees.DEFAULT_LEMMA
+    top.data['sid'] = tree.data['sid']
+    tree.parent = top
+    return top
+
+
 def add_parser(subparsers):
     """Add an argument parser to the subparsers of treetools.py.
     """
@@ -369,4 +388,6 @@ def run(args):
                         sys.stderr.write("\r%d" % tree_ind)
                 sys.stderr.write("\n")
 
-TRANSFORMATIONS = [root_attach, negra_mark_heads, boyd_split, raising]
+TRANSFORMATIONS = [root_attach, negra_mark_heads, boyd_split, raising,
+                   add_topnode]
+
