@@ -221,8 +221,52 @@ def add_topnode(tree, **params):
     return top
 
 
+def insert_terminals(tree, **params):
+    """Insert terminal nodes in the tree, given in a parameter file
+    in two colums, first column contains the string index, second the
+    word. Inserted terminals will be attached to the root node.
+    Example:
+
+    A B D
+
+    In order to insert a 'C' with POS tag 'X' between the 'B' and
+    the 'D', you must specify
+
+    2 C X
+
+    No spaces in words allowed.
+
+    Prerequisites: none
+    Parameters: terminalfile:[file]
+    Output options: none
+    """
+    terminals = defaultdict(int)
+    with io.open(params['terminalfile']) as tf:
+        for line in tf:
+            line = line.strip()
+            # throw away stuff after third space
+            terminals[int(line[0])] = (line[1], line[2])
+    for terminal_num in terminals:
+        node = trees.Tree(trees.make_node_data())
+        node.data['word'] = terminals[terminal_num][0]
+        node.data['label'] = terminals[terminal_num][1]
+        node.data['morph'] = trees.DEFAULT_MORPH
+        node.data['lemma'] = trees.DEFAULT_LEMMA
+        node.data['edge'] = trees.DEFAULT_EDGE
+        node.data['num'] = terminal_num
+        # shift other terminal numbers by one
+        treeterms = trees.terminals(tree)
+        for term in treeterms:
+            if term.data['num'] >= terminal_num:
+                term.data['num'] += 1
+        # insert this one
+        tree.children.append(node)
+        node.parent = tree
+
+
 def punctuation_delete(tree, **params):
-    """Remove punctuation terminals and write them out.
+    """Remove punctuation terminals and write them out
+    on stdout.
 
     Prerequisite: none
     Parameters: none
@@ -230,8 +274,13 @@ def punctuation_delete(tree, **params):
     """
     terms = trees.terminals(tree)
     removal = []
+    print("--- %d" % tree.data['sid'])
     for i, terminal in enumerate(terms):
         if terminal.data['word'] in trees.PUNCT:
+            print("%s\t%s\t%s" % (terminal.data['num'],
+                                  terminal.data['word'],
+                                  terminal.data['label']),
+                  file=sys.stdout)
             removal.append(terminal)
     # skip tree if it's a punctuation-only tree
     if len(removal) == len(terms):
@@ -243,7 +292,7 @@ def punctuation_delete(tree, **params):
     return tree
 
 
-def punctuation_verylow(tree):
+def punctuation_verylow(tree, **params):
     """Move all punctuation to the parent of its left terminal neighbor
     (when possible).
 
@@ -266,6 +315,70 @@ def punctuation_verylow(tree):
                 element.parent.children.remove(element)
                 element.parent = target
                 target.children.append(element)
+    return tree
+
+
+def punctuation_symetrify(tree, **params):
+    """Reattach pairwise punctuation symetrically. A punctuation symbol
+    X is lowered to a node Y if
+    1. it is pairwise punctuation (two brackets, quotes, etc.)
+    2. the left part L matching X is a direct daughter of Y
+    3. X is the right neighbor of the rightmost terminal dominated by Y
+    4. There is no punctuation between L and X
+
+    Prerequisite: A previous application of root_attach().
+    Parameters: none
+    Output options: none
+    """
+    # collect all relevant terminals
+    terms = trees.terminals(tree)
+    parens = [(i, terminal) for (i, terminal) in enumerate(terms)
+              if terminal.data['word'] in trees.PAIRPUNCT]
+    done = []
+    for (i, terminal) in parens:
+        if terminal in done:
+            continue
+        # is left part? -------------------------
+        # end of sentence? continue
+        if terminal == terms[-1]:
+            continue
+        do_continue = False
+        neighbor = trees.right_sibling(terminal)
+        if not neighbor == None and len(trees.children(neighbor)) > 0:
+            for neighborterm in trees.terminals(neighbor):
+                if neighborterm.data['word'] in trees.PAIRPUNCT:
+                    terminal.parent.children.remove(terminal)
+                    neighbor.children.append(terminal)
+                    terminal.parent = neighbor
+                    done.append(neighborterm)
+                    do_continue = True
+                    break
+            if do_continue:
+                continue
+        # is right part? ------------------------
+        # parent of current punctuation
+        p = terminal.parent
+        pterms = trees.terminals(p)
+        # parent dominates end of sentence? continue
+        if pterms[-1] == terms[-1]:
+            continue
+        neighborpos = pterms[-1].data['num']
+        # right neighbor of rightmost term of parent of punct
+        neighbor = terms[neighborpos]
+        # is not pairwise punct? continue
+        if not neighbor.data['word'] in trees.PAIRPUNCT:
+            continue
+        # is there punctuation in the middle between the current
+        # one and the above neighbor? Then continue
+        if any([terms[x].data['word'] in trees.PAIRPUNCT
+                for x in range(i + 1, neighborpos)]):
+            continue
+        # otherwise move neighbor down
+        neighbor.parent.children.remove(neighbor)
+        p.children.append(neighbor)
+        neighbor.parent = p
+        # don't treat neighbor twice
+        done.append(neighbor)
     return tree
 
 
@@ -436,6 +549,8 @@ def run(args):
                         sys.stderr.write("\r%d" % tree_ind)
                 sys.stderr.write("\n")
 
-TRANSFORMATIONS = [root_attach, negra_mark_heads, boyd_split, raising,
-                   add_topnode, punctuation_delete, punctuation_verylow]
+TRANSFORMATIONS = [root_attach, negra_mark_heads, boyd_split,
+                   raising, add_topnode, insert_terminals,
+                   punctuation_delete, punctuation_verylow,
+                   punctuation_symetrify]
 
