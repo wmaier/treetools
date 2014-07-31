@@ -152,6 +152,25 @@ def terminal_blocks(tree):
     return blocks
 
 
+def delete_terminal(tree, leaf):
+    """Delete a leaf node and recursively all of its ancestors
+    which do not have siblings. Root of the tree with the leaf
+    must be given as well. Return the first node with siblings
+    or the (given) root.
+    """
+    num = leaf.data['num']
+    parent = leaf.parent
+    while parent is not None and len(leaf.children) == 0:
+        parent.children.remove(leaf)
+        leaf = parent
+        parent = leaf.parent
+    # shift numbering
+    for terminal in terminals(tree):
+        if terminal.data['num'] > num:
+            terminal.data['num'] -= 1
+    return leaf
+
+
 def right_sibling(tree):
     """Return the right sibling of this tree if it exists and None otherwise.
     """

@@ -158,6 +158,33 @@ def test_add_topnode(discont_tree, cont_tree):
     assert len(trees.children(ctree)) == 1
 
 
+def test_delete_terminal(discont_tree, cont_tree):
+    """trees.delete_terminal
+    """
+    # discont
+    old_num_nodes = len([node for node in trees.preorder(discont_tree)])
+    terminals = trees.terminals(discont_tree)
+    to_remove = terminals[0]
+    to_remove_p = to_remove.parent
+    result = trees.delete_terminal(discont_tree, to_remove)
+    res_words = [node.data['word'] for node in trees.terminals(discont_tree)]
+    res_num_nodes = len([node for node in trees.preorder(discont_tree)])
+    assert result == to_remove_p
+    assert res_words == testdata.WORDS[1:]
+    assert res_num_nodes == old_num_nodes - 1
+    # cont
+    old_num_nodes = len([node for node in trees.preorder(cont_tree)])
+    terminals = trees.terminals(cont_tree)
+    to_remove = terminals[0]
+    to_remove_p = to_remove.parent
+    result = trees.delete_terminal(cont_tree, to_remove)
+    res_words = [node.data['word'] for node in trees.terminals(cont_tree)]
+    res_num_nodes = len([node for node in trees.preorder(cont_tree)])
+    assert result == to_remove_p
+    assert res_words == testdata.WORDS[1:]
+    assert res_num_nodes == old_num_nodes - 1
+
+
 def test_lca(discont_tree, cont_tree):
     """trees.lca
     """

@@ -221,6 +221,28 @@ def add_topnode(tree, **params):
     return top
 
 
+def delete_punctuation(tree, **params):
+    """Remove punctuation terminals and write them out.
+
+    Prerequisite: none
+    Parameters: none
+    Output options: none
+    """
+    terms = trees.terminals(tree)
+    removal = []
+    for i, terminal in enumerate(terms):
+        if terminal.data['word'] in trees.PUNCT:
+            removal.append(terminal)
+    # skip tree if it's a punctuation-only tree
+    if len(removal) == len(terms):
+        sys.stderr.write('\ndelete_punctuation: no mod on %d, ' \
+                         'punctuation only\n' % tree.data['sid'])
+        return tree
+    for terminal in removal:
+        trees.delete_terminal(tree, terminal)
+    return tree
+
+
 def add_parser(subparsers):
     """Add an argument parser to the subparsers of treetools.py.
     """
@@ -389,5 +411,5 @@ def run(args):
                 sys.stderr.write("\n")
 
 TRANSFORMATIONS = [root_attach, negra_mark_heads, boyd_split, raising,
-                   add_topnode]
+                   add_topnode, delete_punctuation]
 
