@@ -349,6 +349,34 @@ def test_punctuation_verylow(discont_tree, cont_tree):
                                trees.preorder(cont_tree)]
 
 
+def test_punctuation_root(discont_tree, cont_tree):
+    """transform.punctuation_root
+    """
+    terms = trees.terminals(discont_tree)
+    terms[0].data['word'] = ","
+    old_p = terms[0].parent
+    assert len(trees.children(old_p)) == 2
+    discont_tree = transform.punctuation_root(discont_tree)
+    assert len(trees.children(old_p)) == 1
+    assert terms[0].parent == discont_tree
+    terms = trees.terminals(cont_tree)
+    terms[3].data['word'] = ","
+    old_p = terms[3].parent
+    assert len(trees.children(old_p)) == 3
+    cont_tree = transform.punctuation_root(cont_tree)
+    assert len(trees.children(old_p)) == 2
+    assert terms[3].parent == cont_tree
+
+
+def test_ptb_delete_traces(cont_tree):
+    """transform.ptb_delete_traces
+    """
+    terms = trees.terminals(cont_tree)
+    terms[-2].data['label'] = "-NONE-"
+    cont_tree = transform.ptb_delete_traces(cont_tree)
+    assert len(trees.terminals(cont_tree)) == len(terms) - 1
+
+
 def test_analysis(discont_tree, cont_tree):
     """See treeanalysis
     """
