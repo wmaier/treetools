@@ -139,25 +139,6 @@ def test_cont_output(cont_tree):
     assert result == original
 
 
-def test_add_topnode(discont_tree, cont_tree):
-    """transform.add_topnode
-    """
-    dtree = discont_tree
-    discont_nodes = [node for node in trees.preorder(dtree)]
-    dtree = transform.add_topnode(dtree)
-    discont_nodes_p = [node for node in trees.preorder(dtree)]
-    assert len(discont_nodes) == len(discont_nodes_p) - 1
-    assert discont_tree.parent == dtree
-    assert len(trees.children(dtree)) == 1
-    ctree = cont_tree
-    cont_nodes = [node for node in trees.preorder(ctree)]
-    ctree = transform.add_topnode(ctree)
-    cont_nodes_p = [node for node in trees.preorder(ctree)]
-    assert len(cont_nodes) == len(cont_nodes_p) - 1
-    assert cont_tree.parent == ctree
-    assert len(trees.children(ctree)) == 1
-
-
 def test_delete_terminal(discont_tree, cont_tree):
     """trees.delete_terminal
     """
@@ -310,6 +291,62 @@ def test_raising(discont_tree):
     assert labels == testdata.CONT_LABELS_PREORDER
     assert words == testdata.WORDS
     assert set(uwords) == set(testdata.WORDS)
+
+
+def test_add_topnode(discont_tree, cont_tree):
+    """transform.add_topnode
+    """
+    dtree = discont_tree
+    discont_nodes = [node for node in trees.preorder(dtree)]
+    dtree = transform.add_topnode(dtree)
+    discont_nodes_p = [node for node in trees.preorder(dtree)]
+    assert len(discont_nodes) == len(discont_nodes_p) - 1
+    assert discont_tree.parent == dtree
+    assert len(trees.children(dtree)) == 1
+    ctree = cont_tree
+    cont_nodes = [node for node in trees.preorder(ctree)]
+    ctree = transform.add_topnode(ctree)
+    cont_nodes_p = [node for node in trees.preorder(ctree)]
+    assert len(cont_nodes) == len(cont_nodes_p) - 1
+    assert cont_tree.parent == ctree
+    assert len(trees.children(ctree)) == 1
+
+
+def test_punctuation_verylow(discont_tree, cont_tree):
+    """transform.punctuation_verylow
+    """
+    terminals = trees.terminals(discont_tree)
+    old_vp_children = terminals[0].parent.children
+    old_q_parent = terminals[-1].parent
+    terminals[0].data['word'] = "("
+    terminals[7].data['word'] = ")"
+    discont_tree = transform.punctuation_verylow(discont_tree)
+    new_vp_children = terminals[0].parent.children
+    new_q_parent = terminals[-1].parent
+    new_labels_test = [u'VROOT', u'S', u'VP', u'SBAR', u'VP', u'WP',
+                       u'VB', u'?', u'IN', u'NP', u'NNP', u'VB', 
+                       u'NNP', u'VB', u'NNP']
+    assert old_q_parent == discont_tree
+    assert old_vp_children == new_vp_children
+    assert new_q_parent == terminals[-2].parent
+    assert new_labels_test == [node.data['label'] for node in
+                               trees.preorder(discont_tree)]
+    terminals = trees.terminals(cont_tree)
+    old_vp_children = terminals[0].parent.children
+    old_q_parent = terminals[-1].parent
+    terminals[0].data['word'] = "("
+    terminals[7].data['word'] = ")"
+    cont_tree = transform.punctuation_verylow(cont_tree)
+    new_vp_children = terminals[0].parent.children
+    new_q_parent = terminals[-1].parent
+    new_labels_test = [u'VROOT', u'S', u'WP', u'VB', u'NNP',
+                       u'VP', u'VB', u'NNP', u'SBAR', u'IN',
+                       u'NP', u'NNP', u'VP', u'VB', u'?']
+    assert old_q_parent == cont_tree
+    assert old_vp_children == new_vp_children
+    assert new_q_parent == terminals[-2].parent
+    assert new_labels_test == [node.data['label'] for node in
+                               trees.preorder(cont_tree)]
 
 
 def test_analysis(discont_tree, cont_tree):

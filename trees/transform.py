@@ -221,7 +221,7 @@ def add_topnode(tree, **params):
     return top
 
 
-def delete_punctuation(tree, **params):
+def punctuation_delete(tree, **params):
     """Remove punctuation terminals and write them out.
 
     Prerequisite: none
@@ -240,6 +240,32 @@ def delete_punctuation(tree, **params):
         return tree
     for terminal in removal:
         trees.delete_terminal(tree, terminal)
+    return tree
+
+
+def punctuation_verylow(tree):
+    """Move all punctuation to the parent of its left terminal neighbor
+    (when possible).
+
+    Prerequisite: A previous application of root_attach().
+    Parameters: none
+    Output options: none
+    """
+    # collect all relevant terminals
+    parens = [(i, terminal) for (i, terminal)
+              in enumerate(trees.terminals(tree))
+              if terminal.data['word'] in trees.PUNCT
+              and i > 0]
+    terminals = trees.terminals(tree)
+    for (i, element) in parens:
+        # exception: phrases which only have punctuation below them
+        if not all([child.data['word'] in trees.PUNCT \
+                    for child in element.parent.children]):
+            target = terminals[i - 1].parent
+            if not target == element.parent:
+                element.parent.children.remove(element)
+                element.parent = target
+                target.children.append(element)
     return tree
 
 
@@ -411,5 +437,5 @@ def run(args):
                 sys.stderr.write("\n")
 
 TRANSFORMATIONS = [root_attach, negra_mark_heads, boyd_split, raising,
-                   add_topnode, delete_punctuation]
+                   add_topnode, punctuation_delete, punctuation_verylow]
 

@@ -171,34 +171,6 @@ def symetrify2(tree):
     return tree
 
 
-def punct_verylow(tree):
-    """Move all punctuation to the parent of its left terminal neighbor
-    (when possible).
-
-    Prerequisite: A previous application of root_attach().
-    Parameters: none
-    Output options: none
-    """
-    # collect all relevant terminals
-    parens = [(i, terminal) for (i, terminal)
-              in enumerate(trees.terminals(tree))
-              if terminal.data['word'] in trees.C_PUNCT
-              and i > 0]
-    terminals = trees.terminals(tree)
-    for (i, element) in parens:
-        # exception: phrases which only have punctuation below them
-        punct_only = True
-        for child in element.parent.children:
-            punct_only = punct_only and child.data['word'] in trees.C_PUNCT
-        if not punct_only:
-            target = terminals[i - 1].parent
-            if not target == element.parent:
-                element.parent.children.remove(element)
-                element.parent = target
-                target.children.append(element)
-    return tree
-
-
 def insert_terminals(tree, **params):
     """Insert terminal nodes in the tree, given in a parameter file
     in two colums, first column contains the string index, second the
