@@ -77,37 +77,6 @@ def root_attach(tree):
     return tree
 
 
-def negra_mark_heads(tree):
-    """Mark the head child of each node in a NeGra/TIGER tree using a simple
-    heuristic. If there is child with a HD edge, it will be marked. Otherwise,
-    the rightmost child with a NK edge will be marked. If there is no such
-    child, the leftmost child will be marked.
-
-    Prerequisite: none
-    Parameters: none
-    Output options:
-        mark_heads_marking: Mark heads with an '
-    """
-    tree.data['head'] = False
-    for subtree in trees.preorder(tree):
-        if trees.has_children(subtree):
-            subtree_children = trees.children(subtree)
-            edges = [child.data['edge'] for child in subtree_children]
-            # default leftmost
-            index = 0
-            # if applicable leftmost HD
-            if 'HD' in edges:
-                index = edges.index('HD')
-            # otherwise if applicable rightmost NK
-            elif 'NK' in edges:
-                index = (len(edges) - 1) - edges[::-1].index('NK')
-            subtree_children[index].data['head'] = True
-            for i, child in enumerate(subtree_children):
-                if not i == index:
-                    child.data['head'] = False
-    return tree
-
-
 def boyd_split(tree):
     """For each continuous terminal block of a discontinuous node in tree,
     introduce a node which covers exactly this block. A single unique
@@ -382,6 +351,72 @@ def punctuation_symetrify(tree, **params):
     return tree
 
 
+def punctuation_root(tree, **params):
+    """Attach all punctuation to the root node.
+
+    Prerequisite: none
+    Parameters: none
+    Output options: none
+    """
+    terms = trees.terminals(tree)
+    punct = [terminal for terminal in terms
+             if terminal.data['label'] in trees.PUNCT \
+             and len(trees.children(terminal.parent)) > 1]
+    for p in punct:
+        p.parent.children.remove(p)
+        tree.children.append(p)
+        p.parent = tree
+    return tree
+
+
+def ptb_delete_traces(tree, **params):
+    """Delete PTB traces.
+
+    Prerequisite: none
+    Parameters: none
+    Output options: none
+    """
+    for trace in [terminal for terminal in trees.terminals(tree)
+                  if terminal.data['label'] == "-NONE-"]:
+        trees.delete_terminal(tree, trace)
+    for node in trees.preorder(tree):
+        label = trees.parse_label(node.data['label'])
+        label.coindex = ""
+        node.data['label'] = trees.format_label(label)
+    return tree
+
+
+def negra_mark_heads(tree):
+    """Mark the head child of each node in a NeGra/TIGER tree using a simple
+    heuristic. If there is child with a HD edge, it will be marked. Otherwise,
+    the rightmost child with a NK edge will be marked. If there is no such
+    child, the leftmost child will be marked.
+
+    Prerequisite: none
+    Parameters: none
+    Output options:
+        mark_heads_marking: Mark heads with an '
+    """
+    tree.data['head'] = False
+    for subtree in trees.preorder(tree):
+        if trees.has_children(subtree):
+            subtree_children = trees.children(subtree)
+            edges = [child.data['edge'] for child in subtree_children]
+            # default leftmost
+            index = 0
+            # if applicable leftmost HD
+            if 'HD' in edges:
+                index = edges.index('HD')
+            # otherwise if applicable rightmost NK
+            elif 'NK' in edges:
+                index = (len(edges) - 1) - edges[::-1].index('NK')
+            subtree_children[index].data['head'] = True
+            for i, child in enumerate(subtree_children):
+                if not i == index:
+                    child.data['head'] = False
+    return tree
+
+
 def add_parser(subparsers):
     """Add an argument parser to the subparsers of treetools.py.
     """
@@ -549,8 +584,9 @@ def run(args):
                         sys.stderr.write("\r%d" % tree_ind)
                 sys.stderr.write("\n")
 
-TRANSFORMATIONS = [root_attach, negra_mark_heads, boyd_split,
+TRANSFORMATIONS = [root_attach, boyd_split,
                    raising, add_topnode, insert_terminals,
                    punctuation_delete, punctuation_verylow,
-                   punctuation_symetrify]
+                   punctuation_symetrify, punctuation_root,
+                   negra_mark_heads, ptb_delete_traces]
 
