@@ -360,7 +360,7 @@ def punctuation_root(tree, **params):
     """
     terms = trees.terminals(tree)
     punct = [terminal for terminal in terms
-             if terminal.data['label'] in trees.PUNCT \
+             if terminal.data['word'] in trees.PUNCT \
              and len(trees.children(terminal.parent)) > 1]
     for p in punct:
         p.parent.children.remove(p)
