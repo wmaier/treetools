@@ -212,6 +212,29 @@ def test_right_sibling(discont_tree, cont_tree):
     assert crs == testdata.CONT_RIGHTSIB_PREORDER
 
 
+def test_left_sibling(discont_tree, cont_tree):
+    """trees.right_sibling
+    """
+    tree = discont_tree
+    rs = []
+    for node in trees.preorder(discont_tree):
+        sibling = trees.left_sibling(node)
+        if sibling is None:
+            rs.append(sibling)
+        else:
+            rs.append(sibling.data['label'])
+    ctree = cont_tree
+    crs = []
+    for node in trees.preorder(cont_tree):
+        sibling = trees.left_sibling(node)
+        if sibling is None:
+            crs.append(sibling)
+        else:
+            crs.append(sibling.data['label'])
+    assert rs == testdata.DISCONT_LEFTSIB_PREORDER
+    assert crs == testdata.CONT_LEFTSIB_PREORDER
+
+
 def test_terminal_blocks(discont_tree, cont_tree):
     """trees.terminal_blocks
     """

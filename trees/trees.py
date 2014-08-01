@@ -183,6 +183,18 @@ def right_sibling(tree):
     return None
 
 
+def left_sibling(tree):
+    """Return the left sibling of this tree if it exists and None otherwise.
+    """
+    if tree.parent is None:
+        return None
+    siblings = children(tree.parent)
+    for (index, _) in enumerate(siblings[1:]):
+        if siblings[index] == tree:
+            return siblings[index - 1]
+    return None
+
+
 def lca(tree_a, tree_b):
     """Return the least common ancestor of two trees and None if there
     is none.
