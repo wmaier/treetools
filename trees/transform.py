@@ -328,6 +328,7 @@ def punctuation_symetrify(tree, **params):
                                LABEL (relative clauses)
     Output options: none
     """
+    print("----------- %d " % tree.data['sid'])
     # collect all relevant terminals
     terms = trees.terminals(tree)
     parens = [(i, terminal) for (i, terminal) in enumerate(terms)
@@ -341,6 +342,7 @@ def punctuation_symetrify(tree, **params):
                       and terms[i + 1].data['label'] == relpron)]
     done = []
     for (i, terminal) in parens:
+        print("** %s" % terminal.data['word'])
         # don't treat stuff twice
         if terminal in done:
             continue
@@ -350,7 +352,7 @@ def punctuation_symetrify(tree, **params):
             todo = []
             neighbor = trees.right_sibling(terminal)
             node = terms[i + 1].parent
-            while not node == neighbor:
+            while not node == neighbor and not node is None:
                 todo.append(node)
                 node = node.parent
             todo.append(neighbor)
@@ -377,7 +379,7 @@ def punctuation_symetrify(tree, **params):
             todo = []
             neighbor = trees.left_sibling(terminal)
             node = terms[i - 1].parent
-            while not node == neighbor:
+            while not node == neighbor and not node is None:
                 todo.append(node)
                 node = node.parent
             todo.append(neighbor)
