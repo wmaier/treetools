@@ -203,23 +203,30 @@ def insert_terminals(tree, **params):
 
     [ID] 2 C X
 
-    No spaces in words allowed.
+    No spaces in words allowed, no double word indices per sentence
+    allowed.
 
     Prerequisites: none
     Parameters: quiet                : no messages
                 terminalfile:[file]  : the terminals to insert
     Output options: none
     """
-    # read terminals file only once
-    if not hasattr(insert_terminals, "terminals"):
-        insert_terminals.terminals = {}
-        with io.open(params['terminalfile']) as tf:
+    # read terminals file only if filename is new
+    if not hasattr(insert_terminals, "fn") \
+       or not insert_terminals.fn == params['terminalfile']:
+        insert_terminals.fn = params['terminalfile']
+        insert_terminals.terminals = dict()
+        with io.open(insert_terminals.fn) as tf:
             for line in tf:
                 line = line.strip().split()
                 if not int(line[0]) in insert_terminals.terminals:
                     insert_terminals.terminals[int(line[0])] = {}
                 if not int(line[1]) in insert_terminals.terminals[int(line[0])]:
                     insert_terminals.terminals[int(line[0])][int(line[1])] = {}
+                else:
+                    del insert_terminals.terminals
+                    raise ValueError("in tree %d, double index %d" %
+                                     (int(line[0]), int(line[1])))
                 # throw away stuff after fourth space
                 insert_terminals.terminals[int(line[0])][int(line[1])] \
                     = (line[2], line[3])

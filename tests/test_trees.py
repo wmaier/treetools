@@ -321,6 +321,17 @@ def test_insert_terminal(discont_tree, cont_tree):
     temp.write('1\t0\tTest1\tPosTest1\n')
     temp.write('1\t2\tTest1\tPosTest1\n')
     temp.write('1\t6\tTest2\tPosTest2\n')
+    temp.write('1\t6\tTest2\tPosTest2\n')
+    temp.write('1\t100\tTest2\tPosTest2\n')
+    temp.flush()
+    params = {'terminalfile' : temp.name, 'quiet' : True}
+    with pytest.raises(ValueError):
+        transform.insert_terminals(discont_tree,
+                                   **params)
+    temp = tempfile.NamedTemporaryFile()
+    temp.write('1\t0\tTest1\tPosTest1\n')
+    temp.write('1\t2\tTest1\tPosTest1\n')
+    temp.write('1\t6\tTest2\tPosTest2\n')
     temp.write('1\t100\tTest2\tPosTest2\n')
     temp.flush()
     params = {'terminalfile' : temp.name, 'quiet' : True}
@@ -328,6 +339,40 @@ def test_insert_terminal(discont_tree, cont_tree):
     discont_tree = transform.insert_terminals(discont_tree,
                                               **params)
     new_terms = trees.terminals(discont_tree)
+    assert len(old_terms) == len(new_terms) - 2
+    gold_words = list(testdata.WORDS)
+    out_words = [term.data['word'] for term in new_terms]
+    gold_words[1:1] = ['Test1']
+    gold_words[5:5] = ['Test2']
+    assert gold_words == out_words
+    gold_pos = list(testdata.POS)
+    out_pos = [term.data['label'] for term in new_terms]
+    gold_pos[1:1] = ['PosTest1']
+    gold_pos[5:5] = ['PosTest2']
+    assert gold_pos == out_pos
+    # cont
+    temp = tempfile.NamedTemporaryFile()
+    temp.write('1\t0\tTest1\tPosTest1\n')
+    temp.write('1\t2\tTest1\tPosTest1\n')
+    temp.write('1\t6\tTest2\tPosTest2\n')
+    temp.write('1\t6\tTest2\tPosTest2\n')
+    temp.write('1\t100\tTest2\tPosTest2\n')
+    temp.flush()
+    params = {'terminalfile' : temp.name, 'quiet' : True}
+    with pytest.raises(ValueError):
+        transform.insert_terminals(cont_tree,
+                                   **params)
+    temp = tempfile.NamedTemporaryFile()
+    temp.write('1\t0\tTest1\tPosTest1\n')
+    temp.write('1\t2\tTest1\tPosTest1\n')
+    temp.write('1\t6\tTest2\tPosTest2\n')
+    temp.write('1\t100\tTest2\tPosTest2\n')
+    temp.flush()
+    params = {'terminalfile' : temp.name, 'quiet' : True}
+    old_terms = trees.terminals(cont_tree)
+    cont_tree = transform.insert_terminals(cont_tree,
+                                           **params)
+    new_terms = trees.terminals(cont_tree)
     assert len(old_terms) == len(new_terms) - 2
     gold_words = list(testdata.WORDS)
     out_words = [term.data['word'] for term in new_terms]
