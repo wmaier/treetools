@@ -316,66 +316,85 @@ def punctuation_verylow(tree, **params):
 
 
 def punctuation_symetrify(tree, **params):
-    """Reattach pairwise punctuation symetrically. A punctuation symbol
-    X is lowered to a node Y if
-    1. it is pairwise punctuation (two brackets, quotes, etc.)
-    2. the left part L matching X is a direct daughter of Y
-    3. X is the right neighbor of the rightmost terminal dominated by Y
-    4. There is no punctuation between L and X
+    """Reattach pairwise punctuation symetrically. Loop through all
+    punctuation terminals t that can occur in pairs from left to right.
+    First check if t is on the left corner of a phrase which dominates
+    a terminal that is a potential right part for t. If not applicable,
+    check if t is on the right corner of a phrase and has a potential
+    left part as a terminal child of this phrase.
 
-    Prerequisite: A previous application of root_attach().
-    Parameters: none
+    Prerequisite: VROOT children attached.
+    Parameters: relc [LABEL] : include commas before words POS tagged
+                               LABEL (relative clauses)
     Output options: none
     """
     # collect all relevant terminals
     terms = trees.terminals(tree)
     parens = [(i, terminal) for (i, terminal) in enumerate(terms)
               if terminal.data['word'] in trees.PAIRPUNCT]
+    relpron = None
+    if 'relc' in params:
+        relpron = params['relc']
+        parens = [(i, terminal) for (i, terminal) in enumerate(terms)
+                  if terminal.data['word'] in trees.PAIRPUNCT
+                  or (i < len(terms) - 1 
+                      and terms[i + 1].data['label'] == relpron)]
     done = []
     for (i, terminal) in parens:
+        # don't treat stuff twice
         if terminal in done:
             continue
-        # is left part? -------------------------
-        # end of sentence? continue
-        if terminal == terms[-1]:
+        # is left part? --> look for right part
+        if not terminal == terms[-1]:
+            # to check: everything between parent of current term and neighbor
+            todo = []
+            neighbor = trees.right_sibling(terminal)
+            node = terms[i + 1].parent
+            while not node == neighbor:
+                todo.append(node)
+                node = node.parent
+            todo.append(neighbor)
+            do_break = False
+            for neighbor in todo:
+                if not neighbor == None and len(trees.children(neighbor)) > 0:
+                    # check if we find a matching right part among the children
+                    # of the given potential right part and move it there
+                    for neighborterm in trees.terminals(neighbor):
+                        if neighborterm.data['word'] in trees.PAIRPUNCT:
+                            terminal.parent.children.remove(terminal)
+                            neighbor.children.append(terminal)
+                            terminal.parent = neighbor
+                            done.append(neighborterm)
+                            done.append(terminal)
+                            do_break = True
+                            break
+                    if do_break:
+                        break
+        if terminal in done:
             continue
-        do_continue = False
-        neighbor = trees.right_sibling(terminal)
-        if not neighbor == None and len(trees.children(neighbor)) > 0:
-            for neighborterm in trees.terminals(neighbor):
-                if neighborterm.data['word'] in trees.PAIRPUNCT:
-                    terminal.parent.children.remove(terminal)
-                    neighbor.children.append(terminal)
-                    terminal.parent = neighbor
-                    done.append(neighborterm)
-                    do_continue = True
-                    break
-            if do_continue:
-                continue
-        # is right part? ------------------------
-        # parent of current punctuation
-        p = terminal.parent
-        pterms = trees.terminals(p)
-        # parent dominates end of sentence? continue
-        if pterms[-1] == terms[-1]:
-            continue
-        neighborpos = pterms[-1].data['num']
-        # right neighbor of rightmost term of parent of punct
-        neighbor = terms[neighborpos]
-        # is not pairwise punct? continue
-        if not neighbor.data['word'] in trees.PAIRPUNCT:
-            continue
-        # is there punctuation in the middle between the current
-        # one and the above neighbor? Then continue
-        if any([terms[x].data['word'] in trees.PAIRPUNCT
-                for x in range(i + 1, neighborpos)]):
-            continue
-        # otherwise move neighbor down
-        neighbor.parent.children.remove(neighbor)
-        p.children.append(neighbor)
-        neighbor.parent = p
-        # don't treat neighbor twice
-        done.append(neighbor)
+        # is right part? --> look for left part
+        if not terminal == terms[0]:
+            todo = []
+            neighbor = trees.left_sibling(terminal)
+            node = terms[i - 1].parent
+            while not node == neighbor:
+                todo.append(node)
+                node = node.parent
+            todo.append(neighbor)
+            do_break = False
+            for neighbor in todo:
+                if not neighbor == None and len(trees.children(neighbor)) > 0:
+                    for neighborterm in trees.terminals(neighbor):
+                        if neighborterm.data['word'] in trees.PAIRPUNCT:
+                            terminal.parent.children.remove(terminal)
+                            neighbor.children.append(terminal)
+                            terminal.parent = neighbor
+                            done.append(neighborterm)
+                            done.append(terminal)
+                            do_break = True
+                            break
+                    if do_break:
+                        break
     return tree
 
 

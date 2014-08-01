@@ -177,8 +177,8 @@ def right_sibling(tree):
     if tree.parent is None:
         return None
     siblings = children(tree.parent)
-    for (index, _) in enumerate(siblings[:-1]):
-        if siblings[index] == tree:
+    for (index, sibling) in enumerate(siblings[:-1]):
+        if sibling == tree:
             return siblings[index + 1]
     return None
 
@@ -189,9 +189,9 @@ def left_sibling(tree):
     if tree.parent is None:
         return None
     siblings = children(tree.parent)
-    for (index, _) in enumerate(siblings[1:]):
-        if siblings[index] == tree:
-            return siblings[index - 1]
+    for (index, sibling) in enumerate(siblings[1:]):
+        if sibling == tree:
+            return siblings[index]
     return None
 
 

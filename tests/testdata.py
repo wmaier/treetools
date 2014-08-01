@@ -92,9 +92,9 @@ DISCONT_HEADS_PREORDER = []
 DISCONT_RIGHTSIB_PREORDER = [None, u'?', u'VB', u'VB', u'IN', u'VB', 
                              None, u'NP', None, None, u'NNP', None, 
                              u'NNP', None, None]
-DISCONT_LEFTSIB_PREORDER = [None, u'?', u'NNP', u'NNP', u'NP', u'VB', 
-                            None, u'VP', None, None, u'SBAR', None, 
-                            u'VP', None, None]
+DISCONT_LEFTSIB_PREORDER = [None, None, None, None, None, None, u'WP', 
+                            u'VP', u'IN', None, u'SBAR', u'VB', u'VP', 
+                            u'VB', u'S']
 DISCONT_LABELSBOYD_PREORDER = [u'VROOT', u'S', u'VP', u'SBAR', u'VP',
                                u'WP', u'VB', u'NNP', u'VP', u'VB',
                                u'NNP', u'SBAR', u'IN', u'NP', u'NNP',
@@ -105,9 +105,9 @@ CONT_LABELS_PREORDER = [u'VROOT', u'S', u'WP', u'VB', u'NNP',
 CONT_RIGHTSIB_PREORDER = [None, u'?', u'VB', u'NNP', u'VP', 
                           None, u'NNP', u'SBAR', None, u'NP', 
                           u'VP', None, None, None, None]
-CONT_LEFTSIB_PREORDER = [None, u'?', u'VP', u'WP', u'VB', None, 
-                         u'SBAR', u'VB', None, u'VP', u'IN', None, 
-                         None, None, None]
+CONT_LEFTSIB_PREORDER = [None, None, None, u'WP', u'VB', u'NNP', None, 
+                         u'VB', u'NNP', None, u'IN', None, u'NP', None, 
+                         u'S']
 DISCONT_BLOCKS_VP = [[1], [4,5,6,7,8]]
 CONT_BLOCKS_VP = [[4,5,6,7,8]]
 DISCONT_DOM_FIRST = [u'WP', u'VP', u'SBAR', u'VP',  u'S', u'VROOT']
