@@ -192,33 +192,53 @@ def add_topnode(tree, **params):
 
 def insert_terminals(tree, **params):
     """Insert terminal nodes in the tree, given in a parameter file
-    in two colums, first column contains the string index, second the
-    word. Inserted terminals will be attached to the root node.
-    Example:
+    in four colums: sentence index, word index, word, part-of-speech. 
+    Inserted terminals will be attached to the root node.
+    Example: Given a sentence with id [ID] and words
 
-    A B D
+    A B D,
 
-    In order to insert a 'C' with POS tag 'X' between the 'B' and
+    in order to insert a 'C' with POS tag 'X' between the 'B' and
     the 'D', you must specify
 
-    2 C X
+    [ID] 2 C X
 
     No spaces in words allowed.
 
     Prerequisites: none
-    Parameters: terminalfile:[file]
+    Parameters: quiet                : no messages
+                terminalfile:[file]  : the terminals to insert
     Output options: none
     """
-    terminals = defaultdict(int)
-    with io.open(params['terminalfile']) as tf:
-        for line in tf:
-            line = line.strip()
-            # throw away stuff after third space
-            terminals[int(line[0])] = (line[1], line[2])
-    for terminal_num in terminals:
+    # read terminals file only once
+    if not hasattr(insert_terminals, "terminals"):
+        insert_terminals.terminals = {}
+        with io.open(params['terminalfile']) as tf:
+            for line in tf:
+                line = line.strip().split()
+                if not int(line[0]) in insert_terminals.terminals:
+                    insert_terminals.terminals[int(line[0])] = {}
+                if not int(line[1]) in insert_terminals.terminals[int(line[0])]:
+                    insert_terminals.terminals[int(line[0])][int(line[1])] = {}
+                # throw away stuff after fourth space
+                insert_terminals.terminals[int(line[0])][int(line[1])] \
+                    = (line[2], line[3])
+    if not tree.data['sid'] in insert_terminals.terminals:
+        return tree
+    for terminal_num in sorted(insert_terminals.terminals[tree.data['sid']],
+                               key=int):
+        if terminal_num > len(trees.terminals(tree)) + 1 \
+                or terminal_num == 0:
+            if not 'quiet' in params:
+                print("sentence length %d, cannot insert at %d" \
+                          % (len(trees.terminals(tree)),
+                             terminal_num))
+            continue
         node = trees.Tree(trees.make_node_data())
-        node.data['word'] = terminals[terminal_num][0]
-        node.data['label'] = terminals[terminal_num][1]
+        node.data['word'] = insert_terminals. \
+            terminals[tree.data['sid']][terminal_num][0]
+        node.data['label'] = insert_terminals. \
+            terminals[tree.data['sid']][terminal_num][1]
         node.data['morph'] = trees.DEFAULT_MORPH
         node.data['lemma'] = trees.DEFAULT_LEMMA
         node.data['edge'] = trees.DEFAULT_EDGE
@@ -231,6 +251,7 @@ def insert_terminals(tree, **params):
         # insert this one
         tree.children.append(node)
         node.parent = tree
+    return tree
 
 
 def punctuation_delete(tree, **params):
@@ -238,26 +259,26 @@ def punctuation_delete(tree, **params):
     on stdout.
 
     Prerequisite: none
-    Parameters: none
+    Parameters: quiet : no messages
     Output options: none
     """
-    terms = trees.terminals(tree)
-    removal = []
-    print("--- %d" % tree.data['sid'])
-    for i, terminal in enumerate(terms):
-        if terminal.data['word'] in trees.PUNCT:
-            print("%s\t%s\t%s" % (terminal.data['num'],
+    removal = [term for term in trees.terminals(tree)
+               if term.data['word'] in trees.PUNCT]
+    output = ["%s\t%s\t%s\t%s" % (tree.data['sid'],
+                                  terminal.data['num'],
                                   terminal.data['word'],
-                                  terminal.data['label']),
-                  file=sys.stdout)
-            removal.append(terminal)
+                                  terminal.data['label'])
+              for terminal in removal]
     # skip tree if it's a punctuation-only tree
-    if len(removal) == len(terms):
-        sys.stderr.write('\ndelete_punctuation: no mod on %d, ' \
-                         'punctuation only\n' % tree.data['sid'])
-        return tree
-    for terminal in removal:
-        trees.delete_terminal(tree, terminal)
+    if len(removal) == len(trees.terminals(tree)):
+        if not 'quiet' in params:
+            sys.stderr.write('\ndelete_punctuation: no mod on %d, ' \
+                                 'punctuation only\n' % tree.data['sid'])
+    else:
+        for terminal in removal:
+            tree = trees.delete_terminal(tree, terminal)
+        for line in output:
+            print(line)
     return tree
 
 

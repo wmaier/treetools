@@ -238,6 +238,12 @@ def get_label(tree, **params):
     return u"%s%s%s%s%s" % (label, gf_string, head, split_marker, split_number)
 
 
+class Label(object):
+    """Dummy class for labels
+    """
+    pass
+
+
 def parse_label(label, **params):
     """Generic parsing of treebank label assuming following 
     format (no spaces):
@@ -294,9 +300,15 @@ def parse_label(label, **params):
         label = DEFAULT_LABEL
     # is trace?
     is_trace = len(label) > 0 and label[0] == '*' and label[-1] == '*'
-    Label = namedtuple('Label', 'label gf gf_separator coindex gapindex ' \
-                       'headmarker is_trace')
-    return Label(label, gf, gf_separator, coindex, gapindex, headmarker, is_trace)
+    lab = Label()
+    lab.label = label
+    lab.gf = gf
+    lab.gf_separator = gf_separator
+    lab.coindex = coindex
+    lab.gapindex = gapindex
+    lab.headmarker = headmarker
+    lab.is_trace = is_trace
+    return lab
 
 
 def format_label(label, **params):
@@ -322,7 +334,8 @@ def format_label(label, **params):
     if not label.gf == DEFAULT_EDGE or edge_always:
         gf = label.gf_separator + label.gf
     headmarker = "'" if label.headmarker else ""
-    return lab + gf + index + headmarker
+    result = lab + gf + index + headmarker
+    return result
 
 
 def replace_chars(tree, cands):
