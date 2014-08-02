@@ -328,7 +328,6 @@ def punctuation_symetrify(tree, **params):
                                LABEL (relative clauses)
     Output options: none
     """
-    print("----------- %d " % tree.data['sid'])
     # collect all relevant terminals
     terms = trees.terminals(tree)
     parens = [(i, terminal) for (i, terminal) in enumerate(terms)
@@ -342,61 +341,33 @@ def punctuation_symetrify(tree, **params):
                       and terms[i + 1].data['label'] == relpron)]
     done = []
     for (i, terminal) in parens:
-        print("** %s" % terminal.data['word'])
         # don't treat stuff twice
         if terminal in done:
             continue
-        # is left part? --> look for right part
-        if not terminal == terms[-1]:
-            # to check: everything between parent of current term and neighbor
-            todo = []
-            neighbor = trees.right_sibling(terminal)
-            node = terms[i + 1].parent
-            while not node == neighbor and not node is None:
-                todo.append(node)
-                node = node.parent
-            todo.append(neighbor)
-            do_break = False
-            for neighbor in todo:
-                if not neighbor == None and len(trees.children(neighbor)) > 0:
-                    # check if we find a matching right part among the children
-                    # of the given potential right part and move it there
-                    for neighborterm in trees.terminals(neighbor):
-                        if neighborterm.data['word'] in trees.PAIRPUNCT:
-                            terminal.parent.children.remove(terminal)
-                            neighbor.children.append(terminal)
-                            terminal.parent = neighbor
-                            done.append(neighborterm)
-                            done.append(terminal)
-                            do_break = True
-                            break
-                    if do_break:
-                        break
+        leftmost_term = trees.terminals(terminal.parent)[0]
+        if not leftmost_term == terms[0]:
+            candnum = leftmost_term.data['num'] - 1
+            cand = terms[candnum - 1]
+            if cand.data['word'] in trees.PAIRPUNCT \
+               and not cand in done:
+                cand.parent.children.remove(cand)
+                cand.parent = terminal.parent
+                terminal.parent.children.append(cand)
+                done.append(cand)
+                done.append(terminal)
         if terminal in done:
             continue
-        # is right part? --> look for left part
-        if not terminal == terms[0]:
-            todo = []
-            neighbor = trees.left_sibling(terminal)
-            node = terms[i - 1].parent
-            while not node == neighbor and not node is None:
-                todo.append(node)
-                node = node.parent
-            todo.append(neighbor)
-            do_break = False
-            for neighbor in todo:
-                if not neighbor == None and len(trees.children(neighbor)) > 0:
-                    for neighborterm in trees.terminals(neighbor):
-                        if neighborterm.data['word'] in trees.PAIRPUNCT:
-                            terminal.parent.children.remove(terminal)
-                            neighbor.children.append(terminal)
-                            terminal.parent = neighbor
-                            done.append(neighborterm)
-                            done.append(terminal)
-                            do_break = True
-                            break
-                    if do_break:
-                        break
+        rightmost_term = trees.terminals(terminal.parent)[-1]
+        if not rightmost_term == terms[-1]:
+            candnum = rightmost_term.data['num'] + 1
+            cand = terms[candnum - 1]
+            if cand.data['word'] in trees.PAIRPUNCT \
+               and not cand in done:
+                cand.parent.children.remove(cand)
+                cand.parent = terminal.parent
+                terminal.parent.children.append(cand)
+                done.append(cand)
+                done.append(terminal)
     return tree
 
 
