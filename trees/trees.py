@@ -158,6 +158,10 @@ def delete_terminal(tree, leaf):
     must be given as well. Return the first node with siblings
     or the (given) root.
     """
+    root = tree
+    while not root.parent == None:
+        root = root.parent
+    terms = terminals(root)
     num = leaf.data['num']
     parent = leaf.parent
     while parent is not None and len(leaf.children) == 0:
@@ -165,7 +169,7 @@ def delete_terminal(tree, leaf):
         leaf = parent
         parent = leaf.parent
     # shift numbering
-    for terminal in terminals(tree):
+    for terminal in terms:
         if terminal.data['num'] > num:
             terminal.data['num'] -= 1
     return leaf
