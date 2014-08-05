@@ -13,7 +13,7 @@ from trees import trees, treeinput, treeoutput, transform, treeanalysis
 from . import testdata
 
 
-def test_labels():
+def test_labels(cont_tree):
     """General test concerning the parsing and output of labels
     """
     label = ""
@@ -59,6 +59,21 @@ def test_labels():
     assert e.is_trace
     olabel = trees.format_label(e)
     assert olabel == label
+    cands = {"(" : "X", "{" : "Y", "]" : "Z"}
+    cont_tree_labels = [node.data['label'] for node 
+                        in trees.preorder(cont_tree)]
+    cont_tree.data['label'] = "A(B{C]D"
+    trees.replace_chars(cont_tree, cands)
+    cont_tree_labels_goal = list(cont_tree_labels)
+    cont_tree_labels_goal[0] = "AXBYCZD"
+    cont_tree_labels_new = [node.data['label'] for node 
+                            in trees.preorder(cont_tree)]
+    cont_tree.data['label'] = 10
+    cont_tree_labels_goal[0] = 10
+    trees.replace_chars(cont_tree, cands)
+    cont_tree_labels_new = [node.data['label'] for node 
+                            in trees.preorder(cont_tree)]
+    assert cont_tree_labels_new == cont_tree_labels_goal
 
 
 def test_cont_general(cont_tree):

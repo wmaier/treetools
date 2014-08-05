@@ -355,7 +355,8 @@ def replace_chars(tree, cands):
     dictionary.
     """
     for field in FIELDS:
-        if not tree.data[field] is None:
+        if not tree.data[field] is None \
+                and isinstance(tree.data[field], basestring):
             for cand in cands:
                 tree.data[field] = tree.data[field].replace(cand, cands[cand])
     return tree
