@@ -182,7 +182,6 @@ def terminals(tree, stream, **params):
     """All terminals of the tree on one line separated by whitespace.
     """
     for terminal in trees.terminals(tree):
-        print(terminal.data['word'], end=u" ", file=stream)
         if 'terminals_tnt' in params:
             print("%s\t%s" % (terminal.data['word'],
                               terminal.data['label']), file=stream)
