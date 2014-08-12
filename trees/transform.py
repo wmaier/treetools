@@ -251,6 +251,7 @@ def insert_terminals(tree, **params):
         node.data['edge'] = trees.DEFAULT_EDGE
         node.data['num'] = terminal_num
         # shift other terminal numbers by one
+        # print("inserting in %d at %d" % (tree.data['sid'], terminal_num))
         treeterms = trees.terminals(tree)
         for term in treeterms:
             if term.data['num'] >= terminal_num:

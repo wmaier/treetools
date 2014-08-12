@@ -167,11 +167,15 @@ def brackets(in_file, in_encoding, **params):
     gf_separator = trees.DEFAULT_GF_SEPARATOR
     if 'gf_separator' in params:
         gf_separator = params['gf_separator']
+    cnt = 1
+    if 'brackets_firstid' in params:
+        cnt = params['brackets_firstid']
+    if not 'quiet' in params:
+        print("first sentence id will be %d" % cnt)
     queue = []
     state = 0
     level = 0
     term_cnt = 1
-    cnt = 1
     with io.open(in_file, encoding=in_encoding) as stream:
         for lextoken, lexclass in bracket_lexer(stream):
             if lexclass == "LRB":
@@ -387,6 +391,7 @@ INPUT_OPTIONS = {'gf_split' : 'Brackets: Try to split grammatical ' \
                  'gf_separator' : 'Brackets: Separator to use for ' \
                      ' gf option (default %s)' % trees.DEFAULT_GF_SEPARATOR,
                  'brackets_emptypos' : 'Brackets: Allow empty POS tags',
+                 'brackets_firstid' : 'Give first tree id ID',
                  'continuous' : 'Export/TIGERXML: number sentences by ' \
                      'counting, don\'t use #BOS',
                  'replace_parens' : 'Replace parens by LRB, RRB, etc. ',
