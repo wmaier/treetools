@@ -144,8 +144,6 @@ def export(tree, stream, **params):
             non_terms[subtree.data['num']] = export_format(subtree, **params)
         else:
             terms[subtree.data['num']] = export_format(subtree, **params)
-    for num in terms:
-        print("%d %s" % (num, terms[num]))
     for num in sorted(terms.keys()):
         stream.write(terms[num])
     for num in sorted(non_terms.keys()):
