@@ -224,6 +224,7 @@ def brackets(in_file, in_encoding, **params):
                             for subtree in trees.preorder(queue[0]):
                                 subtree = trees.replace_chars(subtree, trees.BRACKETS)
                         yield queue[0]
+                        term_cnt = 1
                         queue = []
                         state = 0
                     else:
@@ -376,6 +377,7 @@ def export(in_file, in_encoding, **params):
                         for subtree in trees.preorder(tree):
                             subtree = trees.replace_chars(subtree, trees.BRACKETS)
                     yield tree
+                    term_cnt = 1
                     tree_cnt += 1
                     in_sentence = False
                     sentence = []
