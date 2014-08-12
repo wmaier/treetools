@@ -182,12 +182,16 @@ def terminals(tree, stream, **params):
     """All terminals of the tree on one line separated by whitespace.
     """
     for terminal in trees.terminals(tree):
-        print(terminal.data['word'], end=u" ", file=stream)
-        if 'terminals_tnt' in params:
-            print("%s\t%s" % (terminal.data['word'],
-                              terminal.data['label']), file=stream)
+        if 'terminals_one' in params:
+            result = terminal.data['word']
+            if 'terminals_pos' in params:
+                result += "\t%s" % terminal.data['label']
+            print(result, file=stream)
         else:
-            print(terminal.data['word'], end=u" ", file=stream)
+            result = terminal.data['word']
+            if 'terminals_pos' in params:
+                result += "/%s" % terminal.data['label']
+            print(result, end=u" ", file=stream)
     print(u"", file=stream)
 
 
@@ -250,4 +254,5 @@ OUTPUT_OPTIONS = {'boyd_split_marking' : 'Boyd split: Mark split nodes with *',
                   'gf_separator' : 'Separator to use for gf option',
                   'gf_terminals' : 'If gf is set, use func. labels on terms.',
                   'mark_heads_marking' : 'Output head marking',
-                  'terminals_tnt' : 'Terminals output in TnT format'}
+                  'terminals_one' : 'Terminals output with one terminal/line',
+                  'terminals_pos' : 'POS tags in terminal output (sep /)'}
