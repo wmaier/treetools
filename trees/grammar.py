@@ -10,23 +10,7 @@ import argparse
 import sys
 from collections import Counter
 from . import trees, treeinput, treeanalysis
-from . import misc, grammaroutput, grammaranalysis
-
-
-# PMCFG format constants
-PRAGMA = ":"
-RULE = ":"
-RULEARROW = "<-"
-LINEARIZATION = "="
-SEQUENCE = "->"
-# RCG format constants
-RCG_RULEARROW = "-->"
-# other constants
-DEFAULT_BINLABEL = "@"
-DEFAULT_BINSUFFIX = "X"
-DEFAULT_MARKOV_HORIZONTALSEP = "-"
-DEFAULT_MARKOV_VERTICALSEP = "^"
-DEFAULT_VERT = "VERT"
+from . import misc, grammaranalysis, grammaroutput
 
 
 class LabelGenerator(object):
@@ -44,7 +28,7 @@ class LabelGenerator(object):
         """Deliver next unique label (wihtout fan-out)
         """
         self.n += 1
-        return "%s%d%s" % (DEFAULT_BINLABEL, self.n, DEFAULT_BINSUFFIX)
+        return "%s%d%s" % (grammarconst.DEFAULT_BINLABEL, self.n, grammarconst.DEFAULT_BINSUFFIX)
 
 
 class MarkovLabelGenerator(LabelGenerator):
@@ -57,7 +41,7 @@ class MarkovLabelGenerator(LabelGenerator):
             for i, _ in enumerate(params['vert']):
                 if not i < self.kwargs['p']['v']:
                     break
-                vert += "%s%s" % (DEFAULT_MARKOV_VERTICALSEP,
+                vert += "%s%s" % (grammarconst.DEFAULT_MARKOV_VERTICALSEP,
                                   params['vert'][i])
         horiz = ""
         if self.kwargs['p']['h'] > 0:
@@ -67,13 +51,13 @@ class MarkovLabelGenerator(LabelGenerator):
                 i -= 1
                 cnt += 1
                 if 'nofanout' in self.kwargs['p']:
-                    horiz += "%s%s" % (DEFAULT_MARKOV_HORIZONTALSEP, \
+                    horiz += "%s%s" % (grammarconst.DEFAULT_MARKOV_HORIZONTALSEP, \
                                        params['func'][i + 1])
                 else:
-                    horiz += "%s%s%d" % (DEFAULT_MARKOV_HORIZONTALSEP, \
+                    horiz += "%s%s%d" % (grammarconst.DEFAULT_MARKOV_HORIZONTALSEP, \
                                          params['func'][i + 1],
                                          params['fanout'][i + 1])
-        return "%s%s%s%s" % (DEFAULT_BINLABEL, vert, horiz, DEFAULT_BINSUFFIX)
+        return "%s%s%s%s" % (grammarconst.DEFAULT_BINLABEL, vert, horiz, grammarconst.DEFAULT_BINSUFFIX)
 
 
 def linsub(lin, src, dest, replace):
@@ -137,7 +121,7 @@ def binarize_rule(func, lin, rule_cnt, vert, grammar, label_gen, result):
             result[func] = {}
         if not lin in result[func]:
             result[func][lin] = {}
-        result[func][lin][DEFAULT_VERT] = rule_cnt
+        result[func][lin][grammarconst.DEFAULT_VERT] = rule_cnt
     else:
         this_lin = lin
         sub_lin = linsub(lin, lambda x: x > 0, lambda x: 1, True)
@@ -147,7 +131,7 @@ def binarize_rule(func, lin, rule_cnt, vert, grammar, label_gen, result):
             result[bin_func] = {}
         if not sub_lin in result[bin_func]:
             result[bin_func][sub_lin] = {}
-        result[bin_func][sub_lin][DEFAULT_VERT] = rule_cnt
+        result[bin_func][sub_lin][grammarconst.DEFAULT_VERT] = rule_cnt
         for i in range(1, len(func) - 3):
             this_lin = linsub(this_lin, lambda x: x >= 0,
                               lambda x: x - 1, False)
@@ -162,7 +146,7 @@ def binarize_rule(func, lin, rule_cnt, vert, grammar, label_gen, result):
                 result[bin_func] = {}
             if not sub_lin in result[bin_func]:
                 result[bin_func][sub_lin] = {}
-            result[bin_func][sub_lin][DEFAULT_VERT] = rule_cnt
+            result[bin_func][sub_lin][grammarconst.DEFAULT_VERT] = rule_cnt
         bin_func = tuple([bin_label, func[-2], func[-1]])
         this_lin = linsub(this_lin, lambda x: x >= 0, lambda x: x - 1, False)
         this_lin = linsub(this_lin, lambda x: x == -1, lambda x: None, False)
@@ -170,7 +154,7 @@ def binarize_rule(func, lin, rule_cnt, vert, grammar, label_gen, result):
             result[bin_func] = {}
         if not this_lin in result[bin_func]:
             result[bin_func][this_lin] = {}
-        result[bin_func][this_lin][DEFAULT_VERT] = rule_cnt
+        result[bin_func][this_lin][grammarconst.DEFAULT_VERT] = rule_cnt
 
 
 def reordering_none(func, lin):
@@ -218,7 +202,7 @@ def binarize(grammar, **args):
     else:
         # without markovization
         label_gen = LabelGenerator()
-        vert = DEFAULT_VERT
+        vert = grammarconst.DEFAULT_VERT
         for func in grammar:
             for lin in grammar[func]:
                 rule_cnt = sum(grammar[func][lin].values())

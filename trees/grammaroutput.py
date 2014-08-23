@@ -10,20 +10,20 @@ import sys
 from itertools import chain
 from collections import defaultdict
 from StringIO import StringIO
-from . import grammaranalysis
+from . import grammarconst, grammaranalysis
 
 
 BRACKETS = ["(", ")"]
 
 
-def lopar(grammar, lexicon, dest, dest_enc, **params):
+def lopar(gram, lexicon, dest, dest_enc, **params):
     """Write grammar, lexicon and oc files in LoPar format.
     """
-    if not grammaranalysis.is_contextfree(grammar):
+    if not grammaranalysis.is_contextfree(gram):
         raise ValueError("must be PCFG to be written in LoPar format.")
     # look for start symbols
-    lhses = set([f[0] for f in grammar])
-    rhses = set(chain.from_iterable([f[1:] for f in grammar]))
+    lhses = set([f[0] for f in gram])
+    rhses = set(chain.from_iterable([f[1:] for f in gram]))
     startsymbols = {symbol : 0 for symbol in lhses - rhses}
     # open class: cat -> counter, no effort to distinguish closed from open
     oc_lower = defaultdict(int)
@@ -33,9 +33,9 @@ def lopar(grammar, lexicon, dest, dest_enc, **params):
          io.open("%s.start" % dest, 'w', encoding=dest_enc) as start_stream, \
          io.open("%s.oc" % dest, 'w', encoding=dest_enc) as ocl_stream, \
          io.open("%s.OC" % dest, 'w', encoding=dest_enc) as ocu_stream:
-        for func in grammar:
-            for lin in grammar[func]:
-                count = sum(grammar[func][lin].values())
+        for func in gram:
+            for lin in gram[func]:
+                count = sum(gram[func][lin].values())
                 # count start symbols
                 if func[0] in startsymbols:
                     startsymbols[func[0]] += count
@@ -65,7 +65,7 @@ def lopar(grammar, lexicon, dest, dest_enc, **params):
             ocu_stream.write(u"%s %d\n" % (tag, oc_upper[tag]))
 
 
-def pmcfg(grammar, lexicon, dest, dest_enc, **params):
+def pmcfg(gram, lexicon, dest, dest_enc, **params):
     """Write grammar in PMCFG format. No lexicon.
     """
     lindef_to_id = {}
@@ -73,15 +73,15 @@ def pmcfg(grammar, lexicon, dest, dest_enc, **params):
     func_id = 1
     lindef_id = 1
     with io.open("%s.pmcfg" % dest, 'w', encoding=dest_enc) as dest_stream:
-        for func in grammar:
-            for lin in grammar[func]:
-                count = sum(grammar[func][lin].values())
+        for func in gram:
+            for lin in gram[func]:
+                count = sum(gram[func][lin].values())
                 dest_stream.write(u" fun%d %s %s %s %s\n"
-                                  % (func_id, grammar.RULE, func[0],
-                                     grammar.RULEARROW,
+                                  % (func_id, grammarconst.RULE, func[0],
+                                     grammarconst.RULEARROW,
                                      ' '.join(func[1:])))
                 dest_stream.write(u" fun%d %s" % (func_id,
-                                                  grammar.LINEARIZATION))
+                                                  grammarconst.LINEARIZATION))
                 for lindef in lin:
                     if not lindef in lindef_to_id:
                         lindef_to_id[lindef] = lindef_id
@@ -95,17 +95,17 @@ def pmcfg(grammar, lexicon, dest, dest_enc, **params):
             lindef = ' '.join(["%d:%d" % (i, j) for (i, j)
                                in id_to_lindef[lindef_id]])
             dest_stream.write(u" s%s %s %s\n" % (lindef_id,
-                                                 grammar.SEQUENCE,
+                                                 grammarconst.SEQUENCE,
                                                  lindef))
 
 
-def rcg(grammar, lexicon, dest, dest_enc, **params):
+def rcg(gram, lexicon, dest, dest_enc, **params):
     """Write grammar in rparse rcg format, with count field. No lexicon.
     """
     with io.open("%s.rcg" % dest, 'w', encoding=dest_enc) as dest_stream:
-        for func in grammar:
-            for lin in grammar[func]:
-                count = sum(grammar[func][lin].values())
+        for func in gram:
+            for lin in gram[func]:
+                count = sum(gram[func][lin].values())
                 varcnt = 0
                 lhsargs = StringIO()
                 lhsarity = 1
@@ -130,7 +130,7 @@ def rcg(grammar, lexicon, dest, dest_enc, **params):
                                               rhsargs[i])
                                 for i in range(len(func[1:]))])
                 dest_stream.write(u"C:%d %s %s %s\n"
-                                  % (count, lhs, grammar.RCG_RULEARROW, rhs))
+                                  % (count, lhs, grammarconst.RCG_RULEARROW, rhs))
 
 
 FORMATS = [pmcfg, rcg, lopar]
