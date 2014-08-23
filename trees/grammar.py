@@ -28,7 +28,8 @@ class LabelGenerator(object):
         """Deliver next unique label (wihtout fan-out)
         """
         self.n += 1
-        return "%s%d%s" % (grammarconst.DEFAULT_BINLABEL, self.n, grammarconst.DEFAULT_BINSUFFIX)
+        return "%s%d%s" % (grammarconst.DEFAULT_BINLABEL, self.n, \
+                           grammarconst.DEFAULT_BINSUFFIX)
 
 
 class MarkovLabelGenerator(LabelGenerator):
@@ -57,7 +58,8 @@ class MarkovLabelGenerator(LabelGenerator):
                     horiz += "%s%s%d" % (grammarconst.DEFAULT_MARKOV_HORIZONTALSEP, \
                                          params['func'][i + 1],
                                          params['fanout'][i + 1])
-        return "%s%s%s%s" % (grammarconst.DEFAULT_BINLABEL, vert, horiz, grammarconst.DEFAULT_BINSUFFIX)
+        return "%s%s%s%s" % (grammarconst.DEFAULT_BINLABEL, vert, horiz,\
+                             grammarconst.DEFAULT_BINSUFFIX)
 
 
 def linsub(lin, src, dest, replace):
