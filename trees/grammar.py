@@ -23,18 +23,9 @@ def label_strip_fanout(label):
 
 
 def em(grammar, lexicon, **params):
-    """Do EM training. Parameters:
-        cycles: Number of EM cycles
-        train: File with training examples (trees)
+    """Do EM training.
     """
     raise ValueError("not yet implemented")
-    if not 'cycles' in params or not type(params['cycles']) == int:
-        raise ValueError("must specify a number of EM cycles")
-    cyc = params['cycles']
-    if not 'quiet' in params:
-        sys.stderr.write("%d EM cycles\n" % cyc)
-    for t in range(0, cyc):
-        print(t)
     return grammar, lexicon
 
 
@@ -317,8 +308,8 @@ def add_parser(subparsers):
                         ' (default: %(default)s) (at least one must be '\
                         ' specified. Deterministic binarization' \
                         ' if option not present.')
-    parser.add_argument('--em', metavar='EM', help='do EM (see --usage)',
-                        default=None, nargs='+')
+    parser.add_argument('--em', metavar='EM', help='do EM (see --usage)' \
+                        '(default: %(default)s)', default=None)
     parser.add_argument('--src-format', metavar='FMT',
                         choices=[fun.__name__
                                  for fun in treeinput.INPUT_FORMATS],
@@ -422,7 +413,7 @@ def run(args):
     if 'em' in args and args.em is not None:
         print(args)
         em_ops = misc.options_dict(args.em)
-        grammar, lexicon = em(grammar, lexicon, **em_ops)
+        grammar, lexicon = em(grammar, lexicon, params=em_ops)
     sys.stderr.write("\nwriting grammar in format '%s', encoding '%s', to '%s'"
                      % (args.dest_format, args.dest_enc, args.dest))
     sys.stderr.write("\n")
