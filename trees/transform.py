@@ -11,7 +11,6 @@ import argparse
 import sys
 import io
 import os
-from collections import defaultdict
 from . import trees, treeinput, treeoutput, misc
 
 

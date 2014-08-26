@@ -21,6 +21,9 @@ def tigerxml_build_tree(s_element, **params):
     """Build a tree from a <s> element in TIGER XML. If there is
     no unique VROOT, add one.
     """
+    gf_separator = trees.DEFAULT_GF_SEPARATOR
+    if 'gf_separator' in params:
+        gf_separator = params['gf_separator']
     idref_to_tree = dict()
     # handle terminals
     term_cnt = 1
@@ -222,7 +225,8 @@ def brackets(in_file, in_encoding, **params):
                         cnt += 1
                         if 'replace_parens' in params:
                             for subtree in trees.preorder(queue[0]):
-                                subtree = trees.replace_chars(subtree, trees.BRACKETS)
+                                subtree = trees.replace_chars(subtree,
+                                                              trees.BRACKETS)
                         yield queue[0]
                         term_cnt = 1
                         queue = []
@@ -250,7 +254,7 @@ def brackets(in_file, in_encoding, **params):
                 elif state in [1, 9]:
                     # phrase label, 9 when root label, 1 otherwise
                     if 'gf_split' in params:
-                        label_parts = trees.parse_label(lextoken, 
+                        label_parts = trees.parse_label(lextoken,
                                                   gf_separator=gf_separator)
                         label = label_parts.label \
                                 + label_parts.coindex \
@@ -319,7 +323,7 @@ def export_parse_line(line, **params):
         raise ValueError("parent field must be 0 or between 500 and 999")
     # options?
     if 'gf_split' in params:
-        label_parts = trees.parse_label(fields['label'], 
+        label_parts = trees.parse_label(fields['label'],
                                         gf_separator=gf_separator)
         fields['label'] = label_parts.label + label_parts.coindex \
                           + label_parts.headmarker
@@ -375,7 +379,8 @@ def export(in_file, in_encoding, **params):
                         else last_id
                     if 'replace_parens' in params:
                         for subtree in trees.preorder(tree):
-                            subtree = trees.replace_chars(subtree, trees.BRACKETS)
+                            subtree = trees.replace_chars(subtree,
+                                                          trees.BRACKETS)
                     yield tree
                     term_cnt = 1
                     tree_cnt += 1

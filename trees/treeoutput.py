@@ -199,7 +199,7 @@ def tigerxml_begin(stream, **params):
     """The start of a tigerxml document. To be completed.
     """
     stream.write(u"<?xml version='1.0' encoding='%s'?>" \
-                 % params.dest_enc)
+                 % params['dest_enc'])
     stream.write(u"<corpus>")
     stream.write(u"<body>")
 

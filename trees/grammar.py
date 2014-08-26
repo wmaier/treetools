@@ -10,7 +10,7 @@ import argparse
 import sys
 from collections import Counter
 from . import trees, treeinput, treeanalysis
-from . import misc, grammaranalysis, grammaroutput
+from . import misc, grammaranalysis, grammaroutput, grammarconst
 
 
 class LabelGenerator(object):
@@ -22,13 +22,13 @@ class LabelGenerator(object):
         """
         self.args = args
         self.kwargs = kwargs
-        self.n = 0
+        self.numb = 0
 
     def next(self, **params):
         """Deliver next unique label (wihtout fan-out)
         """
-        self.n += 1
-        return "%s%d%s" % (grammarconst.DEFAULT_BINLABEL, self.n, \
+        self.numb += 1
+        return "%s%d%s" % (grammarconst.DEFAULT_BINLABEL, self.numb, \
                            grammarconst.DEFAULT_BINSUFFIX)
 
 
@@ -52,13 +52,15 @@ class MarkovLabelGenerator(LabelGenerator):
                 i -= 1
                 cnt += 1
                 if 'nofanout' in self.kwargs['p']:
-                    horiz += "%s%s" % (grammarconst.DEFAULT_MARKOV_HORIZONTALSEP, \
-                                       params['func'][i + 1])
+                    horiz += "%s%s" \
+                             % (grammarconst.DEFAULT_MARKOV_HORIZONTALSEP,
+                                params['func'][i + 1])
                 else:
-                    horiz += "%s%s%d" % (grammarconst.DEFAULT_MARKOV_HORIZONTALSEP, \
-                                         params['func'][i + 1],
-                                         params['fanout'][i + 1])
-        return "%s%s%s%s" % (grammarconst.DEFAULT_BINLABEL, vert, horiz,\
+                    horiz += "%s%s%d" \
+                             % (grammarconst.DEFAULT_MARKOV_HORIZONTALSEP,
+                                params['func'][i + 1],
+                                params['fanout'][i + 1])
+        return "%s%s%s%s" % (grammarconst.DEFAULT_BINLABEL, vert, horiz,
                              grammarconst.DEFAULT_BINSUFFIX)
 
 
