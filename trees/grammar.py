@@ -10,23 +10,7 @@ import argparse
 import sys
 from collections import Counter
 from . import trees, treeinput, treeanalysis
-from . import misc, grammaranalysis, grammaroutput, grammarconst
-
-
-def label_strip_fanout(label):
-    """Assume the d+$ in a given label to be fanout and return
-    the stripped version of the label.
-    """
-    while label[-1].isdigit():
-        label = label[:-1]
-    return label
-
-
-def em(grammar, lexicon, **params):
-    """Do EM training.
-    """
-    raise ValueError("not yet implemented")
-    return grammar, lexicon
+from . import misc, grammaranalysis, grammaroutput
 
 
 class LabelGenerator(object):
@@ -308,8 +292,6 @@ def add_parser(subparsers):
                         ' (default: %(default)s) (at least one must be '\
                         ' specified. Deterministic binarization' \
                         ' if option not present.')
-    parser.add_argument('--em', metavar='EM', help='do EM (see --usage)' \
-                        '(default: %(default)s)', default=None)
     parser.add_argument('--src-format', metavar='FMT',
                         choices=[fun.__name__
                                  for fun in treeinput.INPUT_FORMATS],
@@ -410,10 +392,6 @@ def run(args):
             reordering = reordering_optimal
         grammar = binarize(grammar, reordering=reordering,
                            markov_opts=markov_opts)
-    if 'em' in args and args.em is not None:
-        print(args)
-        em_ops = misc.options_dict(args.em)
-        grammar, lexicon = em(grammar, lexicon, params=em_ops)
     sys.stderr.write("\nwriting grammar in format '%s', encoding '%s', to '%s'"
                      % (args.dest_format, args.dest_enc, args.dest))
     sys.stderr.write("\n")
@@ -422,6 +400,15 @@ def run(args):
          args.dest_enc,
          **misc.options_dict(args.dest_opts))
     print("\n", file=sys.stderr)
+
+
+def label_strip_fanout(label):
+    """Assume the d+$ in a given label to be fanout and return
+    the stripped version of the label.
+    """
+    while label[-1].isdigit():
+        label = label[:-1]
+    return label
 
 
 GRAMTYPES = {'treebank' : 'Plain treebank grammar',
