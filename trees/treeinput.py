@@ -19,7 +19,8 @@ from . import trees, misc
 
 def tigerxml_build_tree(s_element, **params):
     """Build a tree from a <s> element in TIGER XML. If there is
-    no unique VROOT, add one.
+    no unique VROOT, add one (unary). Root is found by looking for
+    nodes with no parent, 'root' attribute on <graph> is discarded.
     """
     gf_separator = trees.DEFAULT_GF_SEPARATOR
     if 'gf_separator' in params:
@@ -56,12 +57,16 @@ def tigerxml_build_tree(s_element, **params):
             child.parent = subtree
             subtree.children.append(child)
     root = None
+    roots = []
     for subtree in idref_to_tree.values():
         if subtree.parent is None:
-            if root is None:
-                root = subtree
-            else:
-                raise ValueError("more than one root node")
+            roots.append(subtree)
+    if len(roots) == 0:
+        raise ValueError("looks like a cycle")
+    if len(roots) > 1:
+        raise ValueError("multiple roots: %s" % " ".join([node.data['label'] 
+                                                          for node in roots]))
+    root = roots[0]
     top = root
     if not root.data['label'] == trees.DEFAULT_ROOT:
         top = trees.Tree(trees.make_node_data())
