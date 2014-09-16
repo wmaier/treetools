@@ -79,11 +79,11 @@ def pmcfg(gram, lexicon, dest, dest_enc, **params):
                 sys.stderr.write("brackets seem to not have been replaced, " \
                                  "may garble parser output: %s\n" % word)
             for (tag, count) in [(tag, lexicon[word][tag])
-                        for tag in lexicon[word]]: 
+                        for tag in lexicon[word]]:
                 func = (tag, word)
                 if not func in gram:
                     gram[func] = {}
-                lin = (((0,0),),)
+                lin = (((0, 0),),)
                 if lin in gram[func]:
                     count = gram[func][lin][(grammarconst.DEFAULT_VERT)] \
                             + count
@@ -120,7 +120,7 @@ def pmcfg(gram, lexicon, dest, dest_enc, **params):
         with io.open("%s.lex" % dest, 'w', encoding=dest_enc) as lex_stream:
             for word in lexicon:
                 if any(c in BRACKETS for c in word):
-                    sys.stderr.write("brackets seem to not have been replaced, " \
+                    sys.stderr.write("brackets not replaced, " \
                                      "may garble parser output: %s\n" % word)
                 tags = ["%s %d" % (tag, lexicon[word][tag])
                         for tag in lexicon[word]]
@@ -137,11 +137,11 @@ def rcg(gram, lexicon, dest, dest_enc, **params):
                 sys.stderr.write("brackets seem to not have been replaced, " \
                                  "may garble parser output: %s\n" % word)
             for (tag, count) in [(tag, lexicon[word][tag])
-                        for tag in lexicon[word]]: 
+                        for tag in lexicon[word]]:
                 func = (tag, word)
                 if not func in gram:
                     gram[func] = {}
-                lin = (((0,0),),)
+                lin = (((0, 0),),)
                 if lin in gram[func]:
                     count = gram[func][lin][(grammarconst.DEFAULT_VERT)] \
                             + count
@@ -177,12 +177,13 @@ def rcg(gram, lexicon, dest, dest_enc, **params):
                                               rhsargs[i])
                                 for i in range(len(func[1:]))])
                 dest_stream.write(u"C:%d %s %s %s\n"
-                                  % (count, lhs, grammarconst.RCG_RULEARROW, rhs))
+                                  % (count, lhs, grammarconst.RCG_RULEARROW,
+                                     rhs))
     if not 'lex_in_grammar' in params:
         with io.open("%s.lex" % dest, 'w', encoding=dest_enc) as lex_stream:
             for word in lexicon:
                 if any(c in BRACKETS for c in word):
-                    sys.stderr.write("brackets seem to not have been replaced, " \
+                    sys.stderr.write("brackets not replaced, " \
                                      "may garble parser output: %s\n" % word)
                 tags = ["%s %d" % (tag, lexicon[word][tag])
                         for tag in lexicon[word]]

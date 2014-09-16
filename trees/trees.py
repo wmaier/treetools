@@ -261,17 +261,17 @@ class Label(object):
 
 
 def parse_label(label, **params):
-    """Generic parsing of treebank label assuming following 
+    """Generic parsing of treebank label assuming following
     format (no spaces):
 
-    LABEL (GF_SEP GF)? ((COINDEX_SEP COINDEX)|(GAPINDEX_SEP GAPINDEX))? 
+    LABEL (GF_SEP GF)? ((COINDEX_SEP COINDEX)|(GAPINDEX_SEP GAPINDEX))?
     HEADMARKER?
 
     LABEL: \S+, GF_SEP: [#\-], GF: [^\-\=#\s]+
     COINDEX_SEP: \-, GAPINDEX_SEP: \=, CO/GAPINDEX: \d+
 
     Single parts are returned as namedtuple. Non-presented parts
-    are returned with default values from tree.py (or empty). 
+    are returned with default values from tree.py (or empty).
     """
     gf_separator = DEFAULT_GF_SEPARATOR
     if gf_separator in params:
@@ -355,7 +355,7 @@ def format_label(label, **params):
 
 
 def replace_chars(tree, cands):
-    """Replace characters in node data before bracketing output given a 
+    """Replace characters in node data before bracketing output given a
     dictionary.
     """
     for field in FIELDS:
