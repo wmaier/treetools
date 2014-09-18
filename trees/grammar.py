@@ -164,7 +164,7 @@ def binarize_rule(func, lin, rule_cnt, vert, grammar, label_gen, result):
 def reordering_none(func, lin):
     """No reordering.
     """
-    raise ValueError("not yet implemented")
+    return (func, lin)
 
 
 def reordering_optimal(func, lin):
@@ -178,7 +178,7 @@ def binarize(grammar, **args):
     """
     result = {}
     # with markovization?
-    if args['markov_opts'] is not None:
+    if 'markov_opts' in args and args['markov_opts'] is not None:
         nofanout = 'nofanout' in args['markov_opts']
         nf_vert = []
         if nofanout:
@@ -200,7 +200,8 @@ def binarize(grammar, **args):
                         vert = tuple([label_strip_fanout(label)
                                       for label in vert])
                         rule_cnt = nf_vert_c[vert]
-                    func, lin = args['reordering'](func, lin)
+                    if 'reordering' in args:
+                        func, lin = args['reordering'](func, lin)
                     binarize_rule(func, lin, rule_cnt, vert,
                                   grammar, label_gen, result)
     else:
@@ -210,7 +211,8 @@ def binarize(grammar, **args):
         for func in grammar:
             for lin in grammar[func]:
                 rule_cnt = sum(grammar[func][lin].values())
-                func, lin = args['reordering'](func, lin)
+                if 'reordering' in args:
+                    func, lin = args['reordering'](func, lin)
                 binarize_rule(func, lin, rule_cnt, vert,
                               grammar, label_gen, result)
     return result
@@ -402,6 +404,8 @@ def run(args):
          args.dest_enc,
          **misc.options_dict(args.dest_opts))
     print("\n", file=sys.stderr)
+    print(grammar, file=sys.stderr)
+    sys.exit()
 
 
 def label_strip_fanout(label):

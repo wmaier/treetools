@@ -34,6 +34,14 @@ def test_discont_grammar(discont_grammar):
     assert all([lin in testdata.DISCONT_GRAMMAR_LINS for lin in lins])
 
 
+def test_binarize_leftright(discont_grammar, cont_grammar):
+    """Test left-to-right binarization
+    """
+    discont_grammar = grammar.binarize(discont_grammar)
+    cont_grammar = grammar.binarize(cont_grammar)
+    assert testdata.DISCONT_GRAMMAR_LEFT_RIGHT == discont_grammar
+    assert testdata.CONT_GRAMMAR_LEFT_RIGHT == cont_grammar
+
 @pytest.fixture(scope='function')
 def cont_grammar(cont_tree):
     gram = {}
