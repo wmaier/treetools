@@ -34,6 +34,19 @@ def test_discont_grammar(discont_grammar):
     assert all([lin in testdata.DISCONT_GRAMMAR_LINS for lin in lins])
 
 
+def test_discont_grammar_markov(discont_grammar):
+    """Test binarized markovized grammar (discontinuous)
+    """
+    markov_opts = {'v' : 1, 'h' : 2}
+    bin_grammar = grammar.binarize(discont_grammar, \
+                                       markov_opts=markov_opts)
+    assert bin_grammar == testdata.DISCONT_GRAMMAR_LR_H2_V1_BTOP_BBOT
+    markov_opts = {'v' : 2, 'h' : 1}
+    bin_grammar = grammar.binarize(discont_grammar, \
+                                           markov_opts=markov_opts)
+    assert bin_grammar == testdata.DISCONT_GRAMMAR_LR_H1_V2_BTOP_BBOT
+
+
 def test_binarize_leftright(discont_grammar, cont_grammar):
     """Test left-to-right binarization
     """
@@ -41,6 +54,7 @@ def test_binarize_leftright(discont_grammar, cont_grammar):
     cont_grammar = grammar.binarize(cont_grammar)
     assert testdata.DISCONT_GRAMMAR_LEFT_RIGHT == discont_grammar
     assert testdata.CONT_GRAMMAR_LEFT_RIGHT == cont_grammar
+
 
 @pytest.fixture(scope='function')
 def cont_grammar(cont_tree):
