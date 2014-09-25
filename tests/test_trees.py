@@ -461,6 +461,46 @@ def test_punctuation_verylow(discont_tree, cont_tree):
                                trees.preorder(cont_tree)]
 
 
+def test_punctuation_symetrify(discont_tree, cont_tree):
+    """transform.punctuation_symetrify
+    """
+    temp = tempfile.NamedTemporaryFile()
+    temp.write('1\t3\t"\t$(\n')
+    temp.write('1\t5\t"\t$(\n')
+    temp.write('1\t8\t,\t$,\n')
+    temp.flush()
+    params = {'terminalfile' : temp.name, 'quiet' : True}
+    old_terms = trees.terminals(discont_tree)
+    discont_tree = transform.insert_terminals(discont_tree,
+                                              **params)
+    new_terms = trees.terminals(discont_tree)
+    assert len(old_terms) == len(new_terms) - 3
+    discont_tree = transform.root_attach(discont_tree)
+    discont_tree = transform.punctuation_symetrify(discont_tree)
+    treeoutput.compute_export_numbering(discont_tree)
+    assert new_terms[2].parent.data['num'] == 504
+    assert new_terms[4].parent.data['num'] == 504
+    assert new_terms[7].parent.data['num'] == 503
+    # cont
+    temp = tempfile.NamedTemporaryFile()
+    temp.write('1\t3\t"\t$(\n')
+    temp.write('1\t5\t"\t$(\n')
+    temp.write('1\t8\t,\t$,\n')
+    temp.flush()
+    params = {'terminalfile' : temp.name, 'quiet' : True}
+    old_terms = trees.terminals(cont_tree)
+    cont_tree = transform.insert_terminals(cont_tree,
+                                              **params)
+    new_terms = trees.terminals(cont_tree)
+    assert len(old_terms) == len(new_terms) - 3
+    cont_tree = transform.root_attach(cont_tree)
+    cont_tree = transform.punctuation_symetrify(cont_tree)
+    treeoutput.compute_export_numbering(cont_tree)
+    assert new_terms[2].parent.data['num'] == 504
+    assert new_terms[4].parent.data['num'] == 504
+    assert new_terms[7].parent.data['num'] == 503
+
+
 def test_punctuation_root(discont_tree, cont_tree):
     """transform.punctuation_root
     """
