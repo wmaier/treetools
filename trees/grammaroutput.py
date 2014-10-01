@@ -168,7 +168,7 @@ def rcg(gram, lexicon, dest, dest_enc, **params):
                         varcnt += 1
                 rhsargs = [rhsargs[i] for i in sorted(rhsargs, key=int)]
                 for i, rhs_el in enumerate(rhsargs):
-                    rhsargs[i] = ''.join([u"[%d]" % rhs_el[pos] for pos
+                    rhsargs[i] = ','.join([u"[%d]" % rhs_el[pos] for pos
                                           in sorted(rhs_el, key=int)])
                     rhsarity[i] = len(rhs_el)
                 lhs = u"%s%d(%s)" % (func[0], lhsarity, lhsargs.getvalue())
