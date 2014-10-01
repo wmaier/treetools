@@ -282,7 +282,7 @@ def extract(tree, grammar, lexicon):
             func = tuple(func)
             # build linearization
             lin = []
-            # position within rhs element
+            # counters for positions within rhs element
             rhs_argpos = [0] * (len(func) - 1)
             # one lhs argument per block in the tree
             for block in trees.terminal_blocks(subtree):
