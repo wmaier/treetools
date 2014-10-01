@@ -115,11 +115,10 @@ def linsub(lin, src, dest, replace):
     return tuple(result)
 
 
-def binarize_rule(func, lin, rule_cnt, vert, grammar, label_gen, result):
+def binarize_rule(func, lin, rule_cnt, vert, label_gen, result):
     """Left-to-right binarization of a single rule.
     """
     fanout = grammaranalysis.fan_out(lin)
-    rule_cnt = sum(grammar[func][lin].values())
     if len(func[1:]) <= 2:
         if not func in result:
             result[func] = {}
@@ -168,9 +167,45 @@ def reordering_none(func, lin):
 
 
 def reordering_optimal(func, lin):
-    """Rule-optimal binarization (Kallmeyer 2010).
+    """Locally optimal binarization (minimize fan-out per single decision).
     """
-    raise ValueError("not yet implemented")
+    order = []
+    pos = [i for i in range(1, len(func))]
+    for rhs in func[1:]:
+        if len(pos) == 0:
+            continue
+        fanout_min = sys.maxint
+        var_min = sys.maxint
+        winner_pos = pos[0]
+        for posc in pos:
+            # try all rhs predicates and check for the one ...
+            rhsc = func[posc]
+            tlin = linsub(lin, lambda x: x == posc - 1, lambda x: None, False)
+            if len(tlin) < fanout_min:
+                # ... which gives the lowest fanout when binarizing with it
+                fanout_min = len(tlin)
+                var_min = sum([len(tlin_e) for tlin_e in tlin])
+                winner_pos = posc
+            elif len(tlin) == fanout_min:
+                # with equal fanout, break ties using min number of variables
+                fanout_min = len(tlin)
+                var_min = sum([len(tlin_e) for tlin_e in tlin])
+                if sum([len(tlin_e) for tlin_e in tlin]) < var_min:
+                    winner_pos = posc
+        order.append(winner_pos)
+        pos.remove(winner_pos)
+    rhsorder = {}
+    varmap = {}
+    for i, o in enumerate(order):
+        rhsorder[i] = o - 1
+        varmap[o - 1] = i
+    newfunc = tuple([func[0]] + [func[1:][rhsorder[k]] \
+                                     for k in range(len(func[1:]))])
+    newlin = []
+    for arg in lin:
+        newlin.append(tuple([(varmap[argc[0]], argc[1]) for argc in arg]))
+    newlin = tuple(newlin)
+    return (newfunc, newlin)
 
 
 def binarize(grammar, **args):
@@ -203,7 +238,7 @@ def binarize(grammar, **args):
                     if 'reordering' in args:
                         func, lin = args['reordering'](func, lin)
                     binarize_rule(func, lin, rule_cnt, vert,
-                                  grammar, label_gen, result)
+                                  label_gen, result)
     else:
         # without markovization
         label_gen = LabelGenerator()
@@ -211,10 +246,20 @@ def binarize(grammar, **args):
         for func in grammar:
             for lin in grammar[func]:
                 rule_cnt = sum(grammar[func][lin].values())
+                bfunc = func
+                blin = lin
                 if 'reordering' in args:
-                    func, lin = args['reordering'](func, lin)
-                binarize_rule(func, lin, rule_cnt, vert,
-                              grammar, label_gen, result)
+                    bfunc, blin = args['reordering'](func, lin)
+                binarize_rule(bfunc, blin, rule_cnt, vert, label_gen, result)
+    if 'verb' in args and args['verb']:
+        fanouts = []
+        for func in result:
+            for lin in result[func]:
+                fanouts.extend(grammaranalysis.fan_out(lin))
+        print("fanout stats: ", file=sys.stderr)
+        counter = Counter(fanouts)
+        for c in counter:
+            print("%d\t%d" % (c, counter[c]))
     return result
 
 
@@ -320,6 +365,8 @@ def add_parser(subparsers):
                             'the grammar of the form key:value ' \
                             '(default: %(default)s)',
                         default=[])
+    parser.add_argument('--verbose', action='store_true', help='More verbose ' \
+                        'messages', default=False)
     parser.add_argument('--usage', nargs=0, help='show detailed information ' \
                         'about available tasks and input format/options',
                         action=UsageAction)
@@ -379,6 +426,7 @@ def run(args):
         if cnt % 100 == 0:
             print("\r%d" % cnt, end="", file=sys.stderr)
         cnt += 1
+    print("\n", file=sys.stderr)
     if not args.gramtype == 'treebank':
         markov_opts = None
         if args.markov is not None:
@@ -395,7 +443,7 @@ def run(args):
         elif args.gramtype == 'optimal':
             reordering = reordering_optimal
         grammar = binarize(grammar, reordering=reordering,
-                           markov_opts=markov_opts)
+                           markov_opts=markov_opts, verb=args.verbose)
     sys.stderr.write("\nwriting grammar in format '%s', encoding '%s', to '%s'"
                      % (args.dest_format, args.dest_enc, args.dest))
     sys.stderr.write("\n")
@@ -404,7 +452,6 @@ def run(args):
          args.dest_enc,
          **misc.options_dict(args.dest_opts))
     print("\n", file=sys.stderr)
-    print(grammar, file=sys.stderr)
     sys.exit()
 
 
