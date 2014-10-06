@@ -403,7 +403,7 @@ INPUT_OPTIONS = {'gf_split' : 'Brackets: Try to split grammatical ' \
                  'gf_separator' : 'Brackets: Separator to use for ' \
                      ' gf option (default %s)' % trees.DEFAULT_GF_SEPARATOR,
                  'brackets_emptypos' : 'Brackets: Allow empty POS tags',
-                 'brackets_firstid' : 'Give first tree id ID',
+                 'brackets_firstid' : 'Brackets: Give first tree id [ID]',
                  'continuous' : 'Export/TIGERXML: number sentences by ' \
                      'counting, don\'t use #BOS',
                  'replace_parens' : 'Replace parens by LRB, RRB, etc. ',

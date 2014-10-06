@@ -55,6 +55,18 @@ def parse_split_specification(split_spec, size):
     return parts
 
 
+def export_begin(stream, **params):
+    """Export preamble of output is empty.
+    """
+    pass
+
+
+def export_end(stream, **params):
+    """Export suffix of output is empty.
+    """
+    pass
+
+
 def export_tabs(length):
     """Number of tabs after a single field in export format, given the
     length of the field.
@@ -151,6 +163,18 @@ def export(tree, stream, **params):
     stream.write(u"#EOS %d\n" % tree_id)
 
 
+def brackets_begin(stream, **params):
+    """Brackets preamble of output is empty.
+    """
+    pass
+
+
+def brackets_end(stream, **params):
+    """Brackets suffix of output is empty.
+    """
+    pass
+
+
 def write_brackets_subtree(tree, stream, **params):
     """Write a single bracketed subtree.
     """
@@ -198,17 +222,16 @@ def terminals(tree, stream, **params):
 def tigerxml_begin(stream, **params):
     """The start of a tigerxml document. To be completed.
     """
-    stream.write(u"<?xml version='1.0' encoding='%s'?>" \
-                 % params['dest_enc'])
-    stream.write(u"<corpus>")
-    stream.write(u"<body>")
+    stream.write(u"<?xml version='1.0'?>\n")
+    stream.write(u"<corpus>\n")
+    stream.write(u"<body>\n")
 
 
 def tigerxml_end(stream, **params):
     """The end of a tigerxml document, to be completed.
     """
+    stream.write(u"</body>\n")
     stream.write(u"</corpus>")
-    stream.write(u"</body>")
 
 
 def tigerxml(tree, stream, **params):

@@ -559,6 +559,9 @@ def run(args):
         for src, dest in files:
             print("%s --> %s" % (src, dest), file=sys.stderr)
             with io.open(dest, 'w', encoding=args.dest_enc) as dest_stream:
+                getattr(treeoutput, args.dest_format + '_begin')\
+                    (dest_stream,
+                     **misc.options_dict(args.dest_opts))
                 for tree in getattr(treeinput,
                                     args.src_format)(src, args.src_enc,
                                                      **misc.options_dict \
@@ -571,6 +574,9 @@ def run(args):
                     if cnt % args.counting == 0:
                         sys.stderr.write("\r%d" % cnt)
                     cnt += 1
+                getattr(treeoutput, args.dest_format + '_end')\
+                    (dest_stream,
+                     **misc.options_dict(args.dest_opts))
             sys.stderr.write("\n")
     else:
         if os.path.isdir(args.src):
