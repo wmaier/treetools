@@ -7,6 +7,7 @@ Author: Wolfgang Maier <maierw@hhu.de>
 """
 from __future__ import print_function
 import itertools
+import sys
 from copy import deepcopy
 from collections import namedtuple
 
@@ -23,11 +24,12 @@ OPENING_BRACKETS = {"(" : "LRB", "-LRB-" : "LRB",
 CLOSING_BRACKETS = {")" : "RRB", "-RRB-" : "RRB",
                     "]" : "RSB", "-RSB-" : "RSB",
                     "}" : "RCB", "-RCB-" : "RCB"}
-BRACKETS = dict(OPENING_BRACKETS.items() + CLOSING_BRACKETS.items())
+BRACKETS = dict(list(OPENING_BRACKETS.items()) +\
+                list(CLOSING_BRACKETS.items()))
 # ... other stuff
 QUOTES = [u"\"", u"'", u"''", u"`", u"``"]
 COMMA = [u".", u",", u";", u"?", u"!", u"--", u":", u"-", u"/", u"..."]
-PAIRPUNCT = QUOTES + BRACKETS.keys()
+PAIRPUNCT = QUOTES + list(BRACKETS.keys())
 PUNCT = PAIRPUNCT + COMMA
 # phrase brackets
 PHRASE_BRACKETS = ["(", ")"]
@@ -53,12 +55,12 @@ class Tree(object):
     ID.
     """
     # unique id generator
-    newid = itertools.count().next
+    newid = itertools.count()
 
     def __init__(self, data):
         """Construct a new tree and copy given data dict.
         """
-        self.id = Tree.newid()
+        self.id = next(Tree.newid)
         self.children = []
         self.parent = None
         self.data = deepcopy(data)
@@ -71,6 +73,9 @@ class Tree(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 def make_node_data():
@@ -358,9 +363,14 @@ def replace_chars(tree, cands):
     """Replace characters in node data before bracketing output given a
     dictionary.
     """
+    thestringtype = None
+    if sys.version_info[0] < 3:
+        thestringtype = basestring
+    else:
+        thestringtype = str
     for field in FIELDS:
         if not tree.data[field] is None \
-                and isinstance(tree.data[field], basestring):
+                and isinstance(tree.data[field], thestringtype):
             for cand in cands:
                 tree.data[field] = tree.data[field].replace(cand, cands[cand])
     return tree

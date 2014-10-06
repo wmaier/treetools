@@ -13,7 +13,10 @@ import re
 import string
 import sys
 import xml.etree.ElementTree as ET
-from StringIO import StringIO
+if sys.version_info[0] < 3:
+    from StringIO import StringIO
+else:
+    from io import StringIO
 from . import trees, misc
 
 
