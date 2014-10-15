@@ -84,6 +84,8 @@ def test_output_rcg(discont_grammar, discont_lex, cont_grammar, cont_lex):
         lines = [l.strip() for l in tempf.readlines()]
     assert len(lines) == len(testdata.GRAMMAR_OUTPUT_RCG_LEX)
     assert all([line in testdata.GRAMMAR_OUTPUT_RCG_LEX for line in lines])
+    for ending in ['lex', 'rcg']:
+        os.remove("tempdest.%s" % ending)
 
 
 @pytest.fixture(scope='function')
