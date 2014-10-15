@@ -6,7 +6,9 @@ Unit tests (pytest) for tree operations
 Author: Wolfgang Maier <maierw@hhu.de>
 """
 import pytest
-from trees import grammar
+import io
+import os
+from trees import grammar, grammaroutput
 from . import testdata
 
 
@@ -56,6 +58,34 @@ def test_binarize_leftright(discont_grammar, cont_grammar):
     assert testdata.CONT_GRAMMAR_LEFT_RIGHT == cont_grammar
 
 
+def test_output_rcg(discont_grammar, discont_lex, cont_grammar, cont_lex):
+    """Test grammar output (RCG format)
+    """
+    tempdest = os.path.join('.', 'tempdest')
+    grammaroutput.rcg(discont_grammar, discont_lex, tempdest, 'utf8')
+    lines = []
+    with io.open("%s.rcg" % tempdest) as tempf:
+        lines = [l.strip() for l in tempf.readlines()]
+    assert len(lines) == len(testdata.DISCONT_GRAMMAR_OUTPUT_RCG)
+    assert all([line in testdata.DISCONT_GRAMMAR_OUTPUT_RCG for line 
+                in lines])
+    with io.open("%s.lex" % tempdest) as tempf:
+        lines = [l.strip() for l in tempf.readlines()]
+    assert len(lines) == len(testdata.GRAMMAR_OUTPUT_RCG_LEX)
+    assert all([line in testdata.GRAMMAR_OUTPUT_RCG_LEX for line in lines])
+    grammaroutput.rcg(cont_grammar, cont_lex, tempdest, 'utf8')
+    lines = []
+    with io.open("%s.rcg" % tempdest) as tempf:
+        lines = [l.strip() for l in tempf.readlines()]
+    assert len(lines) == len(testdata.CONT_GRAMMAR_OUTPUT_RCG)
+    assert all([line in testdata.CONT_GRAMMAR_OUTPUT_RCG for line 
+                in lines])
+    with io.open("%s.lex" % tempdest) as tempf:
+        lines = [l.strip() for l in tempf.readlines()]
+    assert len(lines) == len(testdata.GRAMMAR_OUTPUT_RCG_LEX)
+    assert all([line in testdata.GRAMMAR_OUTPUT_RCG_LEX for line in lines])
+
+
 @pytest.fixture(scope='function')
 def cont_grammar(cont_tree):
     gram = {}
@@ -65,8 +95,24 @@ def cont_grammar(cont_tree):
 
 
 @pytest.fixture(scope='function')
+def cont_lex(cont_tree):
+    gram = {}
+    lex = {}
+    grammar.extract(cont_tree, gram, lex)
+    return lex
+
+
+@pytest.fixture(scope='function')
 def discont_grammar(discont_tree):
     gram = {}
     lex = {}
     grammar.extract(discont_tree, gram, lex)
     return gram
+
+
+@pytest.fixture(scope='function')
+def discont_lex(discont_tree):
+    gram = {}
+    lex = {}
+    grammar.extract(discont_tree, gram, lex)
+    return lex

@@ -240,3 +240,21 @@ DISCONT_GRAMMAR_LR_H2_V1_BTOP_BBOT = \
                                                                    {'VERT':
                                                                         1}}}
 
+DISCONT_GRAMMAR_OUTPUT_RCG = [
+    "C:1 SBAR2([0],[1][2][3]) --> VP2([0],[3]) IN1([1]) NP1([2])",
+    "C:1 VP2([0],[1][2][3]) --> SBAR2([0],[3]) VB1([1]) NNP1([2])",
+    "C:1 S1([0][1][2][3]) --> VP2([0],[3]) VB1([1]) NNP1([2])",
+    "C:1 NP1([0]) --> NNP1([0])",
+    "C:1 VP2([0],[1]) --> WP1([0]) VB1([1])",
+    "C:1 VROOT1([0][1]) --> S1([0]) ?1([1])"]
+CONT_GRAMMAR_OUTPUT_RCG = [
+    "C:1 VROOT1([0][1]) --> S1([0]) ?1([1])",
+    "C:1 VP1([0]) --> VB1([0])",
+    "C:1 S1([0][1][2][3]) --> WP1([0]) VB1([1]) NNP1([2]) VP1([3])",
+    "C:1 SBAR1([0][1][2]) --> IN1([0]) NP1([1]) VP1([2])",
+    "C:1 NP1([0]) --> NNP1([0])",
+    "C:1 VP1([0][1][2]) --> VB1([0]) NNP1([1]) SBAR1([2])"]
+GRAMMAR_OUTPUT_RCG_LEX = [
+    "Who\tWP 1", "Fritz\tNNP 1", "Manfred\tNNP 1", "?\t? 1",
+    "Hans\tNNP 1", "tell\tVB 1", "that\tIN 1", "likes\tVB 1",
+    "did\tVB 1"]
