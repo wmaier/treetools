@@ -7,6 +7,11 @@ Author: Wolfgang Maier <maierw@hhu.de>
 """
 import tempfile
 import gzip
+import sys
+if sys.version_info[0] < 3:
+    from itertools import izip_longest
+else:
+    from itertools import zip_longest
 
 
 def get_doc(funs):
@@ -76,3 +81,12 @@ def gunzip(in_file):
     return in_file
 
 
+def grouper(n, iterable, fillvalue=None):
+    """Grouper recipe from 
+    http://docs.python.org/library/itertools.html#recipes.
+    Example: grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"""
+    args = [iter(iterable)] * n
+    if sys.version_info[0] < 3:
+        return izip_longest(fillvalue=fillvalue, *args)
+    else:
+        return zip_longest(fillvalue=fillvalue, *args)

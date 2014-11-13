@@ -10,7 +10,7 @@ import argparse
 import sys
 from collections import Counter
 from . import trees, treeinput, treeanalysis
-from . import misc, grammaranalysis, grammaroutput, grammarconst
+from . import misc, grammaranalysis, grammaroutput, grammarconst, grammarinput
 
 
 class LabelGenerator(object):
@@ -222,7 +222,8 @@ def binarize(grammar, **args):
             for func in grammar:
                 for lin in grammar[func]:
                     for vert in grammar[func][lin]:
-                        nf_vert.append(tuple([label_strip_fanout(label)
+                        nf_vert.append(tuple([grammarconst.\
+                                              label_strip_fanout(label)
                                               for label in vert]))
             nf_vert_c = Counter(nf_vert)
         label_gen = MarkovLabelGenerator(p=args['markov_opts'])
@@ -232,7 +233,8 @@ def binarize(grammar, **args):
                     rule_cnt = grammar[func][lin][vert]
                     if nofanout:
                         # then use the corresponding counts/contexts
-                        vert = tuple([label_strip_fanout(label)
+                        vert = tuple([grammarconst.\
+                                      label_strip_fanout(label)
                                       for label in vert])
                         rule_cnt = nf_vert_c[vert]
                     if 'reordering' in args:
@@ -343,7 +345,8 @@ def add_parser(subparsers):
                         ' if option not present.')
     parser.add_argument('--src-format', metavar='FMT',
                         choices=[fun.__name__
-                                 for fun in treeinput.INPUT_FORMATS],
+                                 for fun in treeinput.INPUT_FORMATS] \
+                        + [fun.__name__ for fun in grammarinput.FORMATS],
                         help='input format (default: %(default)s)',
                         default='export')
     parser.add_argument('--src-enc', metavar='ENCODING',
@@ -379,7 +382,8 @@ class UsageAction(argparse.Action):
     """
     def __call__(self, parser, namespace, values, option_string=None):
         title_str = misc.bold("%s help" % sys.argv[0])
-        help_str = "\n\n%s\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n" \
+        help_str = "\n\n%s\n%s\n\n%s\n%s\n\n%s" \
+                   "\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n" \
                    "%s\n\n%s\n%s\n\n%s\n%s" \
             % (misc.bold("%s\n%s\n" %
                          ('available grammar output types: ',
@@ -390,13 +394,21 @@ class UsageAction(argparse.Action):
                           '=================================== ')),
                misc.get_doc_opts(MARKOVPARAMS),
                misc.bold("%s\n%s\n" %
-                         ('available input formats: ',
-                          '======================== ')),
+                         ('available tree input formats: ',
+                          '============================= ')),
                misc.get_doc(treeinput.INPUT_FORMATS),
                misc.bold("%s\n%s\n" %
-                         ('available input options: ',
-                          '======================== ')),
+                         ('available grammar input formats: ',
+                          '================================ ')),
+               misc.get_doc(grammarinput.FORMATS),
+               misc.bold("%s\n%s\n" %
+                         ('available input options (trees): ',
+                          '================================ ')),
                misc.get_doc_opts(treeinput.INPUT_OPTIONS),
+               misc.bold("%s\n%s\n" %
+                         ('available input options (grammars): ',
+                          '=================================== ')),
+               misc.get_doc_opts(grammarinput.FORMAT_OPTIONS),
                misc.bold("%s\n%s\n" %
                          ('available dest formats: ',
                           '======================= ')),
@@ -414,18 +426,32 @@ def run(args):
     """
     print("reading from '%s' in format '%s' and encoding '%s'"
           % (args.src, args.src_format, args.src_enc), file=sys.stderr)
-    print("extracting grammar (%s)" % args.gramtype, file=sys.stderr)
     grammar = {}
     lexicon = {}
-    cnt = 1
-    for tree in getattr(treeinput,
-                        args.src_format)(args.src, args.src_enc,
-                                         **misc.options_dict \
-                                         (args.src_opts)):
-        extract(tree, grammar, lexicon)
-        if cnt % 100 == 0:
-            print("\r%d" % cnt, end="", file=sys.stderr)
-        cnt += 1
+    tree_inputformats = [fun.__name__ for fun in treeinput.INPUT_FORMATS]
+    grammar_inputformats = [fun.__name__ for fun in grammarinput.FORMATS]
+    
+    if args.src_format in grammar_inputformats and args.src_format in \
+       tree_inputformats:
+        raise ValueError("Ambiguous input format specification")
+    elif args.src_format in grammar_inputformats:
+        print("reading grammar (%s)" % args.gramtype, file=sys.stderr)
+        getattr(grammarinput, args.src_format)(args.src, args.src_enc,
+                                               **misc.options_dict \
+                                               (args.src_opts))
+    elif args.src_format in tree_inputformats:
+        print("extracting grammar (%s)" % args.gramtype, file=sys.stderr)
+        cnt = 1
+        for tree in getattr(treeinput,
+                            args.src_format)(args.src, args.src_enc,
+                                             **misc.options_dict \
+                                             (args.src_opts)):
+            extract(tree, grammar, lexicon)
+            if cnt % 100 == 0:
+                print("\r%d" % cnt, end="", file=sys.stderr)
+            cnt += 1
+    else:
+        raise ValueError("Specify input format %s" % args.src_format)
     print("\n", file=sys.stderr)
     if not args.gramtype == 'treebank':
         markov_opts = None
@@ -453,15 +479,6 @@ def run(args):
          **misc.options_dict(args.dest_opts))
     print("\n", file=sys.stderr)
     sys.exit()
-
-
-def label_strip_fanout(label):
-    """Assume the d+$ in a given label to be fanout and return
-    the stripped version of the label.
-    """
-    while label[-1].isdigit():
-        label = label[:-1]
-    return label
 
 
 GRAMTYPES = {'treebank' : 'Plain treebank grammar',
