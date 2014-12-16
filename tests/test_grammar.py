@@ -8,7 +8,7 @@ Author: Wolfgang Maier <maierw@hhu.de>
 import pytest
 import io
 import os
-from trees import grammar, grammaroutput
+from trees import grammar, grammaroutput, grammarinput, grammarconst
 from . import testdata
 
 
@@ -88,6 +88,23 @@ def test_output_rcg(discont_grammar, discont_lex, cont_grammar, cont_lex):
         os.remove("tempdest.%s" % ending)
 
 
+def test_input_rcg(discont_grammar_novert, discont_lex):
+    """Test grammar input (RCG format)
+    """
+    tempdestname = os.path.join('.', 'tempdest')
+    with io.open(tempdestname + '.rcg', 'w') as tempdest:
+        for line in testdata.DISCONT_GRAMMAR_OUTPUT_RCG:
+            tempdest.write(unicode(line) + "\n")
+    with io.open(tempdestname + '.lex', 'w') as tempdest:
+        for line in testdata.GRAMMAR_OUTPUT_RCG_LEX:
+            tempdest.write(unicode(line) + "\n")
+    grammar, lexicon = grammarinput.rcg(tempdestname, 'utf-8')
+    assert grammar == discont_grammar_novert
+    assert lexicon == discont_lex
+    for ending in ['lex', 'rcg']:
+        os.remove("tempdest.%s" % ending)
+
+
 @pytest.fixture(scope='function')
 def cont_grammar(cont_tree):
     gram = {}
@@ -109,6 +126,18 @@ def discont_grammar(discont_tree):
     gram = {}
     lex = {}
     grammar.extract(discont_tree, gram, lex)
+    return gram
+
+
+@pytest.fixture(scope='function')
+def discont_grammar_novert(discont_tree):
+    gram = {}
+    lex = {}
+    grammar.extract(discont_tree, gram, lex)
+    for func in gram:
+        for lin in gram[func]:
+            gram[func][lin] = {grammarconst.DEFAULT_VERT : \
+                                   sum(gram[func][lin].values())}
     return gram
 
 

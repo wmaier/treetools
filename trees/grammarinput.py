@@ -61,6 +61,7 @@ def rcg(src, src_enc, **opts):
             if not lin in grammar[func]:
                 grammar[func][lin] = {}
             grammar[func][lin][grammarconst.DEFAULT_VERT] = count
+    return grammar, lexicon
 
 
 FORMATS = [rcg]
