@@ -84,7 +84,8 @@ def gunzip(in_file):
 def grouper(n, iterable, fillvalue=None):
     """Grouper recipe from 
     http://docs.python.org/library/itertools.html#recipes.
-    Example: grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"""
+    Example: grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx
+    """
     args = [iter(iterable)] * n
     if sys.version_info[0] < 3:
         return izip_longest(fillvalue=fillvalue, *args)
