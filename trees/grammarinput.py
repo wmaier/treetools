@@ -1,7 +1,7 @@
 """
 treetools: Tools for transforming treebank trees.
 
-This module provides functions and classes for grammar output.
+This module provides functions and classes for grammar input.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
