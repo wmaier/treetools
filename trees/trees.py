@@ -285,7 +285,7 @@ def parse_label(label, **params):
     # head marker
     headmarker = ""
     if len(label) > 0 and label[-1] == DEFAULT_HEAD_MARKER:
-        headmarker = True
+        headmarker = label[-1]
         label = label[:-1]
     # coindex or gapping sep (PTB)
     coindex = ""
