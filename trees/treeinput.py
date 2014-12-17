@@ -268,7 +268,10 @@ def brackets(in_file, in_encoding, **params):
                     if 'gf_split' in params:
                         label_parts = trees.parse_label(lextoken,
                                                   gf_separator=gf_separator)
-                        label = label_parts.label \
+                        separator = gf_separator
+                        if len(label_parts.coindex) == 0:
+                            separator = ""
+                        label = label_parts.label + separator \
                                 + label_parts.coindex \
                                 + label_parts.headmarker
                         edge = label_parts.gf
@@ -337,8 +340,11 @@ def export_parse_line(line, **params):
     if 'gf_split' in params:
         label_parts = trees.parse_label(fields['label'],
                                         gf_separator=gf_separator)
-        fields['label'] = label_parts.label + label_parts.coindex \
-                          + label_parts.headmarker
+        separator = gf_separator
+        if len(label_parts.coindex) == 0:
+            separator = ""
+        fields['label'] = label_parts.label + separator + \
+            label_parts.coindex + label_parts.headmarker
         fields['edge'] = label_parts.gf
     return fields
 
