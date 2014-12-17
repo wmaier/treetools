@@ -88,6 +88,36 @@ def test_output_rcg(discont_grammar, discont_lex, cont_grammar, cont_lex):
         os.remove("tempdest.%s" % ending)
 
 
+def test_output_pmcfg(discont_grammar, discont_lex, cont_grammar, cont_lex):
+    """Test grammar output (PMCFG format)
+    """
+    tempdest = os.path.join('.', 'tempdest-pmcfg')
+    grammaroutput.pmcfg(discont_grammar, discont_lex, tempdest, 'utf8')
+    lines = []
+    with io.open("%s.pmcfg" % tempdest) as tempf:
+        lines = [l.strip() for l in tempf.readlines()]
+    assert len(lines) == len(testdata.DISCONT_GRAMMAR_OUTPUT_PMCFG)
+    assert all([line in testdata.DISCONT_GRAMMAR_OUTPUT_PMCFG for line 
+                in lines])
+    with io.open("%s.lex" % tempdest) as tempf:
+        lines = [l.strip() for l in tempf.readlines()]
+    assert len(lines) == len(testdata.GRAMMAR_OUTPUT_RCG_LEX)
+    assert all([line in testdata.GRAMMAR_OUTPUT_RCG_LEX for line in lines])
+    grammaroutput.pmcfg(cont_grammar, cont_lex, tempdest, 'utf8')
+    lines = []
+    with io.open("%s.pmcfg" % tempdest) as tempf:
+        lines = [l.strip() for l in tempf.readlines()]
+    assert len(lines) == len(testdata.CONT_GRAMMAR_OUTPUT_PMCFG)
+    assert all([line in testdata.CONT_GRAMMAR_OUTPUT_PMCFG for line 
+                in lines])
+    with io.open("%s.lex" % tempdest) as tempf:
+        lines = [l.strip() for l in tempf.readlines()]
+    assert len(lines) == len(testdata.GRAMMAR_OUTPUT_RCG_LEX)
+    assert all([line in testdata.GRAMMAR_OUTPUT_RCG_LEX for line in lines])
+    for ending in ['lex', 'pmcfg']:
+        os.remove("tempdest-pmcfg.%s" % ending)
+
+    
 def test_input_rcg(discont_grammar_novert, discont_lex):
     """Test grammar input (RCG format)
     """
