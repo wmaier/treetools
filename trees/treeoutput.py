@@ -202,6 +202,18 @@ def brackets(tree, stream, **params):
     stream.write(u"\n")
 
 
+def terminals_begin(stream, **params):
+    """Terminals output preamble is empty.
+    """
+    pass
+
+
+def terminals_end(stream, **params):
+    """Terminals output suffix is empty.
+    """
+    pass
+
+
 def terminals(tree, stream, **params):
     """All terminals of the tree on one line separated by whitespace.
     """
