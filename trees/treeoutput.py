@@ -227,7 +227,7 @@ def terminals(tree, stream, **params):
             result = terminal.data['word']
             if 'terminals_pos' in params:
                 result += "/%s" % terminal.data['label']
-            print(result, end=u" ", file=stream)
+            print(unicode(result), end=u" ", file=stream)
     print(u"", file=stream)
 
 

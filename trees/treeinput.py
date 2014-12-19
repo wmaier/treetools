@@ -33,7 +33,7 @@ def tigerxml_build_tree(s_element, **params):
     term_cnt = 1
     for node in s_element.find('graph').find('terminals').findall('t'):
         subtree = trees.Tree(trees.make_node_data())
-        subtree.data['word'] = node.get('word')
+        subtree.data['word'] = unicode(node.get('word'))
         subtree.data['label'] = node.get('pos')
         subtree.data['morph'] = node.get('morph')
         subtree.data['lemma'] = node.get('lemma')
