@@ -35,7 +35,23 @@ want to perform a system-wide installation, omit the `--user` option.
 Running
 =======
 
-Help can be obtained on the command line by running `treetools --help`.
+To run treetools, type
+
+    `treetools [subcommand] [parameters] [options]`
+
+Available subcommands are:
+
+- `transform`: Process treebank trees. Run transformations and convert between different formats.
+- `grammar`: Extract grammars for different parsers from treebanks.
+- `treeanalysis`: Analyze certain properties of treebank trees, such as, e.g., gap degree.
+
+To get see the available parameters for a subcommand, type
+
+    `treetools [subcommand] --help`
+
+To get verbose help on available transformation algorithms, available options, etc., type
+
+    `treetools [subcommand] --usage`
 
 
 License
