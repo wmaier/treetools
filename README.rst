@@ -35,6 +35,9 @@ want to perform a system-wide installation, omit the `--user` option.
 Running
 =======
 
+Syntax
+------
+
 To run treetools, type::
 
     treetools [subcommand] [parameters] [options]
@@ -52,6 +55,21 @@ To get see the available parameters for a subcommand, type::
 To get verbose help on available transformation algorithms, available options, etc., type::
 
     treetools [subcommand] --usage
+
+Examples
+--------
+
+To attach the punctuation in TIGER and remove its crossing branches while converting it from TigerXML to a bracket format, type::
+
+    treetools transform tiger.xml tiger.preproc.xml --trans root_attach boyd_split negra_mark_heads boyd_split raising --src-format tigerxml --dest-format export
+
+To extract the bare sentences (one per line) from a treebank in bracketed format, such as the Penn Treebank, type::
+
+    treetools transform treebank.brackets treebank.terminals --src-format brackets --dest-format terminals
+
+To delete the traces and co-indexation from the Penn Treebank, type::
+
+    treetools transform ptb ptb.notrace --transform ptb_transform --src-format brackets --dest-format brackets
 
 
 License
