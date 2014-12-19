@@ -71,6 +71,10 @@ To delete the traces and co-indexation from the Penn Treebank, type::
 
     treetools transform ptb ptb.notrace --transform ptb_transform --src-format brackets --dest-format brackets
 
+To extract an left-to-right binarized LCFRS with v1/h2 markovization in rparse format from an export-format treebank, type::
+
+    treetools grammar input_treebank output_grammar leftright --dest-format rcg --markov v:1 h:2
+
 
 License
 =======
