@@ -35,9 +35,9 @@ want to perform a system-wide installation, omit the `--user` option.
 Running
 =======
 
-To run treetools, type
+To run treetools, type::
 
-    `treetools [subcommand] [parameters] [options]`
+    treetools [subcommand] [parameters] [options]
 
 Available subcommands are:
 
@@ -45,11 +45,11 @@ Available subcommands are:
 - `grammar`: Extract grammars for different parsers from treebanks.
 - `treeanalysis`: Analyze certain properties of treebank trees, such as, e.g., gap degree.
 
-To get see the available parameters for a subcommand, type
+To get see the available parameters for a subcommand, type::
 
     `treetools [subcommand] --help`
 
-To get verbose help on available transformation algorithms, available options, etc., type
+To get verbose help on available transformation algorithms, available options, etc., type::
 
     `treetools [subcommand] --usage`
 
