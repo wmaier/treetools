@@ -239,7 +239,27 @@ DISCONT_GRAMMAR_LR_H2_V1_BTOP_BBOT = \
                                                                   0),),):
                                                                    {'VERT':
                                                                         1}}}
-
+DISCONT_GRAMMAR_OPTIMAL_H2_V1_BTOP_BBOT = \
+    {(u'SBAR', u'VP', u'@^SBAR2-VP2X'): {(((0, 0),), ((1, 0), (0, 1))):
+                                         {'VERT': 1}}, (u'S', u'VP',
+                                                        u'@^S1-VP2X'):
+     {(((0, 0), (1, 0), (0, 1)),): {'VERT': 1}}, (u'@^VP2-SBAR2X', u'VB',
+                                                  u'NNP'): {(((0, 0), (1,
+                                                                       0)),):
+                                                            {'VERT': 1}},
+     (u'VROOT', u'S', u'?'): {(((0, 0), (1, 0)),): {'VERT': 1}},
+     (u'@^S1-VP2X', u'VB', u'NNP'): {(((0, 0), (1, 0)),): {'VERT': 1}},
+     (u'VP', u'WP', u'VB'): {(((0, 0),), ((1, 0),)): {'VERT': 1}}, (u'VP',
+                                                                    u'SBAR',
+                                                                    u'@^VP2-SBAR2X'):
+     {(((0, 0),), ((1, 0), (0, 1))): {'VERT': 1}}, (u'@^SBAR2-VP2X',
+                                                    u'IN', u'NP'): {(((0,
+                                                                       0),
+                                                                      (1,
+                                                                       0)),):
+                                                                    {'VERT':
+                                                                     1}},
+     (u'NP', u'NNP'): {(((0, 0),),): {'VERT': 1}}} 
 DISCONT_GRAMMAR_OUTPUT_RCG = [
     "C:1 SBAR2([0],[1][2][3]) --> VP2([0],[3]) IN1([1]) NP1([2])",
     "C:1 VP2([0],[1][2][3]) --> SBAR2([0],[3]) VB1([1]) NNP1([2])",

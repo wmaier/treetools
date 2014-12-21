@@ -49,6 +49,16 @@ def test_discont_grammar_markov(discont_grammar):
     assert bin_grammar == testdata.DISCONT_GRAMMAR_LR_H1_V2_BTOP_BBOT
 
 
+def test_discont_grammar_markov_optimal(discont_grammar):
+    """Test optimally binarized markovized grammar (discontinuous)
+    """
+    markov_opts = {'v' : 1, 'h' : 2}
+    bin_grammar = grammar.binarize(discont_grammar, \
+                                   markov_opts=markov_opts, \
+                                   reordering=grammar.reordering_optimal)
+    assert bin_grammar == testdata.DISCONT_GRAMMAR_OPTIMAL_H2_V1_BTOP_BBOT
+
+
 def test_binarize_leftright(discont_grammar, cont_grammar):
     """Test left-to-right binarization
     """
