@@ -1,0 +1,4 @@
+include setup.py
+include treetools
+include README.rst
+include trees/*.py
