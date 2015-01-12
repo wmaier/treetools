@@ -202,6 +202,31 @@ def brackets(tree, stream, **params):
     stream.write(u"\n")
 
 
+def discobrackets_begin(stream, **params):
+    """Discobrackets output preamble is empty.
+    """
+    pass
+
+
+def discobrackets_end(stream, **params):
+    """Discobrackets output suffix is empty.
+    """
+    pass
+
+
+def discobrackets(tree, stream, **params):
+    """One bracketed tree per line. Terminals are substituted for
+    numbers and sentence is written after the tree in the same line,
+    separated from the tree by a tab (terminal space-separated).
+    """
+    terminals = trees.terminals(tree)
+    sentence = ' '.join([terminal.data['word'] for terminal in terminals])
+    for terminal in terminals:
+        terminal.data['word'] = unicode(terminal.data['num'])
+    write_brackets_subtree(tree, stream, **params)
+    stream.write("\t" + sentence + "\n")
+
+
 def terminals_begin(stream, **params):
     """Terminals output preamble is empty.
     """
@@ -280,7 +305,7 @@ def tigerxml(tree, stream, **params):
     stream.write(u"</s>\n")
 
 
-OUTPUT_FORMATS = [export, brackets, tigerxml, terminals]
+OUTPUT_FORMATS = [export, brackets, discobrackets, tigerxml, terminals]
 OUTPUT_OPTIONS = {'boyd_split_marking' : 'Boyd split: Mark split nodes with *',
                   'boyd_split_numbering' : 'Boyd split: Number split nodes',
                   'brackets_emptyroot' : 'Omit root label as in Penn Treebank',
