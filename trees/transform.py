@@ -679,7 +679,7 @@ def run(args):
                 sys.stderr.write("\n")
 
 TRANSFORMATIONS = [root_attach, boyd_split, raising, add_topnode, 
-                   insert_terminals, substitute_terminals,
+                   substitute_terminals, insert_terminals,
                    punctuation_delete, punctuation_verylow,
                    punctuation_symetrify, punctuation_root,
                    negra_mark_heads, ptb_delete_traces]
