@@ -189,6 +189,74 @@ def add_topnode(tree, **params):
     return top
 
 
+def substitute_terminals(tree, **params):
+    """Substitute terminal nodes in the tree, given in a parameter file
+    in four colums: sentence index, word index, word, part-of-speech. 
+    The POS column is optional.
+
+    Example: To substitute the 5th word in sentence 5 with "house"/NN,
+    include
+
+    5 5 house NN
+
+    and omit NN if you only want to substitute the word an leave the
+    POS tag as is.
+
+    No spaces in words allowed, no double word indices per sentence
+    allowed.
+
+    Prerequisites: none
+    Parameters: quiet                : no messages
+                terminalfile:[file]  : the terminals to insert
+    Output options: none
+    """
+    # read terminals file only if filename is new
+    if not hasattr(substitute_terminals, "fn") \
+       or not substitute_terminals.fn == params['terminalfile']:
+        substitute_terminals.fn = params['terminalfile']
+        substitute_terminals.terminals = dict()
+        with io.open(substitute_terminals.fn) as tf:
+            for line in tf:
+                line = line.strip().split()
+                # probably no POS tag?
+                if len(line) == 3:
+                    line.append(None)
+                if not int(line[0]) in substitute_terminals.terminals:
+                    substitute_terminals.terminals[int(line[0])] = {}
+                if not int(line[1]) in \
+                   substitute_terminals.terminals[int(line[0])]:
+                    substitute_terminals.terminals[int(line[0])][int(line[1])] \
+                        = {}
+                else:
+                    del substitute_terminals.terminals
+                    raise ValueError("in tree %d, double index %d" %
+                                     (int(line[0]), int(line[1])))
+                # throw away stuff after fourth space
+                substitute_terminals.terminals[int(line[0])][int(line[1])] \
+                    = (line[2], line[3])
+    print(substitute_terminals.terminals)
+    if not tree.data['sid'] in substitute_terminals.terminals:
+        return tree
+    terminals = trees.terminals(tree)
+    for terminal_num in sorted(substitute_terminals.terminals[tree.data['sid']],
+                               key=int):
+        if not terminal_num in range(len(trees.terminals(tree)) + 1)[1:]:
+            if not 'quiet' in params:
+                print("sentence length %d, cannot insert at %d" \
+                      % (len(trees.terminals(tree)),
+                         terminal_num))
+                continue
+        terminal = terminals[terminal_num - 1]
+        new_word = substitute_terminals.\
+                   terminals[tree.data['sid']][terminal_num][0]
+        terminal.data['word'] = new_word
+        new_pos = substitute_terminals.\
+                  terminals[tree.data['sid']][terminal_num][1]
+        if not new_pos is None:
+            terminal.data['label'] = new_pos
+    return tree
+
+
 def insert_terminals(tree, **params):
     """Insert terminal nodes in the tree, given in a parameter file
     in four colums: sentence index, word index, word, part-of-speech. 
@@ -610,8 +678,8 @@ def run(args):
                         sys.stderr.write("\r%d" % tree_ind)
                 sys.stderr.write("\n")
 
-TRANSFORMATIONS = [root_attach, boyd_split,
-                   raising, add_topnode, insert_terminals,
+TRANSFORMATIONS = [root_attach, boyd_split, raising, add_topnode, 
+                   insert_terminals, substitute_terminals,
                    punctuation_delete, punctuation_verylow,
                    punctuation_symetrify, punctuation_root,
                    negra_mark_heads, ptb_delete_traces]
