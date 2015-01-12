@@ -13,6 +13,7 @@ import re
 import string
 import sys
 import xml.etree.ElementTree as ET
+from collections import defaultdict
 if sys.version_info[0] < 3:
     from StringIO import StringIO
 else:
@@ -188,7 +189,8 @@ def brackets(in_file, in_encoding, **params):
     level = 0
     term_cnt = 1
     with io.open(in_file, encoding=in_encoding) as stream:
-        for lextoken, lexclass in bracket_lexer(stream):
+        lexer = bracket_lexer(stream)
+        for lextoken, lexclass in lexer:
             if lexclass == "LRB":
                 if state in [0, 2, 3, 5]:
                     # beginning of sentence or phrase
@@ -239,6 +241,27 @@ def brackets(in_file, in_encoding, **params):
                             for subtree in trees.preorder(queue[0]):
                                 subtree = trees.replace_chars(subtree,
                                                               trees.BRACKETS)
+                        if 'disco' in params and params['disco']:
+                            terminalmap = {}
+                            for terminal in trees.terminals(queue[0]):
+                                terminalmap[int(terminal.data['word'])] = terminal
+                            tokenmap = defaultdict(int)
+                            position = 1
+                            try:
+                                lextoken, lexclass = lexer.next()
+                            except StopIteration:
+                                raise ValueError("no sentence after tree")
+                            try:
+                                while not lextoken == "\n":
+                                    lextoken, lexclass = lexer.next()
+                                    if not lextoken == ' ':
+                                        tokenmap[position] = lextoken
+                                        position += 1
+                            except StopIteration:
+                                pass
+                            for terminal in trees.terminals(queue[0]):
+                                terminal.data['num'] = int(terminal.data['word'])
+                                terminal.data['word'] = tokenmap[terminal.data['num']]
                         yield queue[0]
                         term_cnt = 1
                         queue = []
@@ -297,6 +320,21 @@ def brackets(in_file, in_encoding, **params):
                     raise ValueError("unknown state")
             else:
                 raise ValueError("unknown lexer token class")
+
+
+def discobrackets(in_file, in_encoding, **params):
+    """ Build a tree from disco bracket input. Every terminal is supposed to
+    be an integer i. For a sentence of length n, all 1 <= i <= n must be
+    present. Tree is parsed as regular bracketed tree; after that, the 
+    terminals are reordered w.r.t. to their numbering. 
+
+    The required format is one tree per line, after each tree a tab is 
+    expected, followed by the tokens in their correct order, separated by
+    a space.
+    """
+    params['disco'] = True
+    for tree in brackets(in_file, in_encoding, **params):
+        yield tree
 
 
 def export_build_tree(num, node_by_num, children_by_num):
@@ -406,7 +444,7 @@ def export(in_file, in_encoding, **params):
                     sentence = []
 
 
-INPUT_FORMATS = [export, brackets, tigerxml]
+INPUT_FORMATS = [export, brackets, discobrackets, tigerxml]
 INPUT_OPTIONS = {'gf_split' : 'Brackets: Try to split grammatical ' \
                      'functions from label at last occurrence of gf separator',
                  'gf_separator' : 'Brackets: Separator to use for ' \
