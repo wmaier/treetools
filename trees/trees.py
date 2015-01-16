@@ -307,8 +307,9 @@ def parse_label(label, **params):
     # gf
     gf = DEFAULT_EDGE
     gf_sep_pos = None
-    for i, char in reversed(list(enumerate(label))):
-        # first separator from right to left counts
+    for i, char in list(enumerate(label)):
+        # first separator from left to right counts
+        # TODO for TueBa-D/Z this should be right to left
         if char == gf_separator:
             gf_sep_pos = i
             break
