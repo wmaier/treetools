@@ -16,6 +16,7 @@ def main():
               ' on subcommands.')
     subparsers = parser.add_subparsers(help='Subcommands',
                                        dest='subparser_name')
+    subparsers.required = True
     transform.add_parser(subparsers)
     treeanalysis.add_parser(subparsers)
     grammar.add_parser(subparsers)
