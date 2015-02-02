@@ -5,6 +5,9 @@ Setup module.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
+from __future__ import print_function
+import sys
+from distutils.core import setup
 
 classifiers = """\
 Development Status :: 4 - Beta
@@ -16,8 +19,6 @@ Programming Language :: Python
 Topic :: Text Processing :: Linguistic
 """
 
-import sys
-from distutils.core import setup
 if sys.version_info < (2, 3):
     _setup = setup
     def setup(**kwargs):
