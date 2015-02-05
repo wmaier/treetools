@@ -84,6 +84,20 @@ def make_node_data():
     return dict(zip(FIELDS, [None] * NUMBER_OF_FIELDS))
 
 
+def make_node_data_fill():
+    """Make a node data hash, initialize with fields and fill them
+    with default values.
+    """
+    fields = dict(zip(FIELDS, [None] * NUMBER_OF_FIELDS))
+    fields['word'] = DEFAULT_WORD
+    fields['lemma'] = DEFAULT_LEMMA
+    fields['label'] = u"EMPTY"
+    fields['morph'] = u"--"
+    fields['edge'] = u"--"
+    fields['parent_num'] = -1
+    return fields
+
+
 def preorder(tree):
     """Generator which performs a preorder tree traversal and yields
     the subtrees encountered on its way.
@@ -306,7 +320,7 @@ def parse_label(label, **params):
         label = label[:gapping_sep_pos]
     # gf
     gf = DEFAULT_EDGE
-    gf_sep_pos = None
+    gf_sep_pos = -1
     for i, char in list(enumerate(label)):
         # first separator from left to right counts
         # TODO for TueBa-D/Z this should be right to left
