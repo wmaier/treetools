@@ -11,7 +11,7 @@ import argparse
 import sys
 import io
 import os
-from . import trees, treeinput, treeoutput, transformconst, misc
+from . import trees, treeinput, treeoutput, misc
 
 
 def root_attach(tree):
@@ -517,6 +517,8 @@ def mark_heads_by_rules(tree, **params):
         mark_heads_preset: Instead of rulefile, can be 'negra' or 'ptb'
     Output options: none
     """
+    # head rules still missing
+    raise ValueError("not yet implemented")
     rules = []
     if 'mark_heads_preset' in params and 'mark_heads_rulefile' in\
        params:
