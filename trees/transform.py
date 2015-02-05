@@ -11,7 +11,7 @@ import argparse
 import sys
 import io
 import os
-from . import trees, treeinput, treeoutput, misc
+from . import trees, treeinput, treeoutput, transformconst, misc
 
 
 def root_attach(tree):
@@ -505,6 +505,100 @@ def negra_mark_heads(tree):
     return tree
 
 
+def mark_heads_by_rules(tree, **params):
+    """Mark the head child of each node in a tree using Collins-style head
+    rules. Rule file must be specified as parameter mark_heads_rulefile, 
+    or 'standard' rules for NeGra/TIGER ('negra') or the Penn Treebank ('ptb')
+    can be loaded with the parameter mark_heads_preset.
+
+    Prerequisite: none
+    Parameters: none
+        mark_heads_rulefile: Path to rulefile
+        mark_heads_preset: Instead of rulefile, can be 'negra' or 'ptb'
+    Output options: none
+    """
+    rules = []
+    if 'mark_heads_preset' in params and 'mark_heads_rulefile' in\
+       params:
+        raise ValueError("specify either head rule preset or rule file")
+    if 'mark_heads_preset' in params:
+        if params['mark_heads_preset'] == 'negra':
+            rules = transformconst.parse_head_rules(transformconst.\
+                                                    HEAD_RULES_PTB)
+        elif params['mark_heads_preset'] == 'ptb':
+            rules = transformconst.parse_head_rules(transformconst.\
+                                                    HEAD_RULES_NEGRA)
+        else:
+            raise ValueError("unknown head rule preset " \
+                             + str(params['mark_heads_preset']))
+    elif 'mark_heads_rulefile' in params:
+        if not len(params['mark_heads_rulefile']) == 0:
+            raise ValueError("not yet implemented")
+    else:
+        raise ValueError("must specify head rule preset or rule file")
+    tree.data['head'] = False
+    for subtree in trees.preorder(tree):
+        parent_label = trees.parse_label(subtree.data['label']).label
+        children = trees.children(subtree)
+        children_label = [trees.parse_label(child.data['label']).label\
+                          for child in children]
+        if len(children) > 0:
+            headpos = transformconst.get_headpos_by_rule(parent_label,
+                                                         children_label, rules)
+            for i, child in enumerate(children):
+                children[i].data['head'] = i == headpos
+    return tree
+
+
+def _binarize_tree(tree):
+    """Recursively binarize this tree.
+    """
+    if not trees.has_children(tree):
+        return tree
+    for child in trees.children(tree):
+        _binarize_tree(child)
+    if len(trees.children(tree)) > 2:
+        direction = "left"
+        remaining = trees.children(tree)
+        last_tree = tree
+        tree.children = []
+        label = tree.data['label']
+        child = None
+        binarization_tree = None
+        while len(remaining) > 2:
+            if remaining[0].data['head']:
+                direction = 'right'
+            binarization_tree = trees.Tree(trees.make_node_data_fill())
+            binarization_tree.data['label'] = '@' + label
+            binarization_tree.data['head'] = True
+            if direction == 'left':
+                child = remaining[0]
+                remaining = remaining[1:]
+            elif direction == 'right':
+                child = remaining[-1]
+                remaining = remaining[:-1]
+            last_tree.children.append(binarization_tree)
+            last_tree.children.append(child)
+            binarization_tree.parent = last_tree
+            child.parent = last_tree
+            last_tree = binarization_tree
+        for i in range(2):
+            child = remaining[i]
+            binarization_tree.children.append(child)
+            child.parent = binarization_tree
+
+
+def binarize(tree, **params):
+    """Destructively binarize the tree.
+
+    Prerequisite: none
+    Parameters: none
+    Output options: none
+    """
+    _binarize_tree(tree)
+    return tree
+
+
 def add_parser(subparsers):
     """Add an argument parser to the subparsers of treetools.py.
     """
@@ -678,9 +772,10 @@ def run(args):
                         sys.stderr.write("\r%d" % tree_ind)
                 sys.stderr.write("\n")
 
+
 TRANSFORMATIONS = [root_attach, boyd_split, raising, add_topnode, 
                    substitute_terminals, insert_terminals,
                    punctuation_delete, punctuation_verylow,
                    punctuation_symetrify, punctuation_root,
-                   negra_mark_heads, ptb_delete_traces]
-
+                   negra_mark_heads, mark_heads_by_rules,
+                   ptb_delete_traces, binarize]
