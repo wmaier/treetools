@@ -259,9 +259,14 @@ def brackets(in_file, in_encoding, **params):
                                         position += 1
                             except StopIteration:
                                 pass
-                            for terminal in trees.terminals(queue[0]):
-                                terminal.data['num'] = int(terminal.data['word'])
-                                terminal.data['word'] = tokenmap[terminal.data['num']]
+                            if 'disco_reordered' in params:
+                                for terminal in trees.terminals(queue[0]):
+                                    terminal.data['word'] = terminal.data['word'] + "-" \
+                                        + tokenmap[terminal.data['num']]
+                            else:
+                                for terminal in trees.terminals(queue[0]):
+                                    terminal.data['num'] = int(terminal.data['word']) + 1
+                                    terminal.data['word'] = tokenmap[terminal.data['num']]
                         yield queue[0]
                         term_cnt = 1
                         queue = []
@@ -445,7 +450,9 @@ def export(in_file, in_encoding, **params):
 
 
 INPUT_FORMATS = [export, brackets, discobrackets, tigerxml]
-INPUT_OPTIONS = {'gf_split' : 'Brackets: Try to split grammatical ' \
+INPUT_OPTIONS = {'disco_reordered' : 'In discobrackets, output CF order with '\
+                     'terminal indices',
+                 'gf_split' : 'Brackets: Try to split grammatical ' \
                      'functions from label at last occurrence of gf separator',
                  'gf_separator' : 'Brackets: Separator to use for ' \
                      ' gf option (default %s)' % trees.DEFAULT_GF_SEPARATOR,
