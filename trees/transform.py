@@ -458,15 +458,25 @@ def punctuation_root(tree, **params):
 
 
 def ptb_delete_traces(tree, **params):
-    """Delete PTB traces.
+    """Delete PTB traces and all co-indexation.
 
     Prerequisite: none
-    Parameters: none
+    Parameters: keep [LABELS] : trace labels which are to be kept 
+                                (co-indexation will be deleted 
+                                nevertheless), comma separated.
     Output options: none
     """
-    for trace in [terminal for terminal in trees.terminals(tree)
-                  if terminal.data['label'] == "-NONE-"]:
-        trees.delete_terminal(tree, trace)
+    keep = []
+    if 'keep' in params:
+        keep = params['keep'].split(',')
+    traces = [terminal for terminal in trees.terminals(tree)
+                  if terminal.data['label'] == "-NONE-"]
+    for trace in traces:
+        trace_word = trees.parse_label(trace.data['word'])
+        trace_word.coindex = ""
+        trace_word = trees.format_label(trace_word)
+        if not trace_word in keep:
+            trees.delete_terminal(tree, trace)
     for node in trees.preorder(tree):
         label = trees.parse_label(node.data['label'])
         label.coindex = ""
