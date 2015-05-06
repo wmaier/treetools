@@ -27,7 +27,7 @@ if sys.version_info < (2, 3):
         _setup(**kwargs)
 
 if sys.version < "2.7.3":
-    print "Requires Python version >= 2.7.3"
+    print("Requires Python version >= 2.7.3")
     sys.exit(1)
 
 long_description = ""
