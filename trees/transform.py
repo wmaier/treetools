@@ -464,6 +464,9 @@ def ptb_delete_traces(tree, **params):
     Parameters: keep [LABELS] : trace labels which are to be kept 
                                 (co-indexation will be deleted 
                                 nevertheless), comma separated.
+                                Labels will swap positions with 
+                                terminals, i.e., -NONE- will be
+                                terminal and trace symbol label.
     Output options: none
     """
     keep = []
@@ -477,6 +480,10 @@ def ptb_delete_traces(tree, **params):
         trace_word = trees.format_label(trace_word)
         if not trace_word in keep:
             trees.delete_terminal(tree, trace)
+        else:
+            word = trace.data['word']
+            trace.data['word'] = "-NONE-"
+            trace.data['label'] = word
     for node in trees.preorder(tree):
         label = trees.parse_label(node.data['label'])
         label.coindex = ""
