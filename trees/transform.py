@@ -11,6 +11,7 @@ import argparse
 import sys
 import io
 import os
+from collections import defaultdict
 from . import trees, treeinput, treeoutput, misc
 
 
@@ -464,40 +465,46 @@ def ptb_delete_traces(tree, **params):
 
     Prerequisite: none
     Parameters: keep [LABELS] : Trace labels which are to be kept,
-                                comma-separated. co-indexation will 
+                                comma-separated. Co-indexation will 
+                                be deleted nevertheless.
+                keepall       : Keep all trace labels. Co-indexation will 
                                 be deleted nevertheless.
                 keepcoindex   : For all labels which are to be kept,
                                 keep the co-indexation, too.
+                slash         : Perform slash feature annotation on
+                                path from trace to antecedent.
     Output options: none
     """
     keep = []
     if 'keep' in params:
         keep = params['keep'].split(',')
-    do_keep_index = 'keepcoindex' in params
+    keepcoindex = 'keepcoindex' in params
+    keepall = 'keepall' in params
+    slash = 'slash' in params
     traces = [terminal for terminal in trees.terminals(tree)
                   if terminal.data['label'] == "-NONE-"]
-    keepcoindex = []
+    index_to_traces = defaultdict(list)
     for trace in traces:
         trace_word = trees.parse_label(trace.data['word'])
         coindex = str(trace_word.coindex)
         trace_word.coindex = ""
         trace_word = trees.format_label(trace_word)
-        if not trace_word in keep:
-            trees.delete_terminal(tree, trace)
-        else:
-            keepcoindex.append(coindex)
-            word = trace.data['word']
+        if keepall or trace_word in keep:
+            index_to_traces[coindex].add(trace)
+            trace.data['label'] = trace.data['word']
             trace.data['word'] = "-NONE-"
-            trace.data['label'] = word
+        else:
+            trees.delete_terminal(tree, trace)
     for node in trees.preorder(tree):
         label = trees.parse_label(node.data['label'])
         coindex = str(label.coindex)
-        if do_keep_index:
-            if not coindex in set(keepcoindex):
+        if len(coindex) > 0:
+            if keepcoindex:
+                if not coindex in index_to_traces:
+                    label.coindex = ""
+            else:
                 label.coindex = ""
-        else:
-            label.coindex = ""
-        node.data['label'] = trees.format_label(label)
+            node.data['label'] = trees.format_label(label)
     return tree
 
 
