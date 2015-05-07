@@ -459,34 +459,44 @@ def punctuation_root(tree, **params):
 
 def ptb_delete_traces(tree, **params):
     """Delete PTB traces and all co-indexation.
+    Labels will swap positions with terminals, i.e., -NONE- will be
+    terminal and trace symbol label.
 
     Prerequisite: none
-    Parameters: keep [LABELS] : trace labels which are to be kept 
-                                (co-indexation will be deleted 
-                                nevertheless), comma separated.
-                                Labels will swap positions with 
-                                terminals, i.e., -NONE- will be
-                                terminal and trace symbol label.
+    Parameters: keep [LABELS] : Trace labels which are to be kept,
+                                comma-separated. co-indexation will 
+                                be deleted nevertheless.
+                keepcoindex   : For all labels which are to be kept,
+                                keep the co-indexation, too.
     Output options: none
     """
     keep = []
     if 'keep' in params:
         keep = params['keep'].split(',')
+    do_keep_index = 'keepcoindex' in params
     traces = [terminal for terminal in trees.terminals(tree)
                   if terminal.data['label'] == "-NONE-"]
+    keepcoindex = []
     for trace in traces:
         trace_word = trees.parse_label(trace.data['word'])
+        coindex = str(trace_word.coindex)
         trace_word.coindex = ""
         trace_word = trees.format_label(trace_word)
         if not trace_word in keep:
             trees.delete_terminal(tree, trace)
         else:
+            keepcoindex.append(trace_word.coindex)
             word = trace.data['word']
             trace.data['word'] = "-NONE-"
             trace.data['label'] = word
     for node in trees.preorder(tree):
         label = trees.parse_label(node.data['label'])
-        label.coindex = ""
+        coindex = str(label.coindex)
+        if do_keep_index:
+            if not coindex in set(keepcoindex):
+                label.coindex = ""
+        else:
+            label.coindex = ""
         node.data['label'] = trees.format_label(label)
     return tree
 
