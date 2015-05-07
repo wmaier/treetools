@@ -485,7 +485,7 @@ def ptb_delete_traces(tree, **params):
         if not trace_word in keep:
             trees.delete_terminal(tree, trace)
         else:
-            keepcoindex.append(trace_word.coindex)
+            keepcoindex.append(coindex)
             word = trace.data['word']
             trace.data['word'] = "-NONE-"
             trace.data['label'] = word
