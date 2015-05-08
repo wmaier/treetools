@@ -472,7 +472,9 @@ def ptb_delete_traces(tree, **params):
                 keepcoindex   : For all labels which are to be kept,
                                 keep the co-indexation, too.
                 slash         : Perform slash feature annotation on
-                                path from trace to antecedent.
+                                path from trace to antecedent. Annotation
+                                will be the label of the filler up to the
+                                first dash.
     Output options: none
     """
     keep = []
@@ -490,21 +492,51 @@ def ptb_delete_traces(tree, **params):
         trace_word.coindex = ""
         trace_word = trees.format_label(trace_word)
         if keepall or trace_word in keep:
-            index_to_traces[coindex].add(trace)
+            index_to_traces[coindex].append(trace)
             trace.data['label'] = trace.data['word']
             trace.data['word'] = "-NONE-"
         else:
             trees.delete_terminal(tree, trace)
     for node in trees.preorder(tree):
         label = trees.parse_label(node.data['label'])
-        coindex = str(label.coindex)
-        if len(coindex) > 0:
+        if label.coindex > 0:
             if keepcoindex:
-                if not coindex in index_to_traces:
+                if not label.coindex in index_to_traces:
                     label.coindex = ""
             else:
                 label.coindex = ""
             node.data['label'] = trees.format_label(label)
+            # if coindex is still there we could do slash annotation
+            if len(label.coindex) > 0 and slash:
+                # find dash
+                annot = node.data['label']
+                dashpos = annot.find('-')
+                if dashpos > 0:
+                    annot = annot[:dashpos]
+                for trace in index_to_traces[label.coindex]:
+                    goal = trees.lca(node, trace)
+                    if goal == None:
+                        if node in trees.dominance(trace):
+                            goal = node
+                        else:
+                            raise ValueError("filler neither c-commands nor dominates")
+                    # annotate path from filler to goal
+                    cursor = node
+                    cursorlabel = trees.parse_label(cursor.data['label'])
+                    cursorlabel.coindex = ""
+                    cursor.data['label'] = trees.format_label(cursorlabel)
+                    while not cursor == goal:
+                        if not cursor == node:
+                            cursor.data['label'] += "/" + annot
+                        cursor = cursor.parent
+                    cursor = trace
+                    cursorlabel = trees.parse_label(cursor.data['label'])
+                    cursorlabel.coindex = ""
+                    cursor.data['label'] = trees.format_label(cursorlabel)
+                    while not cursor == goal:
+                        cursor.data['label'] += "/" + annot
+                        cursor = cursor.parent
+                    trace_label = trees.parse_label(trace.data['label'])
     return tree
 
 
