@@ -500,7 +500,7 @@ def ptb_delete_traces(tree, **params):
     for node in trees.preorder(tree):
         label = trees.parse_label(node.data['label'])
         if label.coindex > 0:
-            if keepcoindex:
+            if keepcoindex or slash:
                 if not label.coindex in index_to_traces:
                     label.coindex = ""
             else:
