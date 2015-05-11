@@ -475,7 +475,8 @@ def ptb_delete_traces(tree, **params):
                                 path from trace to antecedent. Annotation
                                 will be the label of the filler up to the
                                 first dash. Annotation only performed
-                                for given labels.
+                                for given labels if labels are given,
+                                otherwise for all labels
     Output options: none
     """
     keep = []
@@ -483,22 +484,28 @@ def ptb_delete_traces(tree, **params):
         keep = params['keep'].split(',')
     keepcoindex = 'keepcoindex' in params
     keepall = 'keepall' in params
-    slash = 'slash' in params
+    slash = []
+    do_slash = False
+    if 'slash' in params:
+        do_slash = True
+        if not type(slash) is bool:
+            slash = params['slash'].split(',')
     traces = [terminal for terminal in trees.terminals(tree)
                   if terminal.data['label'] == "-NONE-"]
     index_to_traces = defaultdict(list)
     index_to_nonterms = defaultdict(list)
     # map indices to trace nodes and deleted indices from labales
     for trace in traces:
-        trace_word = trees.parse_label(trace.data['word'])
-        coindex = str(trace_word.coindex)
+        tracelabel = trees.parse_label(trace.data['word'])
+        coindex = str(tracelabel.coindex)
         if not keepcoindex:
-            trace_word.coindex = ""
-        trace_word.gapindex = ""
-        trace_word = trees.format_label(trace_word)
-        if keepall or trace_word in keep:
-            index_to_traces[coindex].append(trace)
-            trace.data['label'] = trace.data['word']
+            tracelabel.coindex = ""
+        tracelabel.gapindex = ""
+        tracelabel = trees.format_label(tracelabel)
+        if keepall or tracelabel in keep:
+            if len(coindex) > 0:
+                index_to_traces[coindex].append(trace)
+            trace.data['label'] = tracelabel
             trace.data['word'] = "-NONE-"
         else:
             trees.delete_terminal(tree, trace)
@@ -515,26 +522,81 @@ def ptb_delete_traces(tree, **params):
             label.coindex = ""
         node.data['label'] = trees.format_label(label)
     # do slash annotatoin
-    if slash:
+    if do_slash:
         # check if one index maps to several nonterms aka uniqueness of fillers
-        if (any([len(index_to_nonterms[index]) > 1 \
-                 for index in index_to_nonterms])):
-            print(' '.join([x.data['word'] for x in trees.terminals(tree)]))
+        if (any([len(index_to_nonterms[index]) > 1 for index in index_to_nonterms])):
+            # if necessary compute new mapping
+            print("\n", file=sys.stderr)
+            print(' '.join([x.data['word'] for x in trees.terminals(tree)]), \
+                  file=sys.stderr)
+            print("fillers not unique: resolving traces bottom-up", \
+                  file=sys.stderr)
+            trace_filler = {}
+            new_index = 1
             for index in index_to_traces:
-                for tree in index_to_traces[index]:
-                    print(' '.join([x.data['label'] for x in trees.terminals(tree)]))
-            print("----")
-            for index in index_to_nonterms:
-                for tree in index_to_nonterms[index]:
-                    print(' '.join([x.data['label'] for x in trees.terminals(tree)]))
-            raise ValueError("same index found on different non-terminals")
-        # check if there is no filler for some trace
-        # fillers with index and no trace are no problem!
-        if (any([index not in index_to_nonterms \
-                 for index in index_to_traces])):
-            raise ValueError("no filler for trace")
+                fillers = index_to_nonterms[index]
+                for trace in index_to_traces[index]:
+                    mapping_found = False
+                    cursor = trace
+                    while not cursor.parent is None:
+                        for filler in fillers:
+                            if cursor.parent is filler:
+                                # dominance
+                                trace_filler[trace] = (new_index, filler)
+                                new_index += 1
+                                mapping_found = True
+                            else:
+                                # c-command
+                                for child in trees.children(cursor.parent):
+                                    for filler in fillers:
+                                        if child is filler:
+                                            trace_filler[trace] = (new_index,
+                                                                   child)
+                                            new_index += 1
+                                            mapping_found = True
+                                            break
+                                    # MUCH BETTER THAN GOTO!
+                                    if mapping_found:
+                                        break
+                            # MUCH BETTER THAN GOTO!
+                            if mapping_found:
+                                break
+                        # MUCH BETTER THAN GOTO!
+                        if mapping_found:
+                            break
+                        cursor = cursor.parent
+            newindex = 1
+            new_index_to_traces = defaultdict(list)
+            new_index_to_nonterms = defaultdict(list)
+            for trace in trace_filler:
+                index, filler = trace_filler[trace]
+                new_index_to_traces[str(index)].append(trace)
+                new_index_to_nonterms[str(index)].append(filler)
+            index_to_traces = new_index_to_traces
+            index_to_nonterms = new_index_to_nonterms
+        # check if there is no filler for some trace, fillers with index and no 
+        # trace are no problem!
+        if (any([index not in index_to_nonterms for index in index_to_traces])):
+            print("\n", file=sys.stderr)
+            print(' '.join([x.data['word'] \
+                            for x in trees.terminals(tree)]), \
+                  file=sys.stderr)
+            print("no filler for trace, deleting it", \
+                  file=sys.stderr)
+            to_delete = []
+            for index in index_to_traces:
+                if not index in index_to_nonterms:
+                    to_delete.append(index)
+            for index in to_delete:
+                for trace in index_to_traces[index]:
+                    trees.delete_terminal(tree, trace)
+                del index_to_traces[index]
+        # resolve traces and annotate stuff
         for coindex in index_to_traces:
             for trace in index_to_traces[coindex]:
+                if len(slash) > 0:
+                    if not trees.parse_label(trace.data['label']).label in slash:
+                        continue
                 # always has length 1 (see above)
                 filler = index_to_nonterms[coindex][0]
                 goal = trees.lca(filler, trace)
@@ -544,7 +606,7 @@ def ptb_delete_traces(tree, **params):
                     else:
                         raise ValueError("filler neither c-commands nor dominates")
                 # annotate path from filler to goal
-                annot = trees.parse_label(trace.data['word']).label
+                annot = trees.parse_label(filler.data['label']).label
                 cursor = filler
                 while not cursor == goal:
                     if not cursor == filler:
