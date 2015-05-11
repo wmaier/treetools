@@ -461,7 +461,7 @@ def punctuation_root(tree, **params):
 def ptb_delete_traces(tree, **params):
     """Delete PTB traces and all co-indexation.
     Labels will swap positions with terminals, i.e., -NONE- will be
-    terminal and trace symbol label.
+    terminal and trace symbol label. Gap indices ('=') are deleted.
 
     Prerequisite: none
     Parameters: keep [LABELS] : Trace labels which are to be kept,
@@ -471,10 +471,11 @@ def ptb_delete_traces(tree, **params):
                                 be deleted nevertheless.
                 keepcoindex   : For all labels which are to be kept,
                                 keep the co-indexation, too.
-                slash         : Perform slash feature annotation on
+                slash [LABELS]: Perform slash feature annotation on
                                 path from trace to antecedent. Annotation
                                 will be the label of the filler up to the
-                                first dash.
+                                first dash. Annotation only performed
+                                for given labels.
     Output options: none
     """
     keep = []
@@ -486,10 +487,14 @@ def ptb_delete_traces(tree, **params):
     traces = [terminal for terminal in trees.terminals(tree)
                   if terminal.data['label'] == "-NONE-"]
     index_to_traces = defaultdict(list)
+    index_to_nonterms = defaultdict(list)
+    # map indices to trace nodes and deleted indices from labales
     for trace in traces:
         trace_word = trees.parse_label(trace.data['word'])
         coindex = str(trace_word.coindex)
-        trace_word.coindex = ""
+        if not keepcoindex:
+            trace_word.coindex = ""
+        trace_word.gapindex = ""
         trace_word = trees.format_label(trace_word)
         if keepall or trace_word in keep:
             index_to_traces[coindex].append(trace)
@@ -497,46 +502,58 @@ def ptb_delete_traces(tree, **params):
             trace.data['word'] = "-NONE-"
         else:
             trees.delete_terminal(tree, trace)
+    # map indices to non-terminals (except preterminals)
     for node in trees.preorder(tree):
+        if len(trees.children(node)) == 0:
+            continue
         label = trees.parse_label(node.data['label'])
-        if label.coindex > 0:
-            if keepcoindex or slash:
-                if not label.coindex in index_to_traces:
-                    label.coindex = ""
-            else:
-                label.coindex = ""
-            node.data['label'] = trees.format_label(label)
-            # if coindex is still there we could do slash annotation
-            if len(label.coindex) > 0 and slash:
-                # find dash
-                annot = node.data['label']
-                dashpos = annot.find('-')
-                if dashpos > 0:
-                    annot = annot[:dashpos]
-                for trace in index_to_traces[label.coindex]:
-                    goal = trees.lca(node, trace)
-                    if goal == None:
-                        if node in trees.dominance(trace):
-                            goal = node
-                        else:
-                            raise ValueError("filler neither c-commands nor dominates")
-                    # annotate path from filler to goal
-                    cursor = node
-                    cursorlabel = trees.parse_label(cursor.data['label'])
-                    cursorlabel.coindex = ""
-                    cursor.data['label'] = trees.format_label(cursorlabel)
-                    while not cursor == goal:
-                        if not cursor == node:
-                            cursor.data['label'] += "/" + annot
-                        cursor = cursor.parent
-                    cursor = trace
-                    cursorlabel = trees.parse_label(cursor.data['label'])
-                    cursorlabel.coindex = ""
-                    cursor.data['label'] = trees.format_label(cursorlabel)
-                    while not cursor == goal:
+        if len(label.coindex) > 0:
+            index_to_nonterms[label.coindex].append(node)
+        # already delete indices
+        label.gapindex = ""
+        if not keepcoindex:
+            label.coindex = ""
+        node.data['label'] = trees.format_label(label)
+    # do slash annotatoin
+    if slash:
+        # check if one index maps to several nonterms aka uniqueness of fillers
+        if (any([len(index_to_nonterms[index]) > 1 \
+                 for index in index_to_nonterms])):
+            print(' '.join([x.data['word'] for x in trees.terminals(tree)]))
+            for index in index_to_traces:
+                for tree in index_to_traces[index]:
+                    print(' '.join([x.data['label'] for x in trees.terminals(tree)]))
+            print("----")
+            for index in index_to_nonterms:
+                for tree in index_to_nonterms[index]:
+                    print(' '.join([x.data['label'] for x in trees.terminals(tree)]))
+            raise ValueError("same index found on different non-terminals")
+        # check if there is no filler for some trace
+        # fillers with index and no trace are no problem!
+        if (any([index not in index_to_nonterms \
+                 for index in index_to_traces])):
+            raise ValueError("no filler for trace")
+        for coindex in index_to_traces:
+            for trace in index_to_traces[coindex]:
+                # always has length 1 (see above)
+                filler = index_to_nonterms[coindex][0]
+                goal = trees.lca(filler, trace)
+                if goal == None:
+                    if filler in trees.dominance(trace):
+                        goal = filler
+                    else:
+                        raise ValueError("filler neither c-commands nor dominates")
+                # annotate path from filler to goal
+                annot = trees.parse_label(trace.data['word']).label
+                cursor = filler
+                while not cursor == goal:
+                    if not cursor == filler:
                         cursor.data['label'] += "/" + annot
-                        cursor = cursor.parent
-                    trace_label = trees.parse_label(trace.data['label'])
+                    cursor = cursor.parent
+                cursor = trace
+                while not cursor == goal:
+                    cursor.data['label'] += "/" + annot
+                    cursor = cursor.parent
     return tree
 
 
