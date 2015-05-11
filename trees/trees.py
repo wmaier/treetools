@@ -287,7 +287,7 @@ def parse_label(label, **params):
     """Generic parsing of treebank label assuming following
     format (no spaces):
 
-    LABEL (GF_SEP GF)? ((COINDEX_SEP COINDEX)|(GAPINDEX_SEP GAPINDEX))?
+    LABEL (GF_SEP GF)? (GAPINDEX_SEP GAPINDEX)? (COINDEX_SEP COINDEX)?
     HEADMARKER?
 
     LABEL: \S+, GF_SEP: [#\-], GF: [^\-\=#\s]+
@@ -307,21 +307,17 @@ def parse_label(label, **params):
         label = label[:-1]
     # coindex or gapping sep (PTB)
     coindex = ""
+    coindex_sep_pos = label.rfind(DEFAULT_COINDEX_SEPARATOR)
+    if coindex_sep_pos > -1:
+        if label[coindex_sep_pos + 1:].isdigit():
+            coindex = label[coindex_sep_pos + 1:]
+            label = label[:coindex_sep_pos]
     gapindex = ""
-    coindex_sep_pos = None
-    gapping_sep_pos = None
-    for i, char in reversed(list(enumerate(label))):
-        if char == DEFAULT_COINDEX_SEPARATOR and coindex_sep_pos == None:
-            coindex_sep_pos = i
-        if char == DEFAULT_GAPPING_SEPARATOR and gapping_sep_pos == None:
-            gapping_sep_pos = i
-    if coindex_sep_pos is not None and label[coindex_sep_pos + 1:].isdigit():
-        coindex = label[coindex_sep_pos + 1:]
-        label = label[:coindex_sep_pos]
-    if gapping_sep_pos is not None and label[gapping_sep_pos + 1:].isdigit() \
-       and coindex == "":
-        gapindex = label[gapping_sep_pos + 1:]
-        label = label[:gapping_sep_pos]
+    gapping_sep_pos = label.rfind(DEFAULT_GAPPING_SEPARATOR)
+    if gapping_sep_pos > -1:
+        if label[gapping_sep_pos + 1:].isdigit():
+            gapindex = label[gapping_sep_pos + 1:]
+            label = label[:gapping_sep_pos]
     # gf
     gf = DEFAULT_EDGE
     gf_sep_pos = -1
@@ -360,16 +356,14 @@ def format_label(label, **params):
     """
     label_always = 'always_label' in params
     edge_always = 'always_gf' in params
-    if len(label.gapindex) > 0 and len(label.coindex) > 0:
-        raise ValueError("Cannot have gapping index and coindex on same label")
     lab = ""
     if not label.label == DEFAULT_LABEL or label_always:
         lab = label.label
     index = ""
+    if len(label.gapindex) > 0:
+        index += DEFAULT_GAPPING_SEPARATOR + label.gapindex
     if len(label.coindex) > 0:
-        index = DEFAULT_COINDEX_SEPARATOR + label.coindex
-    elif len(label.gapindex) > 0:
-        index = DEFAULT_GAPPING_SEPARATOR + label.gapindex
+        index += DEFAULT_COINDEX_SEPARATOR + label.coindex
     gf = ""
     if not label.gf == DEFAULT_EDGE or edge_always:
         gf = label.gf_separator + label.gf
