@@ -537,12 +537,6 @@ def ptb_delete_traces(tree, **params):
                         cursor.data['label'] += "/" + annot
                         cursor = cursor.parent
                     trace_label = trees.parse_label(trace.data['label'])
-    if not keepcoindex:
-        for node in trees.preorder(tree):
-            label = trees.parse_label(node.data['label'])
-            if label.coindex > 0:
-                label.coindex = ""
-                node.data['label'] = trees.format_label(label)
     return tree
 
 
