@@ -276,7 +276,7 @@ def get_label(tree, **params):
 class Label(object):
     """Dummy class for labels
     """
-    def __repr__(self):
+    def __str__(self):
         result = ""
         for element in self.__dict__:
             result += element + " -> " + str(self.__dict__[element]) + "\n"
