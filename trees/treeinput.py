@@ -86,6 +86,7 @@ def tigerxml_build_tree(s_element, **params):
             label_parts = trees.parse_label(subtree.data['label'], \
                                       gf_separator=gf_separator)
             subtree.data['label'] = label_parts.label \
+                                    + label_parts.gapindex \
                                     + label_parts.coindex \
                                     + label_parts.headmarker
             subtree.data['edge'] = label_parts.gf
