@@ -82,11 +82,19 @@ def tigerxml_build_tree(s_element, **params):
         root.parent = top
     # split gf as postprocessing step if applicable
     if 'gf_split' in params:
+        coindexseparator = trees.DEFAULT_COINDEX_SEPARATOR
+        if len(label_parts.coindex) == 0:
+            coindexseparator = trees.DEFAULT_COINDEX_SEPARATOR
+        gapseparator = trees.DEFAULT_GAPPING_SEPARATOR
+        if len(label_parts.gapindex) == 0:
+            gapseparator = ""
         for subtree in trees.preorder(top):
             label_parts = trees.parse_label(subtree.data['label'], \
                                       gf_separator=gf_separator)
             subtree.data['label'] = label_parts.label \
+                                    + gapseparator\
                                     + label_parts.gapindex \
+                                    + coindexseparator\
                                     + label_parts.coindex \
                                     + label_parts.headmarker
             subtree.data['edge'] = label_parts.gf
@@ -300,7 +308,13 @@ def brackets(in_file, in_encoding, **params):
                         separator = gf_separator
                         if len(label_parts.coindex) == 0:
                             separator = ""
-                        label = label_parts.label + separator \
+                        gapseparator = trees.DEFAULT_GAPPING_SEPARATOR
+                        if len(label_parts.gapindex) == 0:
+                            gapseparator = ""
+                        label = label_parts.label \
+                                + gapseparator \
+                                + label_parts.gapindex \
+                                + separator \
                                 + label_parts.coindex \
                                 + label_parts.headmarker
                         edge = label_parts.gf
@@ -387,8 +401,15 @@ def export_parse_line(line, **params):
         separator = gf_separator
         if len(label_parts.coindex) == 0:
             separator = ""
-        fields['label'] = label_parts.label + separator + \
-            label_parts.coindex + label_parts.headmarker
+        gapseparator = trees.DEFAULT_GAPPING_SEPARATOR
+        if len(label_parts.gapindex) == 0:
+            gapseparator = ""
+        fields['label'] = label_parts.label \
+                          + gapseparator\
+                          + label_parts.gapindex\
+                          + separator\
+                          + label_parts.coindex\
+                          + label_parts.headmarker
         fields['edge'] = label_parts.gf
     return fields
 
