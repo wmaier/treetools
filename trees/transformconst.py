@@ -82,13 +82,19 @@ def get_headpos_by_rule(parent_label, children_label, rules,
     if not parent_label.lower() in rules:
         return default
     for hrule in rules[parent_label]:
+        if len(hrule[1]) == 0:
+            if hrule[0] == 'left-to-right':
+                return len(children_label) - 1
+            elif hrule[0] == 'right-to_left':
+                return 0
+            else:
+                raise ValueError("unknown head rule direction")
         for label in hrule[1]:
             if hrule[0] == 'left-to-right':
                 for i, child_label in enumerate(children_label):
                     parsed_label = trees.parse_label(child_label)
                     if parsed_label.label.lower() == label:
                         return i
-                return len(children_label) - 1
             elif hrule[0] == 'right-to-left':
                 for i, child_label in \
                     itertools.izip(reversed(xrange(len(children_label))),
@@ -99,4 +105,4 @@ def get_headpos_by_rule(parent_label, children_label, rules,
                 return 0
             else:
                 raise ValueError("unknown head rule direction")
-        
+    return 0
