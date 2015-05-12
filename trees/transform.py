@@ -488,7 +488,7 @@ def ptb_delete_traces(tree, **params):
     do_slash = False
     if 'slash' in params:
         do_slash = True
-        if not type(slash) is bool:
+        if not type(params['slash']) is bool:
             slash = params['slash'].split(',')
     traces = [terminal for terminal in trees.terminals(tree)
                   if terminal.data['label'] == "-NONE-"]
@@ -614,7 +614,8 @@ def ptb_delete_traces(tree, **params):
                     cursor = cursor.parent
                 cursor = trace
                 while not cursor == goal:
-                    cursor.data['label'] += "/" + annot
+                    if not cursor == trace:
+                        cursor.data['label'] += "/" + annot
                     cursor = cursor.parent
     return tree
 
