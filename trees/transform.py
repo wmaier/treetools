@@ -662,19 +662,14 @@ def mark_heads_by_rules(tree, **params):
         mark_heads_preset: Instead of rulefile, can be 'negra' or 'ptb'
     Output options: none
     """
-    # head rules still missing
-    raise ValueError("not yet implemented")
     rules = []
-    if 'mark_heads_preset' in params and 'mark_heads_rulefile' in\
-       params:
+    if 'mark_heads_preset' in params and 'mark_heads_rulefile' in params:
         raise ValueError("specify either head rule preset or rule file")
     if 'mark_heads_preset' in params:
         if params['mark_heads_preset'] == 'negra':
-            rules = transformconst.parse_head_rules(transformconst.\
-                                                    HEAD_RULES_PTB)
+            rules = transformconst.HEAD_RULES_PTB
         elif params['mark_heads_preset'] == 'ptb':
-            rules = transformconst.parse_head_rules(transformconst.\
-                                                    HEAD_RULES_NEGRA)
+            rules = transformconst.HEAD_RULES_NEGRA
         else:
             raise ValueError("unknown head rule preset " \
                              + str(params['mark_heads_preset']))
