@@ -614,7 +614,8 @@ def ptb_delete_traces(tree, **params):
                     cursor = cursor.parent
                 cursor = trace
                 while not cursor == goal:
-                    cursor.data['label'] += "/" + annot
+                    if not cursor == trace:
+                        cursor.data['label'] += "/" + annot
                     cursor = cursor.parent
     return tree
 
