@@ -12,7 +12,7 @@ import sys
 import io
 import os
 from collections import defaultdict
-from . import trees, treeinput, treeoutput, misc
+from . import trees, treeinput, treeoutput, misc, transformconst
 
 
 def root_attach(tree):
