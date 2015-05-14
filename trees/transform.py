@@ -565,6 +565,8 @@ def ptb_delete_traces(tree, **params):
                         if mapping_found:
                             break
                         cursor = cursor.parent
+                    if cursor.parent == None and not mapping_found:
+                        raise ValueError("no mapping found")
             newindex = 1
             new_index_to_traces = defaultdict(list)
             new_index_to_nonterms = defaultdict(list)
@@ -712,7 +714,10 @@ def _binarize_tree(tree):
             if remaining[0].data['head']:
                 direction = 'right'
             binarization_tree = trees.Tree(trees.make_node_data_fill())
-            binarization_tree.data['label'] = '@' + label
+            label_no_coindex = trees.parse_label(label)
+            label_no_coindex.coindex = ""
+            label_no_coindex = trees.format_label(label_no_coindex)
+            binarization_tree.data['label'] = '@' + label_no_coindex
             binarization_tree.data['head'] = True
             if direction == 'left':
                 child = remaining[0]

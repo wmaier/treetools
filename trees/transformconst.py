@@ -6,6 +6,7 @@ transformations: constants and utilities
 Author: Wolfgang Maier <maierw@hhu.de>
 """
 import itertools
+from . import trees
 
 # Head rules for PTB (WSJ) from Collins (1999, p. 240)
 HEAD_RULES_PTB = {
@@ -81,7 +82,7 @@ def get_headpos_by_rule(parent_label, children_label, rules,
     """
     if not parent_label.lower() in rules:
         return default
-    for hrule in rules[parent_label]:
+    for hrule in rules[parent_label.lower()]:
         if len(hrule[1]) == 0:
             if hrule[0] == 'left-to-right':
                 return len(children_label) - 1
@@ -92,14 +93,14 @@ def get_headpos_by_rule(parent_label, children_label, rules,
         for label in hrule[1]:
             if hrule[0] == 'left-to-right':
                 for i, child_label in enumerate(children_label):
-                    parsed_label = trees.parse_label(child_label)
+                    parsed_label = trees.parse_label(child_label.lower())
                     if parsed_label.label.lower() == label:
                         return i
             elif hrule[0] == 'right-to-left':
                 for i, child_label in \
                     itertools.izip(reversed(xrange(len(children_label))),
                                    reversed(children_label)):
-                    parsed_label = trees.parse_label(child_label)
+                    parsed_label = trees.parse_label(child_label.lower())
                     if parsed_label.label.lower() == label:
                         return i
                 return 0
