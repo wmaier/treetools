@@ -197,9 +197,13 @@ def brackets(tree, stream, **params):
     """One bracketed tree per line. Tree must not be discontinuous.
     """
     if treeanalysis.gap_degree(tree) > 0:
-        raise ValueError("cannot write a discontinuous trees with brackets.")
-    write_brackets_subtree(tree, stream, **params)
-    stream.write(u"\n")
+        if 'brackets_skipdisco' in params:
+            print("skipping discontinuous tree", file=sys.stderr)
+        else:
+            raise ValueError("cannot write a discontinuous trees with brackets.")
+    else:
+        write_brackets_subtree(tree, stream, **params)
+        stream.write(u"\n")
 
 
 def discobrackets_begin(stream, **params):
@@ -309,6 +313,7 @@ OUTPUT_FORMATS = [export, brackets, discobrackets, tigerxml, terminals]
 OUTPUT_OPTIONS = {'boyd_split_marking' : 'Boyd split: Mark split nodes with *',
                   'boyd_split_numbering' : 'Boyd split: Number split nodes',
                   'brackets_emptyroot' : 'Omit root label as in Penn Treebank',
+                  'brackets_skipdisco' : 'Skip disco trees in brackets output',
                   'export_four' : 'Export fmt: Use lemma (-- if not present)',
                   'gf' : 'Append grammatical function labels to node labels',
                   'gf_separator' : 'Separator to use for gf option',
