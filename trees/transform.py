@@ -711,6 +711,8 @@ def _binarize_tree(tree):
         child = None
         binarization_tree = None
         while len(remaining) > 2:
+            if 'head' not in remaining[0].data:
+                raise ValueError("heads not marked?")
             if remaining[0].data['head']:
                 direction = 'right'
             binarization_tree = trees.Tree(trees.make_node_data_fill())
