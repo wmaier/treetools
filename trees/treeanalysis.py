@@ -13,7 +13,7 @@ from . import trees, treeinput, misc
 
 
 class PosTags(object):
-    """Accumulates statistics concerning gap degree over several trees.
+    """Accumulates statistics concerning POS tags over several trees.
     """
     def __init__(self):
         self.tags = []
@@ -37,7 +37,7 @@ class PosTags(object):
 
 
 class SentenceCount(object):
-    """Accumulates statistics concerning gap degree over several trees.
+    """Counts sentences.
     """
     def __init__(self):
         self.cnt = 0
