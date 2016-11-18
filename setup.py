@@ -8,6 +8,7 @@ Author: Wolfgang Maier <maierw@hhu.de>
 from __future__ import print_function
 import sys
 from distutils.core import setup
+from distutils.version import LooseVersion
 
 classifiers = """\
 Development Status :: 4 - Beta
@@ -26,7 +27,7 @@ if sys.version_info < (2, 3):
             del kwargs["classifiers"]
         _setup(**kwargs)
 
-if sys.version < "2.7.3":
+if LooseVersion(sys.version) < LooseVersion("2.7.3"):
     print("Requires Python version >= 2.7.3")
     sys.exit(1)
 
