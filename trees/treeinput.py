@@ -19,6 +19,11 @@ if sys.version_info[0] < 3:
 else:
     from io import StringIO
 from . import trees, misc
+# In Python 3.5, unicode() does not exist anymore, just str()
+try:
+    type(unicode)
+except NameError:
+    unicode = lambda s: str(s)
 
 
 def tigerxml_build_tree(s_element, **params):
