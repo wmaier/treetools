@@ -131,6 +131,59 @@ def gap_degree(tree):
     return max([gap_degree_node(subtree) for subtree in trees.preorder(tree)])
 
 
+def has_gaps(tree):
+    """Return true if the tree has gaps.
+    """
+    return gap_degree_node(tree) > 0
+
+
+def gap_type(tree):
+    """Return the gap type: source, pass, none (Maier & Lichte 2016).
+    """
+    if not trees.has_children(tree):
+        return "none"
+    terminals = trees.terminals(tree)
+    pos = terminals[0].data['num']
+    for terminal in terminals[1:]:
+        if terminal.data['num'] > pos + 1:
+            return "pass"
+        pos += 1
+    for child in trees.children(tree):
+        if trees.has_children(child) and has_gaps(child):
+            return "source"
+    return "none"
+
+
+def disco_order(tree, mode):
+    """Return the continuous reordering of this tree (Maier and Lichte, 2016).
+    Mode can be one of 'left', 'rightd'.
+    """
+    result = []
+    ochildren = trees.children(tree)
+    if len(ochildren) > 2:
+        raise ValueError("tree must be binarized")
+    if not trees.has_children(tree):
+        return [tree]
+    if len(ochildren) == 1:
+        result = disco_order(ochildren[0], mode)
+    if len(ochildren) == 2:
+        left = ochildren[0]
+        right = ochildren[1]
+        if mode == "left":
+            result = disco_order(left, mode)
+            result.extend(disco_order(right, mode))
+        elif mode == "rightd":
+            if gap_type(tree) == "source":
+                result = disco_order(right, mode)
+                result.extend(disco_order(left, mode))
+            else:
+                result = disco_order(left, mode)
+                result.extend(disco_order(right, mode))
+        else:
+            raise ValueError("unknown mode")
+    return result
+
+
 def add_parser(subparsers):
     """Add an argument parser to the subparsers of treetools.py.
     """
