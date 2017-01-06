@@ -66,7 +66,7 @@ Examples
 
 To attach the punctuation in TIGER and remove its crossing branches while converting it from TigerXML to a bracket format, type::
 
-    treetools transform tiger.xml tiger.preproc.xml --trans root_attach boyd_split negra_mark_heads boyd_split raising --src-format tigerxml --dest-format export
+    treetools transform tiger.xml tiger.preproc.xml --trans root_attach negra_mark_heads boyd_split raising --src-format tigerxml --dest-format export
 
 To extract the bare sentences (one per line) from a treebank in bracketed format, such as the Penn Treebank, type::
 
