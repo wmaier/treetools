@@ -106,6 +106,14 @@ def test_discont_general(discont_tree):
     words = [node.data['word'] for node in terms]
     uterms = trees.unordered_terminals(tree)
     uwords = [node.data['word'] for node in uterms]
+    tree = transform.negra_mark_heads(tree)
+    tree = transform.binarize(tree)
+    left_reorder = [node.data['num'] for node \
+                        in treeanalysis.disco_order(tree, 'left')]
+    rightd_reorder = [node.data['num'] for node \
+                          in treeanalysis.disco_order(tree, 'rightd')]
+    assert left_reorder == testdata.DISCONT_LEFT_REORDER
+    assert rightd_reorder == testdata.DISCONT_RIGHTD_REORDER
     assert all(['num' in node.data for node in terms])
     assert all([node in uterms for node in terms])
     assert len(terms) == 9

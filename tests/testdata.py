@@ -85,7 +85,8 @@ WORDS = [u'Who', u'did', u'Fritz', u'tell', u'Hans', u'that', u'Manfred',
 POS = [u'WP', u'VB', u'NNP', u'VB', u'NNP', u'IN', u'NNP', u'VB', u'?']
 DISCONT_EXPORT_NUMBERING = [0, 504, 503, 502, 500, 1, 8, 6, 501, 7, 4, 5, 2, \
                                 3, 9]
-#DISCONT_EXPORT_LEFT_REORDER = [1, 8, 
+DISCONT_LEFT_REORDER = [1, 8, 6, 7, 4, 5, 2, 3, 9]
+DISCONT_RIGHTD_REORDER = [2, 3, 1, 8, 6, 7, 4, 5, 9]
 DISCONT_LABELS_PREORDER = [u'VROOT', u'S', u'VP', u'SBAR', u'VP', u'WP',
                            u'VB', u'IN', u'NP', u'NNP', u'VB', u'NNP',
                            u'VB', u'NNP', u'?']
