@@ -1,0 +1,16 @@
+#BOS 1
+Who                     WP      --              --      500
+did                     VB      --              HD      504
+Fritz                   NNP     --              HD      504
+tell                    VB      --              HD      503
+Hans                    NNP     --              --      503
+that                    IN      --              HD      502
+Manfred                 NNP     --              HD      501
+likes                   VB      --              HD      500
+?                       ?       --              --      0
+#500                    VP      --              --      502
+#501                    NP      --              --      502
+#502                    SBAR    --              --      503
+#503                    VP      --              --      504
+#504                    S       --              --      0
+#EOS 1

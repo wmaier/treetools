@@ -556,3 +556,20 @@ def test_analysis(discont_tree, cont_tree):
     sentencecount.run(discont_tree)
     sentencecount.run(cont_tree)
     assert sentencecount.cnt == 2
+
+
+def test_binarize(discont_tree, cont_tree):
+    """See transform.binarize
+    """
+    tree = discont_tree
+    tree = transform.negra_mark_heads(tree)
+    tree = transform.binarize(tree)
+    nodes = [node for node in trees.preorder(tree)]
+    labels = [node.data['label'] for node in nodes]
+    assert labels == testdata.DISCONT_LABELS_BIN_PREORDER
+    tree = cont_tree
+    tree = transform.negra_mark_heads(tree)
+    tree = transform.binarize(tree)
+    nodes = [node for node in trees.preorder(tree)]
+    labels = [node.data['label'] for node in nodes]
+    assert labels == testdata.CONT_LABELS_BIN_PREORDER

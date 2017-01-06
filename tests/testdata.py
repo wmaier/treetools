@@ -85,6 +85,7 @@ WORDS = [u'Who', u'did', u'Fritz', u'tell', u'Hans', u'that', u'Manfred',
 POS = [u'WP', u'VB', u'NNP', u'VB', u'NNP', u'IN', u'NNP', u'VB', u'?']
 DISCONT_EXPORT_NUMBERING = [0, 504, 503, 502, 500, 1, 8, 6, 501, 7, 4, 5, 2, \
                                 3, 9]
+#DISCONT_EXPORT_LEFT_REORDER = [1, 8, 
 DISCONT_LABELS_PREORDER = [u'VROOT', u'S', u'VP', u'SBAR', u'VP', u'WP',
                            u'VB', u'IN', u'NP', u'NNP', u'VB', u'NNP',
                            u'VB', u'NNP', u'?']
@@ -99,6 +100,10 @@ DISCONT_LABELSBOYD_PREORDER = [u'VROOT', u'S', u'VP', u'SBAR', u'VP',
                                u'WP', u'VB', u'NNP', u'VP', u'VB',
                                u'NNP', u'SBAR', u'IN', u'NP', u'NNP',
                                u'VP', u'VB', u'?']
+DISCONT_LABELS_BIN_PREORDER = [u'VROOT', u'S', u'VP', u'SBAR', u'VP',
+                               u'WP', u'VB', u'@SBAR', u'IN', u'NP',
+                               u'NNP', u'@VP', u'VB', u'NNP', u'@S',
+                               u'VB', u'NNP', u'?']
 CONT_LABELS_PREORDER = [u'VROOT', u'S', u'WP', u'VB', u'NNP',
                         u'VP', u'VB', u'NNP', u'SBAR', u'IN',
                         u'NP', u'NNP', u'VP', u'VB', u'?']
@@ -108,6 +113,10 @@ CONT_RIGHTSIB_PREORDER = [None, u'?', u'VB', u'NNP', u'VP',
 CONT_LEFTSIB_PREORDER = [None, None, None, u'WP', u'VB', u'NNP', None, 
                          u'VB', u'NNP', None, u'IN', None, u'NP', None, 
                          u'S']
+CONT_LABELS_BIN_PREORDER = [u'VROOT', u'S', u'@S', u'@S', u'WP', u'VB',
+                            u'NNP', u'VP', u'@VP', u'VB', u'NNP', u'SBAR',
+                            u'@SBAR', u'IN', u'NP', u'NNP', u'VP', u'VB',
+                            u'?']
 DISCONT_BLOCKS_VP = [[1], [4,5,6,7,8]]
 CONT_BLOCKS_VP = [[4,5,6,7,8]]
 DISCONT_DOM_FIRST = [u'WP', u'VP', u'SBAR', u'VP',  u'S', u'VROOT']
