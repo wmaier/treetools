@@ -35,16 +35,16 @@ def test_labels(cont_tree):
     assert olabel == label
     label = "A--A=1---2"
     e = trees.parse_label(label)
-    assert e.label == "A--A=1--"
-    assert e.gf == trees.DEFAULT_EDGE
+    assert e.label == "A"
+    assert e.gf == "-A=1--"
     assert e.coindex == "2"
     assert not e.is_trace
     olabel = trees.format_label(e)
     assert olabel == label
     label = "A--A-1--=2"
     e = trees.parse_label(label)
-    assert e.label == "A--A-1--"
-    assert e.gf == trees.DEFAULT_EDGE
+    assert e.label == "A"
+    assert e.gf == "-A-1--"
     assert e.coindex == ""
     assert e.gapindex == "2"
     assert not e.is_trace
