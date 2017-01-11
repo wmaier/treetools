@@ -10,6 +10,11 @@ import sys
 from math import floor
 from xml.sax.saxutils import quoteattr
 from . import trees, treeanalysis
+# In Python 3.5, unicode() does not exist anymore, just str()
+try:
+    type(unicode)
+except NameError:
+    unicode = lambda s: str(s)
 
 
 def parse_split_specification(split_spec, size):
