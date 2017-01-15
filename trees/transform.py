@@ -916,7 +916,7 @@ def run(args):
                          encoding=args.dest_enc) as dest_stream:
                 for tree_ind in range(0, part_size):
                     getattr(treeoutput, args.dest_format) \
-                        (tree_iter.next(), dest_stream, \
+                        (next(tree_iter), dest_stream, \
                          **misc.options_dict(args.dest_opts))
                     if tree_ind % args.counting == 0:
                         sys.stderr.write("\r%d" % tree_ind)
