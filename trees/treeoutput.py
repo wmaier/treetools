@@ -14,7 +14,7 @@ from . import trees, treeanalysis
 try:
     type(unicode)
 except NameError:
-    unicode = lambda s: str(s)
+    def unicode(s): return str(s)
 
 
 def parse_split_specification(split_spec, size):
@@ -28,7 +28,7 @@ def parse_split_specification(split_spec, size):
     numerical part size specifications).
     """
     parts = []
-    rest_index = None # remember where the 'rest' part is
+    rest_index = None  # remember where the 'rest' part is
     for i, part_spec in enumerate(split_spec.split('_')):
         if part_spec[-1] == "%":
             parts.append(int(floor((int(part_spec[:-1]) / 100) * size)))
@@ -55,8 +55,8 @@ def parse_split_specification(split_spec, size):
         if not rest_index == None:
             sys.stderr.write("warning: 'rest' part will be empty\n")
     elif sum_parts > size:
-        raise ValueError("treebank smaller than sum of split (%d vs %d)\n" \
-                             % (size, sum_parts))
+        raise ValueError("treebank smaller than sum of split (%d vs %d)\n"
+                         % (size, sum_parts))
     return parts
 
 
@@ -132,7 +132,7 @@ def compute_export_numbering(tree):
                 levels[level] = []
             levels[level].append(subtree)
     for level in levels:
-        levels[level] = sorted(levels[level], \
+        levels[level] = sorted(levels[level],
                                key=lambda x: trees.terminals(x)[0].data['num'])
     num = 500
     for level_num in sorted(levels.keys()):
@@ -251,16 +251,24 @@ def terminals_end(stream, **params):
 def terminals(tree, stream, **params):
     """All terminals of the tree on one line separated by whitespace.
     """
+    if 'terminals_pos' in params and 'pos_only' in params:
+        raise ValueError("can only use one of terminals_pos, pos_only")
     for terminal in trees.terminals(tree):
         if 'terminals_one' in params:
-            result = terminal.data['word']
-            if 'terminals_pos' in params:
-                result += "\t%s" % terminal.data['label']
+            if 'pos_only' in params:
+                result = terminal.data['label']
+            else:
+                result = terminal.data['word']
+                if 'terminals_pos' in params:
+                    result += "\t%s" % terminal.data['label']
             print(result, file=stream)
         else:
-            result = terminal.data['word']
-            if 'terminals_pos' in params:
-                result += "/%s" % terminal.data['label']
+            if 'pos_only' in params:
+                result = terminal.data['label']
+            else:
+                result = terminal.data['word']
+                if 'terminals_pos' in params:
+                    result += "/%s" % terminal.data['label']
             print(unicode(result), end=u" ", file=stream)
     print(u"", file=stream)
 
@@ -315,14 +323,14 @@ def tigerxml(tree, stream, **params):
 
 
 OUTPUT_FORMATS = [export, brackets, discobrackets, tigerxml, terminals]
-OUTPUT_OPTIONS = {'boyd_split_marking' : 'Boyd split: Mark split nodes with *',
-                  'boyd_split_numbering' : 'Boyd split: Number split nodes',
-                  'brackets_emptyroot' : 'Omit root label as in Penn Treebank',
-                  'brackets_skipdisco' : 'Skip disco trees in brackets output',
-                  'export_four' : 'Export fmt: Use lemma (-- if not present)',
-                  'gf' : 'Append grammatical function labels to node labels',
-                  'gf_separator' : 'Separator to use for gf option',
-                  'gf_terminals' : 'If gf is set, use func. labels on terms.',
-                  'mark_heads_marking' : 'Output head marking',
-                  'terminals_one' : 'Terminals output with one terminal/line',
-                  'terminals_pos' : 'POS tags in terminal output (sep /)'}
+OUTPUT_OPTIONS = {'boyd_split_marking': 'Boyd split: Mark split nodes with *',
+                  'boyd_split_numbering': 'Boyd split: Number split nodes',
+                  'brackets_emptyroot': 'Omit root label as in Penn Treebank',
+                  'brackets_skipdisco': 'Skip disco trees in brackets output',
+                  'export_four': 'Export fmt: Use lemma (-- if not present)',
+                  'gf': 'Append grammatical function labels to node labels',
+                  'gf_separator': 'Separator to use for gf option',
+                  'gf_terminals': 'If gf is set, use func. labels on terms.',
+                  'mark_heads_marking': 'Output head marking',
+                  'terminals_one': 'Terminals output with one terminal/line',
+                  'terminals_pos': 'POS tags in terminal output (sep /)'}
