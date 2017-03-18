@@ -2,16 +2,9 @@
  treetools - tree processing
 =====================================================================
 
-treetools is a collection of tools for processing constituency
-treebank trees. It contains algorithms for tree manipulation (such
-as removal of crossing branches), tree analysis, and grammar 
-extraction.
+treetools is a collection of tools for processing treebank trees. It contains algorithms for tree manipulation (such as removal of  crossing branches), tree analysis, and grammar extraction.
 
-treetools is being developed and maintained at the Department for
-Computational Linguistics at the Institute for Language and
-Information at the University of Düsseldorf, Germany (see
-http://phil.hhu.de/beyond-cfg). The project is sponsored by Deutsche
-Forschungsgemeinschaft (DFG). 
+treetools has been developed at the Department for Computational Linguistics at the Institute for Language and Information at the University of Düsseldorf, Germany (see http://phil.hhu.de/beyond-cfg). The project is sponsored by Deutsche Forschungsgemeinschaft (DFG). It is maintained by Wolfgang Maier.
 
 Author: Wolfgang Maier <maierw@hhu.de>.
 
@@ -23,7 +16,7 @@ Installation
 
 Requirements:
 
-- Python 2.7.3+
+- Python 2.7.3+/3.4+
 
 To install the latest release from the Python package index, type::
 
@@ -35,7 +28,7 @@ To install the latest version clone the git repository and run::
 
 within the repository directory. 
 
-If you have superuser privileges and want to perform a system-wide installation, omit the `--user` option, respectively.
+If you have superuser privileges and want to perform a system-wide installation, omit the `--user` option, respectively. 
 
 Running
 =======
@@ -64,9 +57,9 @@ To get verbose help on available transformation algorithms, available options, e
 Examples
 --------
 
-To attach the punctuation in TIGER and remove its crossing branches while converting it from TigerXML to a bracket format, type::
+To attach the punctuation in TIGER and remove its crossing branches while converting it from TigerXML to the export format, type::
 
-    treetools transform tiger.xml tiger.preproc.xml --trans root_attach negra_mark_heads boyd_split raising --src-format tigerxml --dest-format export
+    treetools transform tiger.xml tiger.continuous.export --trans root_attach negra_mark_heads boyd_split raising --src-format tigerxml --dest-format export
 
 To extract the bare sentences (one per line) from a treebank in bracketed format, such as the Penn Treebank, type::
 
@@ -84,7 +77,6 @@ To extract an left-to-right binarized LCFRS with v1/h2 markovization in rparse f
 License
 =======
 
-The code is released under the GNU General Public Licence (GPL) 3.0 or
-higher. The license texts can be found at at
+The code is released under the GNU General Public Licence (GPL) 3.0 or higher. The license texts can be found at at
 http://www.gnu.org/licenses/gpl-3.0. 
 
