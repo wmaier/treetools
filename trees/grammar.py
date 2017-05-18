@@ -238,8 +238,10 @@ def binarize(grammar, **args):
                                       for label in vert])
                         rule_cnt = nf_vert_c[vert]
                     if 'reordering' in args:
-                        func, lin = args['reordering'](func, lin)
-                    binarize_rule(func, lin, rule_cnt, vert,
+                        _func, _lin = args['reordering'](func, lin)
+                    else:
+                        _func, _lin = func, lin
+                    binarize_rule(_func, _lin, rule_cnt, vert,
                                   label_gen, result)
     else:
         # without markovization
