@@ -17,6 +17,7 @@ class LabelGenerator(object):
     """Generator which delivers unique binarization labels. For
     other kinds of labels, overwrite next().
     """
+
     def __init__(self, *args, **kwargs):
         """Allow parameters, also from subclasses.
         """
@@ -28,7 +29,7 @@ class LabelGenerator(object):
         """Deliver next unique label (wihtout fan-out)
         """
         self.numb += 1
-        return "%s%d%s" % (grammarconst.DEFAULT_BINLABEL, self.numb, \
+        return "%s%d%s" % (grammarconst.DEFAULT_BINLABEL, self.numb,
                            grammarconst.DEFAULT_BINSUFFIX)
 
 
@@ -36,6 +37,7 @@ class MarkovLabelGenerator(LabelGenerator):
     """Generator which delivers binarization lables with markovization
     information.
     """
+
     def next(self, **params):
         vert = ""
         if self.kwargs['p']['v'] > 0:
@@ -167,15 +169,16 @@ def reordering_none(func, lin):
 
 
 def reordering_optimal(func, lin):
-    """Locally optimal binarization (minimize fan-out per single decision).
+    """Locally optimal binarization (minimize fan-out per single decision). 
     """
     order = []
     pos = [i for i in range(1, len(func))]
     for rhs in func[1:]:
         if len(pos) == 0:
             continue
-        fanout_min = sys.maxint
-        var_min = sys.maxint
+        # should be large enough
+        fanout_min = 100000
+        var_min = 100000
         winner_pos = pos[0]
         for posc in pos:
             # try all rhs predicates and check for the one ...
@@ -199,8 +202,8 @@ def reordering_optimal(func, lin):
     for i, o in enumerate(order):
         rhsorder[i] = o - 1
         varmap[o - 1] = i
-    newfunc = tuple([func[0]] + [func[1:][rhsorder[k]] \
-                                     for k in range(len(func[1:]))])
+    newfunc = tuple([func[0]] + [func[1:][rhsorder[k]]
+                                 for k in range(len(func[1:]))])
     newlin = []
     for arg in lin:
         newlin.append(tuple([(varmap[argc[0]], argc[1]) for argc in arg]))
@@ -222,7 +225,7 @@ def binarize(grammar, **args):
             for func in grammar:
                 for lin in grammar[func]:
                     for vert in grammar[func][lin]:
-                        nf_vert.append(tuple([grammarconst.\
+                        nf_vert.append(tuple([grammarconst.
                                               label_strip_fanout(label)
                                               for label in vert]))
             nf_vert_c = Counter(nf_vert)
@@ -233,7 +236,7 @@ def binarize(grammar, **args):
                     rule_cnt = grammar[func][lin][vert]
                     if nofanout:
                         # then use the corresponding counts/contexts
-                        vert = tuple([grammarconst.\
+                        vert = tuple([grammarconst.
                                       label_strip_fanout(label)
                                       for label in vert])
                         rule_cnt = nf_vert_c[vert]
@@ -329,11 +332,11 @@ def add_parser(subparsers):
     """Add an argument parser to the subparsers of treetools.py.
     """
     parser = subparsers.add_parser('grammar',
-                                   usage='%(prog)s src dest ' \
+                                   usage='%(prog)s src dest '
                                    'gramtype [options] ',
                                    formatter_class=argparse.
                                    RawDescriptionHelpFormatter,
-                                   description='grammar extraction from' \
+                                   description='grammar extraction from'
                                    ' treebank trees')
     parser.add_argument('src', help='input file')
     parser.add_argument('dest', help='prefix of output files')
@@ -341,13 +344,13 @@ def add_parser(subparsers):
                         help='type of output grammar (default: %(default)s)',
                         default='treebank')
     parser.add_argument('--markov', metavar='M', nargs='+',
-                        help='markovization parameters M as pairs key:value' \
-                        ' (default: %(default)s) (at least one must be '\
-                        ' specified. Deterministic binarization' \
+                        help='markovization parameters M as pairs key:value'
+                        ' (default: %(default)s) (at least one must be '
+                        ' specified. Deterministic binarization'
                         ' if option not present.')
     parser.add_argument('--src-format', metavar='FMT',
                         choices=[fun.__name__
-                                 for fun in treeinput.INPUT_FORMATS] \
+                                 for fun in treeinput.INPUT_FORMATS]
                         + [fun.__name__ for fun in grammarinput.FORMATS],
                         help='input format (default: %(default)s)',
                         default='export')
@@ -355,9 +358,9 @@ def add_parser(subparsers):
                         help='input encoding (default: %(default)s)',
                         default='utf-8')
     parser.add_argument('--src-opts', nargs='+', metavar='O',
-                        help='space separated list of options O for reading ' \
-                            'input of the form key:value ' \
-                            '(default: %(default)s)',
+                        help='space separated list of options O for reading '
+                        'input of the form key:value '
+                        '(default: %(default)s)',
                         default=[])
     parser.add_argument('--dest-format', metavar='FMT',
                         help='grammar format (default: %(default)s)',
@@ -366,13 +369,13 @@ def add_parser(subparsers):
                         help='grammar encoding (default: %(default)s)',
                         default='utf-8')
     parser.add_argument('--dest-opts', nargs='+', metavar='O',
-                        help='space separated list of options O for writing ' \
-                            'the grammar of the form key:value ' \
-                            '(default: %(default)s)',
+                        help='space separated list of options O for writing '
+                        'the grammar of the form key:value '
+                        '(default: %(default)s)',
                         default=[])
-    parser.add_argument('--verbose', action='store_true', help='More verbose ' \
+    parser.add_argument('--verbose', action='store_true', help='More verbose '
                         'messages', default=False)
-    parser.add_argument('--usage', nargs=0, help='show detailed information ' \
+    parser.add_argument('--usage', nargs=0, help='show detailed information '
                         'about available tasks and input format/options',
                         action=UsageAction)
     parser.set_defaults(func=run)
@@ -382,6 +385,7 @@ def add_parser(subparsers):
 class UsageAction(argparse.Action):
     """Custom action which shows extended help on available options.
     """
+
     def __call__(self, parser, namespace, values, option_string=None):
         title_str = misc.bold("%s help" % sys.argv[0])
         help_str = "\n\n%s\n%s\n\n%s\n%s\n\n%s" \
@@ -432,21 +436,21 @@ def run(args):
     lexicon = {}
     tree_inputformats = [fun.__name__ for fun in treeinput.INPUT_FORMATS]
     grammar_inputformats = [fun.__name__ for fun in grammarinput.FORMATS]
-    
+
     if args.src_format in grammar_inputformats and args.src_format in \
        tree_inputformats:
         raise ValueError("Ambiguous input format specification")
     elif args.src_format in grammar_inputformats:
         print("reading grammar (%s)" % args.gramtype, file=sys.stderr)
         getattr(grammarinput, args.src_format)(args.src, args.src_enc,
-                                               **misc.options_dict \
+                                               **misc.options_dict
                                                (args.src_opts))
     elif args.src_format in tree_inputformats:
         print("extracting grammar (%s)" % args.gramtype, file=sys.stderr)
         cnt = 1
         for tree in getattr(treeinput,
                             args.src_format)(args.src, args.src_enc,
-                                             **misc.options_dict \
+                                             **misc.options_dict
                                              (args.src_opts)):
             extract(tree, grammar, lexicon)
             if cnt % 100 == 0:
@@ -475,18 +479,17 @@ def run(args):
     sys.stderr.write("\nwriting grammar in format '%s', encoding '%s', to '%s'"
                      % (args.dest_format, args.dest_enc, args.dest))
     sys.stderr.write("\n")
-    getattr(grammaroutput, args.dest_format) \
-        (grammar, lexicon, args.dest,
-         args.dest_enc,
-         **misc.options_dict(args.dest_opts))
+    getattr(grammaroutput, args.dest_format)(grammar, lexicon, args.dest,
+                                             args.dest_enc,
+                                             **misc.options_dict(args.dest_opts))
     print("\n", file=sys.stderr)
     sys.exit()
 
 
-GRAMTYPES = {'treebank' : 'Plain treebank grammar',
-             'leftright' : 'Simple left-to-right binarization',
-             'optimal' : 'Optimal binarization'}
-MARKOVPARAMS = {'v' : 'vertical markovization (default 1)',
-                'h' : 'horizontal markovization (default 2)',
-                'nofanout' : 'No fan-out on markovization symbols in ' \
+GRAMTYPES = {'treebank': 'Plain treebank grammar',
+             'leftright': 'Simple left-to-right binarization',
+             'optimal': 'Optimal binarization'}
+MARKOVPARAMS = {'v': 'vertical markovization (default 1)',
+                'h': 'horizontal markovization (default 2)',
+                'nofanout': 'No fan-out on markovization symbols in '
                 'binarization non-terminals (default false)'}
