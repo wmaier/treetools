@@ -8,7 +8,10 @@ Author: Wolfgang Maier <maierw@hhu.de>
 import pytest
 import tempfile
 import sys
-from StringIO import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 from trees import trees, treeinput, treeoutput, transform, treeanalysis
 from . import testdata
 
@@ -55,23 +58,23 @@ def test_labels(cont_tree):
     assert e.label == "*LAB*"
     assert e.gf == "GF"
     assert e.gapindex == "1"
-    assert e.headmarker 
+    assert e.headmarker
     assert e.is_trace
     olabel = trees.format_label(e)
     assert olabel == label
-    cands = {"(" : "X", "{" : "Y", "]" : "Z"}
-    cont_tree_labels = [node.data['label'] for node 
+    cands = {"(": "X", "{": "Y", "]": "Z"}
+    cont_tree_labels = [node.data['label'] for node
                         in trees.preorder(cont_tree)]
     cont_tree.data['label'] = "A(B{C]D"
     trees.replace_chars(cont_tree, cands)
     cont_tree_labels_goal = list(cont_tree_labels)
     cont_tree_labels_goal[0] = "AXBYCZD"
-    cont_tree_labels_new = [node.data['label'] for node 
+    cont_tree_labels_new = [node.data['label'] for node
                             in trees.preorder(cont_tree)]
     cont_tree.data['label'] = 10
     cont_tree_labels_goal[0] = 10
     trees.replace_chars(cont_tree, cands)
-    cont_tree_labels_new = [node.data['label'] for node 
+    cont_tree_labels_new = [node.data['label'] for node
                             in trees.preorder(cont_tree)]
     assert cont_tree_labels_new == cont_tree_labels_goal
 
@@ -108,10 +111,10 @@ def test_discont_general(discont_tree):
     uwords = [node.data['word'] for node in uterms]
     tree = transform.negra_mark_heads(tree)
     tree = transform.binarize(tree)
-    left_reorder = [node.data['num'] for node \
-                        in treeanalysis.disco_order(tree, 'left')]
-    rightd_reorder = [node.data['num'] for node \
-                          in treeanalysis.disco_order(tree, 'rightd')]
+    left_reorder = [node.data['num'] for node
+                    in treeanalysis.disco_order(tree, 'left')]
+    rightd_reorder = [node.data['num'] for node
+                      in treeanalysis.disco_order(tree, 'rightd')]
     assert left_reorder == testdata.DISCONT_LEFT_REORDER
     assert rightd_reorder == testdata.DISCONT_RIGHTD_REORDER
     assert all(['num' in node.data for node in terms])
@@ -263,13 +266,13 @@ def test_terminal_blocks(discont_tree, cont_tree):
     """
     for node in trees.preorder(discont_tree):
         if node.data['label'] == 'VP':
-            blocks = [set([term.data['num'] for term in block]) for block 
+            blocks = [set([term.data['num'] for term in block]) for block
                       in trees.terminal_blocks(node)]
             assert blocks == [set(block) for block in testdata.DISCONT_BLOCKS_VP]
             break
     for node in trees.preorder(cont_tree):
         if node.data['label'] == 'VP':
-            blocks = [set([term.data['num'] for term in block]) for block 
+            blocks = [set([term.data['num'] for term in block]) for block
                       in trees.terminal_blocks(node)]
             assert blocks == [set(block) for block in testdata.CONT_BLOCKS_VP]
             break
@@ -363,24 +366,24 @@ def test_add_topnode(discont_tree, cont_tree):
 def test_insert_terminal(discont_tree, cont_tree):
     """transform.insert_terminals
     """
-    temp = tempfile.NamedTemporaryFile()
+    temp = tempfile.NamedTemporaryFile(mode='w')
     temp.write('1\t0\tTest1\tPosTest1\n')
     temp.write('1\t2\tTest1\tPosTest1\n')
     temp.write('1\t6\tTest2\tPosTest2\n')
     temp.write('1\t6\tTest2\tPosTest2\n')
     temp.write('1\t100\tTest2\tPosTest2\n')
     temp.flush()
-    params = {'terminalfile' : temp.name, 'quiet' : True}
+    params = {'terminalfile': temp.name, 'quiet': True}
     with pytest.raises(ValueError):
         transform.insert_terminals(discont_tree,
                                    **params)
-    temp = tempfile.NamedTemporaryFile()
+    temp = tempfile.NamedTemporaryFile(mode='w')
     temp.write('1\t0\tTest1\tPosTest1\n')
     temp.write('1\t2\tTest1\tPosTest1\n')
     temp.write('1\t6\tTest2\tPosTest2\n')
     temp.write('1\t100\tTest2\tPosTest2\n')
     temp.flush()
-    params = {'terminalfile' : temp.name, 'quiet' : True}
+    params = {'terminalfile': temp.name, 'quiet': True}
     old_terms = trees.terminals(discont_tree)
     discont_tree = transform.insert_terminals(discont_tree,
                                               **params)
@@ -397,24 +400,24 @@ def test_insert_terminal(discont_tree, cont_tree):
     gold_pos[5:5] = ['PosTest2']
     assert gold_pos == out_pos
     # cont
-    temp = tempfile.NamedTemporaryFile()
+    temp = tempfile.NamedTemporaryFile(mode='w')
     temp.write('1\t0\tTest1\tPosTest1\n')
     temp.write('1\t2\tTest1\tPosTest1\n')
     temp.write('1\t6\tTest2\tPosTest2\n')
     temp.write('1\t6\tTest2\tPosTest2\n')
     temp.write('1\t100\tTest2\tPosTest2\n')
     temp.flush()
-    params = {'terminalfile' : temp.name, 'quiet' : True}
+    params = {'terminalfile': temp.name, 'quiet': True}
     with pytest.raises(ValueError):
         transform.insert_terminals(cont_tree,
                                    **params)
-    temp = tempfile.NamedTemporaryFile()
+    temp = tempfile.NamedTemporaryFile(mode='w')
     temp.write('1\t0\tTest1\tPosTest1\n')
     temp.write('1\t2\tTest1\tPosTest1\n')
     temp.write('1\t6\tTest2\tPosTest2\n')
     temp.write('1\t100\tTest2\tPosTest2\n')
     temp.flush()
-    params = {'terminalfile' : temp.name, 'quiet' : True}
+    params = {'terminalfile': temp.name, 'quiet': True}
     old_terms = trees.terminals(cont_tree)
     cont_tree = transform.insert_terminals(cont_tree,
                                            **params)
@@ -444,7 +447,7 @@ def test_punctuation_verylow(discont_tree, cont_tree):
     new_vp_children = terminals[0].parent.children
     new_q_parent = terminals[-1].parent
     new_labels_test = [u'VROOT', u'S', u'VP', u'SBAR', u'VP', u'WP',
-                       u'VB', u'?', u'IN', u'NP', u'NNP', u'VB', 
+                       u'VB', u'?', u'IN', u'NP', u'NNP', u'VB',
                        u'NNP', u'VB', u'NNP']
     assert old_q_parent == discont_tree
     assert old_vp_children == new_vp_children
@@ -472,12 +475,12 @@ def test_punctuation_verylow(discont_tree, cont_tree):
 def test_punctuation_symetrify(discont_tree, cont_tree):
     """transform.punctuation_symetrify
     """
-    temp = tempfile.NamedTemporaryFile()
+    temp = tempfile.NamedTemporaryFile(mode='w')
     temp.write('1\t3\t"\t$(\n')
     temp.write('1\t5\t"\t$(\n')
     temp.write('1\t8\t,\t$,\n')
     temp.flush()
-    params = {'terminalfile' : temp.name, 'quiet' : True}
+    params = {'terminalfile': temp.name, 'quiet': True}
     old_terms = trees.terminals(discont_tree)
     discont_tree = transform.insert_terminals(discont_tree,
                                               **params)
@@ -490,15 +493,15 @@ def test_punctuation_symetrify(discont_tree, cont_tree):
     assert new_terms[4].parent.data['num'] == 504
     assert new_terms[7].parent.data['num'] == 503
     # cont
-    temp = tempfile.NamedTemporaryFile()
+    temp = tempfile.NamedTemporaryFile(mode='w')
     temp.write('1\t3\t"\t$(\n')
     temp.write('1\t5\t"\t$(\n')
     temp.write('1\t8\t,\t$,\n')
     temp.flush()
-    params = {'terminalfile' : temp.name, 'quiet' : True}
+    params = {'terminalfile': temp.name, 'quiet': True}
     old_terms = trees.terminals(cont_tree)
     cont_tree = transform.insert_terminals(cont_tree,
-                                              **params)
+                                           **params)
     new_terms = trees.terminals(cont_tree)
     assert len(old_terms) == len(new_terms) - 3
     cont_tree = transform.root_attach(cont_tree)
@@ -559,7 +562,7 @@ def test_analysis(discont_tree, cont_tree):
             assert treeanalysis.gap_degree_node(node) == 0
     postags = treeanalysis.PosTags()
     postags.run(discont_tree)
-    assert postags.tags == testdata.POS 
+    assert postags.tags == testdata.POS
     sentencecount = treeanalysis.SentenceCount()
     sentencecount.run(discont_tree)
     sentencecount.run(cont_tree)
