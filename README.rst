@@ -7,6 +7,7 @@ treetools is a collection of tools for processing treebank trees. It contains al
 treetools has been developed at the Department for Computational Linguistics at the Institute for Language and Information at the University of Düsseldorf, Germany (see http://phil.hhu.de/beyond-cfg). The project is sponsored by Deutsche Forschungsgemeinschaft (DFG). It is maintained by Wolfgang Maier.
 
 Author: Wolfgang Maier <maierw@hhu.de>.
+Contributions: Kilian Gebhardt 
 
 .. contents::
 
