@@ -24,6 +24,7 @@ class Transition():
 def topdown(tree):
     """Extract transitions topdown for continuous trees.
     """
+    terminals = [terminal.data['word'] for terminal in trees.terminals(tree)]
     transitions = []
     for node in trees.preorder(tree):
         num_children = len(trees.children(node))
@@ -35,7 +36,7 @@ def topdown(tree):
             transitions.append(Transition("BINARY-%s" % node.data["label"]))
         else:
             raise ValueError("trees must be binarized")
-    return reversed(transitions)
+    return terminals, list(reversed(transitions))
 
 
 def add_parser(subparsers):
@@ -132,7 +133,8 @@ def run(args):
                             args.src_format)(args.src, args.src_enc,
                                              **misc.options_dict
                                              (args.src_opts)):
-            transitions.append(globals()[args.transtype](tree))
+            sentence, trans = globals()[args.transtype](tree)
+            transitions.append((sentence, trans))
             if cnt % 100 == 0:
                 print("\r%d" % cnt, end="", file=sys.stderr)
             cnt += 1
