@@ -24,7 +24,8 @@ class Transition():
 def topdown(tree):
     """Extract transitions topdown for continuous trees.
     """
-    terminals = [terminal.data['word'] for terminal in trees.terminals(tree)]
+    terminals = [(terminal.data['word'], terminal.data['label'])
+                 for terminal in trees.terminals(tree)]
     transitions = []
     for node in trees.preorder(tree):
         num_children = len(trees.children(node))
