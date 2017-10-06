@@ -9,7 +9,7 @@ from __future__ import print_function
 import argparse
 import sys
 from collections import Counter
-from . import trees, treeinput, treeanalysis
+from . import trees, treeinput, treeanalysis, transform
 from . import misc, transitionoutput
 
 
@@ -34,6 +34,8 @@ def topdown(tree):
         elif len(children) == 1:
             transitions.append(Transition("UNARY-%s" % node.data["label"]))
         elif len(children) == 2:
+            if 'head' not in children[0].data:
+                raise ValueError("heads are supposed to be marked")
             headside = "LEFT" if children[0].data['head'] else "RIGHT"
             transitions.append(Transition("BINARY-%s-%s" % (headside, node.data["label"])))
         else:
@@ -56,6 +58,14 @@ def add_parser(subparsers):
     parser.add_argument('transtype', metavar='T', choices=[t for t in TRANSTYPES],
                         help='type of transitions (default: %(default)s)',
                         default='topdown')
+    parser.add_argument('--transform', metavar='TS', choices=[fun.__name__ for fun in
+                                                              transform.TRANSFORMATIONS],
+                        nargs='+',
+                        help='tree transformations to apply before extraction',
+                        default=[])
+    parser.add_argument('--transformparams', metavar='TSP',
+                        nargs='+', help='tree transformations parameters',
+                        default=[])
     parser.add_argument('--src-format', metavar='FMT',
                         choices=[fun.__name__
                                  for fun in treeinput.INPUT_FORMATS],
@@ -96,7 +106,7 @@ class UsageAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         title_str = misc.bold("%s help" % sys.argv[0])
         help_str = "\n\n%s\n%s\n\n%s\n%s\n\n%s" \
-                   "\n%s\n\n%s\n%s\n\n%s\n%s" \
+                   + "\n%s\n\n%s\n%s\n\n%s\n%s" \
             % (misc.bold("%s\n%s\n" %
                          ('available transition types: ',
                           '=============================== ')),
@@ -135,6 +145,11 @@ def run(args):
                             args.src_format)(args.src, args.src_enc,
                                              **misc.options_dict
                                              (args.src_opts)):
+            print(args.transform)
+            for algorithm in args.transform:
+                print(algorithm)
+                tree = getattr(transform, algorithm)(
+                    tree, **misc.options_dict(args.transformparams))
             sentence, trans = globals()[args.transtype](tree)
             transitions.append((sentence, trans))
             if cnt % 100 == 0:
