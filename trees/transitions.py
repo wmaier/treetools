@@ -28,13 +28,14 @@ def topdown(tree):
                  for terminal in trees.terminals(tree)]
     transitions = []
     for node in trees.preorder(tree):
-        num_children = len(trees.children(node))
-        if num_children == 0:
+        children = trees.children(node)
+        if len(children) == 0:
             transitions.append(Transition("SHIFT"))
-        elif num_children == 1:
+        elif len(children) == 1:
             transitions.append(Transition("UNARY-%s" % node.data["label"]))
-        elif num_children == 2:
-            transitions.append(Transition("BINARY-%s" % node.data["label"]))
+        elif len(children) == 2:
+            headside = "LEFT" if children[0].data['head'] else "RIGHT"
+            transitions.append(Transition("BINARY-%s-%s" % (headside, node.data["label"])))
         else:
             raise ValueError("trees must be binarized")
     return terminals, list(reversed(transitions))
