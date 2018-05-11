@@ -117,20 +117,7 @@ def compute_export_numbering(tree):
     terminal. We then distribute numbers >= 500 from left to right in each
     level, starting with the lowest one.
     """
-    levels = {}
-    for subtree in trees.preorder(tree):
-        if trees.has_children(subtree):
-            level = 0
-            for terminal in trees.terminals(subtree):
-                path_length = 0
-                path_element = terminal
-                while not path_element == subtree:
-                    path_element = path_element.parent
-                    path_length += 1
-                level = max(level, path_length)
-            if not level in levels:
-                levels[level] = []
-            levels[level].append(subtree)
+    levels, _ = trees.levels(tree)
     for level in levels:
         levels[level] = sorted(levels[level],
                                key=lambda x: trees.terminals(x)[0].data['num'])
