@@ -749,6 +749,39 @@ def binarize(tree, **params):
     return tree
 
 
+def _collapse_unary_chains(tree):
+    """Recursively collapse unary chains.
+    """
+    while len(trees.children(tree)) == 1:
+        tree.data['label'] += "+" + trees.children(tree)[0].data['label']
+        grandchildren = trees.children(trees.children(tree)[0])
+        if len(grandchildren) == 0:
+            # it is a terminal and we have to keep its data
+            tree.data['num'] = trees.children(tree)[0].data['num']
+            tree.data['word'] = trees.children(tree)[0].data['word']
+            tree.data['lemma'] = trees.children(tree)[0].data['lemma']
+        tree.children = []
+        for grandchild in grandchildren:
+            tree.children.append(grandchild)
+            grandchild.parent = tree
+    for child in trees.children(tree):
+        _collapse_unary_chains(child)
+
+
+def collapse_unary_chains(tree, **params):
+    """Collapse unary chains and concatenate all labels.
+    
+    Prerequisite: none
+    Parameters: none
+    Output options: none
+    """
+    if len(trees.terminals(tree)) == 1:
+        print("\ndropping {}, single terminal only".format(tree.data['sid']))
+        return None
+    _collapse_unary_chains(tree)
+    return tree
+
+
 def add_parser(subparsers):
     """Add an argument parser to the subparsers of treetools.py.
     """
@@ -880,9 +913,10 @@ def run(args):
                                                      (args.src_opts)):
                     for algorithm in args.trans:
                         tree = globals()[algorithm](tree, **params)
-                    getattr(treeoutput, args.dest_format)(tree, dest_stream,
-                                                          **misc.options_dict \
-                                                          (args.dest_opts))
+                    if tree is not None:
+                        getattr(treeoutput, args.dest_format)(tree, dest_stream,
+                                                              **misc.options_dict
+                                                              (args.dest_opts))
                     if cnt % args.counting == 0:
                         sys.stderr.write("\r%d" % cnt)
                     cnt += 1
@@ -902,7 +936,8 @@ def run(args):
             for algorithm in args.trans:
                 tree = globals()[algorithm](tree,
                                             **misc.options_dict(args.params))
-            tree_list.append(tree)
+            if tree is not None:
+                tree_list.append(tree)
             if cnt % args.counting == 0:
                 sys.stderr.write("\r%d" % cnt)
             cnt += 1
