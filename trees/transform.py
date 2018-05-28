@@ -15,7 +15,7 @@ from collections import defaultdict
 from . import trees, treeinput, treeoutput, misc, transformconst
 
 
-def root_attach(tree):
+def root_attach(tree, **params):
     """Reattach some children of the virtual root node in NeGra/TIGER/TueBa-DZ.
     In a nutshell, the algorithm moves all children of VROOT to the least
     common ancestor of the left neighbor terminal of the leftmost terminal and
@@ -77,7 +77,7 @@ def root_attach(tree):
     return tree
 
 
-def boyd_split(tree):
+def boyd_split(tree, **params):
     """For each continuous terminal block of a discontinuous node in tree,
     introduce a node which covers exactly this block. A single unique
     node is marked as head block if it covers the original head daugther
@@ -145,7 +145,7 @@ def boyd_split(tree):
     return tree
 
 
-def raising(tree):
+def raising(tree, **params):
     """Remove crossing branches by 'raising' nodes which cause crossing
     branches. This algorithm relies on a previous application of the Boyd
     splitting and removes all those newly introduced nodes which are *not*
@@ -631,7 +631,7 @@ def ptb_delete_traces(tree, **params):
     return tree
 
 
-def negra_mark_heads(tree):
+def negra_mark_heads(tree, **params):
     """Mark the head child of each node in a NeGra/TIGER tree using a simple
     heuristic. If there is child with a HD edge, it will be marked. Otherwise,
     the rightmost child with a NK edge will be marked. If there is no such
@@ -683,7 +683,7 @@ def mark_heads_by_rules(tree, **params):
         elif params['mark_heads_preset'] == 'ptb':
             rules = transformconst.HEAD_RULES_NEGRA
         else:
-            raise ValueError("unknown head rule preset " \
+            raise ValueError("unknown head rule preset "
                              + str(params['mark_heads_preset']))
     elif 'mark_heads_rulefile' in params:
         if not len(params['mark_heads_rulefile']) == 0:
@@ -694,7 +694,7 @@ def mark_heads_by_rules(tree, **params):
     for subtree in trees.preorder(tree):
         parent_label = trees.parse_label(subtree.data['label']).label
         children = trees.children(subtree)
-        children_label = [trees.parse_label(child.data['label']).label\
+        children_label = [trees.parse_label(child.data['label']).label
                           for child in children]
         if len(children) > 0:
             headpos = transformconst.get_headpos_by_rule(parent_label,
@@ -704,13 +704,13 @@ def mark_heads_by_rules(tree, **params):
     return tree
 
 
-def _binarize_tree(tree):
+def _binarize_tree(tree, bare_bin_labels):
     """Recursively binarize this tree.
     """
     if not trees.has_children(tree):
         return tree
     for child in trees.children(tree):
-        _binarize_tree(child)
+        _binarize_tree(child, bare_bin_labels)
     if len(trees.children(tree)) > 2:
         direction = "left"
         remaining = trees.children(tree)
@@ -728,7 +728,9 @@ def _binarize_tree(tree):
             label_no_coindex = trees.parse_label(label)
             label_no_coindex.coindex = ""
             label_no_coindex = trees.format_label(label_no_coindex)
-            binarization_tree.data['label'] = '@' + label_no_coindex
+            binarization_tree.data['label'] = '@'
+            if not bare_bin_labels:
+                binarization_tree.data['label'] += label_no_coindex
             binarization_tree.data['head'] = True
             if direction == 'left':
                 child = remaining[0]
@@ -751,10 +753,12 @@ def binarize(tree, **params):
     """Destructively binarize the tree.
 
     Prerequisite: none
-    Parameters: none
+    Parameters:
+        bare_bin_labels       : only use '@' as binarization label
     Output options: none
     """
-    _binarize_tree(tree)
+    bare_bin_labels = 'bare_bin_labels' in params
+    _binarize_tree(tree, bare_bin_labels)
     return tree
 
 
@@ -796,34 +800,19 @@ def filter_by_length(tree, **params):
     Parameters:
         filteroperator      : one of lt, gt, eq
         filtervalue         : number of terminals
-        quiet               : no messages
     Output options: none
     """
     length = len(trees.terminals(tree))
     oper = params['filteroperator']
     val = params['filtervalue']
-    quiet = 'quiet' in params
-    terminals = ""
-    if not quiet:
-        terminals = " ".join([terminal.data['word']
-                              for terminal in trees.terminals(tree)])
     if oper == 'lt':
         if length < val:
-            if not quiet:
-                print("dropping {}, length < {}: {}".format(tree.data['sid'],
-                                                            val, terminals))
             return None
     elif oper == 'gt':
         if length > val:
-            if not quiet:
-                print("dropping {}, length > {}: {}".format(tree.data['sid'],
-                                                            val, terminals))
             return None
     elif oper == 'eq':
         if length == val:
-            if not quiet:
-                print("dropping {}, length == {}: {}".format(tree.data['sid'],
-                                                             val, terminals))
             return None
     return tree
 
