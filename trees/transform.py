@@ -783,12 +783,46 @@ def _collapse_unary_chains(tree):
 
 def collapse_unary_chains(tree, **params):
     """Collapse unary chains and concatenate all labels.
-    
+    May not make sense for sentences of length one.
+
     Prerequisite: none
     Parameters: none
     Output options: none
     """
     _collapse_unary_chains(tree)
+    return tree
+
+
+def _uncollapse_unary_chains(tree):
+    """Recursively uncollapse unary chains.
+    """
+    while tree.data['label'].find("+") > -1:
+        # tree.parent -> tree -> c1 .. cn
+        # tree.parent -> unary -> tree -> c1 .. cn
+        ind = tree.data['label'].find("+")
+        unary = trees.Tree(tree.data)
+        unary.data['label'] = tree.data['label'][:ind]
+        tree.data['label'] = tree.data['label'][ind + 1:]
+        if not tree.parent is None:
+            tree.parent.children.remove(tree)
+            tree.parent.children.append(unary)
+        unary.children.append(tree)
+        unary.parent = tree.parent
+        tree.parent = unary
+    for child in trees.children(tree):
+        _uncollapse_unary_chains(child)
+    return tree
+
+
+def uncollapse_unary_chains(tree, **params):
+    """Un-collapse unary chains collapsed earlier by
+    collapse_unary_chains.
+
+    Prerequisite: none
+    Parameters: none
+    Output options: none
+    """
+    _uncollapse_unary_chains(tree)
     return tree
 
 
