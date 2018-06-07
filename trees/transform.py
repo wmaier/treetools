@@ -15,7 +15,7 @@ from collections import defaultdict
 from . import trees, treeinput, treeoutput, misc, transformconst
 
 
-def root_attach(tree):
+def root_attach(tree, **params):
     """Reattach some children of the virtual root node in NeGra/TIGER/TueBa-DZ.
     In a nutshell, the algorithm moves all children of VROOT to the least
     common ancestor of the left neighbor terminal of the leftmost terminal and
@@ -77,7 +77,7 @@ def root_attach(tree):
     return tree
 
 
-def boyd_split(tree):
+def boyd_split(tree, **params):
     """For each continuous terminal block of a discontinuous node in tree,
     introduce a node which covers exactly this block. A single unique
     node is marked as head block if it covers the original head daugther
@@ -86,7 +86,8 @@ def boyd_split(tree):
     is used. The algorithm is documented in Boyd (2007) (ACL-LAW workshop).
     The algorithm relies on a previous application of head marking.
 
-    Prerequisites: A previous application of root_attach() and head marking.
+    Prerequisites: 
+        A previous application of root_attach() and head marking.
     Parameters: none
     Output options:
         boyd_split_marking: leave asterisks on all block nodes
@@ -144,13 +145,14 @@ def boyd_split(tree):
     return tree
 
 
-def raising(tree):
+def raising(tree, **params):
     """Remove crossing branches by 'raising' nodes which cause crossing
     branches. This algorithm relies on a previous application of the Boyd
     splitting and removes all those newly introduced nodes which are *not*
     marked as head block (see above).
 
-    Prerequisite: Previous application of boyd_split().
+    Prerequisite: 
+        Previous application of boyd_split().
     Parameters: none
     Output options: none
     """
@@ -207,8 +209,9 @@ def substitute_terminals(tree, **params):
     allowed.
 
     Prerequisites: none
-    Parameters: quiet                : no messages
-                terminalfile:[file]  : the terminals to insert
+    Parameters: 
+        quiet                : no messages
+        terminalfile:[file]  : the terminals to insert
     Output options: none
     """
     # read terminals file only if filename is new
@@ -275,8 +278,9 @@ def insert_terminals(tree, **params):
     allowed.
 
     Prerequisites: none
-    Parameters: quiet                : no messages
-                terminalfile:[file]  : the terminals to insert
+    Parameters: 
+        quiet                : no messages
+        terminalfile:[file]  : the terminals to insert
     Output options: none
     """
     # read terminals file only if filename is new
@@ -304,10 +308,10 @@ def insert_terminals(tree, **params):
                                key=int):
         if terminal_num > len(trees.terminals(tree)) + 1 \
                 or terminal_num == 0:
-            if not 'quiet' in params:
-                print("sentence length %d, cannot insert at %d" \
-                          % (len(trees.terminals(tree)),
-                             terminal_num))
+            if 'quiet' not in params:
+                print("sentence length %d, cannot insert at %d"
+                      % (len(trees.terminals(tree)),
+                         terminal_num))
             continue
         node = trees.Tree(trees.make_node_data())
         node.data['word'] = insert_terminals. \
@@ -335,7 +339,8 @@ def punctuation_delete(tree, **params):
     on stdout.
 
     Prerequisite: none
-    Parameters: quiet : no messages
+    Parameters: 
+        quiet : no messages
     Output options: none
     """
     removal = [term for term in trees.terminals(tree)
@@ -362,7 +367,8 @@ def punctuation_verylow(tree, **params):
     """Move all punctuation to the parent of its left terminal neighbor
     (when possible).
 
-    Prerequisite: A previous application of root_attach().
+    Prerequisite: 
+        A previous application of root_attach().
     Parameters: none
     Output options: none
     """
@@ -392,9 +398,11 @@ def punctuation_symetrify(tree, **params):
     check if t is on the right corner of a phrase and has a potential
     left part as a terminal child of this phrase.
 
-    Prerequisite: VROOT children attached.
-    Parameters: relc [LABEL] : include commas before words POS tagged
-                               LABEL (relative clauses)
+    Prerequisite: 
+        A previous application of root_attach
+    Parameters: 
+        relc [LABEL] : include commas before words POS tagged
+                       LABEL (relative clauses)
     Output options: none
     """
     # collect all relevant terminals
@@ -464,19 +472,20 @@ def ptb_delete_traces(tree, **params):
     terminal and trace symbol label. Gap indices ('=') are deleted.
 
     Prerequisite: none
-    Parameters: keep [LABELS] : Trace labels which are to be kept,
-                                comma-separated. Co-indexation will 
-                                be deleted nevertheless.
-                keepall       : Keep all trace labels. Co-indexation will 
-                                be deleted nevertheless.
-                keepcoindex   : For all labels which are to be kept,
-                                keep the co-indexation, too.
-                slash [LABELS]: Perform slash feature annotation on
-                                path from trace to antecedent. Annotation
-                                will be the label of the filler up to the
-                                first dash. Annotation only performed
-                                for given labels if labels are given,
-                                otherwise for all labels
+    Parameters:
+        keep [LABELS] : Trace labels which are to be kept,
+                        comma-separated. Co-indexation will
+                        be deleted nevertheless.
+        keepall       : Keep all trace labels. Co-indexation will
+                        be deleted nevertheless.
+        keepcoindex   : For all labels which are to be kept,
+                        keep the co-indexation, too.
+        slash [LABELS]: Perform slash feature annotation on
+                        path from trace to antecedent. Annotation
+                        will be the label of the filler up to the
+                        first dash. Annotation only performed
+                        for given labels if labels are given,
+                        otherwise for all labels
     Output options: none
     """
     keep = []
@@ -622,7 +631,7 @@ def ptb_delete_traces(tree, **params):
     return tree
 
 
-def negra_mark_heads(tree):
+def negra_mark_heads(tree, **params):
     """Mark the head child of each node in a NeGra/TIGER tree using a simple
     heuristic. If there is child with a HD edge, it will be marked. Otherwise,
     the rightmost child with a NK edge will be marked. If there is no such
@@ -660,7 +669,7 @@ def mark_heads_by_rules(tree, **params):
     can be loaded with the parameter mark_heads_preset.
 
     Prerequisite: none
-    Parameters: none
+    Parameters:
         mark_heads_rulefile: Path to rulefile
         mark_heads_preset: Instead of rulefile, can be 'negra' or 'ptb'
     Output options: none
@@ -674,7 +683,7 @@ def mark_heads_by_rules(tree, **params):
         elif params['mark_heads_preset'] == 'ptb':
             rules = transformconst.HEAD_RULES_NEGRA
         else:
-            raise ValueError("unknown head rule preset " \
+            raise ValueError("unknown head rule preset "
                              + str(params['mark_heads_preset']))
     elif 'mark_heads_rulefile' in params:
         if not len(params['mark_heads_rulefile']) == 0:
@@ -685,7 +694,7 @@ def mark_heads_by_rules(tree, **params):
     for subtree in trees.preorder(tree):
         parent_label = trees.parse_label(subtree.data['label']).label
         children = trees.children(subtree)
-        children_label = [trees.parse_label(child.data['label']).label\
+        children_label = [trees.parse_label(child.data['label']).label
                           for child in children]
         if len(children) > 0:
             headpos = transformconst.get_headpos_by_rule(parent_label,
@@ -695,13 +704,13 @@ def mark_heads_by_rules(tree, **params):
     return tree
 
 
-def _binarize_tree(tree):
+def _binarize_tree(tree, bare_bin_labels):
     """Recursively binarize this tree.
     """
     if not trees.has_children(tree):
         return tree
     for child in trees.children(tree):
-        _binarize_tree(child)
+        _binarize_tree(child, bare_bin_labels)
     if len(trees.children(tree)) > 2:
         direction = "left"
         remaining = trees.children(tree)
@@ -719,7 +728,9 @@ def _binarize_tree(tree):
             label_no_coindex = trees.parse_label(label)
             label_no_coindex.coindex = ""
             label_no_coindex = trees.format_label(label_no_coindex)
-            binarization_tree.data['label'] = '@' + label_no_coindex
+            binarization_tree.data['label'] = '@'
+            if not bare_bin_labels:
+                binarization_tree.data['label'] += label_no_coindex
             binarization_tree.data['head'] = True
             if direction == 'left':
                 child = remaining[0]
@@ -742,10 +753,101 @@ def binarize(tree, **params):
     """Destructively binarize the tree.
 
     Prerequisite: none
+    Parameters:
+        bare_bin_labels       : only use '@' as binarization label
+    Output options: none
+    """
+    bare_bin_labels = 'bare_bin_labels' in params
+    _binarize_tree(tree, bare_bin_labels)
+    return tree
+
+
+def _collapse_unary_chains(tree):
+    """Recursively collapse unary chains.
+    """
+    while len(trees.children(tree)) == 1:
+        tree.data['label'] += "+" + trees.children(tree)[0].data['label']
+        grandchildren = trees.children(trees.children(tree)[0])
+        if len(grandchildren) == 0:
+            # it is a terminal and we have to keep its data
+            tree.data['num'] = trees.children(tree)[0].data['num']
+            tree.data['word'] = trees.children(tree)[0].data['word']
+            tree.data['lemma'] = trees.children(tree)[0].data['lemma']
+        tree.children = []
+        for grandchild in grandchildren:
+            tree.children.append(grandchild)
+            grandchild.parent = tree
+    for child in trees.children(tree):
+        _collapse_unary_chains(child)
+
+
+def collapse_unary_chains(tree, **params):
+    """Collapse unary chains and concatenate all labels.
+    May not make sense for sentences of length one.
+
+    Prerequisite: none
     Parameters: none
     Output options: none
     """
-    _binarize_tree(tree)
+    _collapse_unary_chains(tree)
+    return tree
+
+
+def _uncollapse_unary_chains(tree):
+    """Recursively uncollapse unary chains.
+    """
+    while tree.data['label'].find("+") > -1:
+        # tree.parent -> tree -> c1 .. cn
+        # tree.parent -> unary -> tree -> c1 .. cn
+        ind = tree.data['label'].find("+")
+        unary = trees.Tree(tree.data)
+        unary.data['label'] = tree.data['label'][:ind]
+        tree.data['label'] = tree.data['label'][ind + 1:]
+        if not tree.parent is None:
+            tree.parent.children.remove(tree)
+            tree.parent.children.append(unary)
+        unary.children.append(tree)
+        unary.parent = tree.parent
+        tree.parent = unary
+    for child in trees.children(tree):
+        _uncollapse_unary_chains(child)
+    return tree
+
+
+def uncollapse_unary_chains(tree, **params):
+    """Un-collapse unary chains collapsed earlier by
+    collapse_unary_chains.
+
+    Prerequisite: none
+    Parameters: none
+    Output options: none
+    """
+    _uncollapse_unary_chains(tree)
+    return tree
+
+
+def filter_by_length(tree, **params):
+    """Return None for all trees with a number of terminals
+    less than, greater than, or equal to the given filtervalue.
+
+    Prerequisite: none
+    Parameters:
+        filteroperator      : one of lt, gt, eq
+        filtervalue         : number of terminals
+    Output options: none
+    """
+    length = len(trees.terminals(tree))
+    oper = params['filteroperator']
+    val = params['filtervalue']
+    if oper == 'lt':
+        if length < val:
+            return None
+    elif oper == 'gt':
+        if length > val:
+            return None
+    elif oper == 'eq':
+        if length == val:
+            return None
     return tree
 
 
@@ -756,22 +858,22 @@ def add_parser(subparsers):
                                    usage='%(prog)s src dest [options]',
                                    formatter_class=argparse.
                                    RawDescriptionHelpFormatter,
-                                   description='Offers transformation and ' \
-                                       'format conversion for constituency ' \
-                                       'treebank trees.')
+                                   description='Offers transformation and '
+                                   'format conversion for constituency '
+                                   'treebank trees.')
     parser.add_argument('src', help='input file')
     parser.add_argument('dest', help='output file')
     parser.add_argument('--counting', metavar='n', type=int,
-                        help='display number of processed sentences every n ' \
-                            ' sentences (default: %(default)s)',
+                        help='display number of processed sentences every n '
+                        ' sentences (default: %(default)s)',
                         default=100)
     parser.add_argument('--trans', nargs='+', metavar='T',
                         help='transformations to apply (default: %(default)s)',
                         default=[])
     parser.add_argument('--params', nargs='+', metavar='P',
-                        help='space separated list of transformation ' \
-                            'parameters P of the form (default: ' \
-                            '%(default)s)',
+                        help='space separated list of transformation '
+                        'parameters P of the form (default: '
+                        '%(default)s)',
                         default=[])
     parser.add_argument('--src-format', metavar='FMT',
                         choices=[fun.__name__
@@ -782,9 +884,9 @@ def add_parser(subparsers):
                         help='input encoding (default: %(default)s)',
                         default='utf-8')
     parser.add_argument('--src-opts', nargs='+', metavar='O',
-                        help='space separated list of options O for reading ' \
-                            'input of the form key:value ' \
-                            '(default: %(default)s)',
+                        help='space separated list of options O for reading '
+                        'input of the form key:value '
+                        '(default: %(default)s)',
                         default=[])
     parser.add_argument('--dest-format', metavar='FMT',
                         choices=[fun.__name__
@@ -795,9 +897,9 @@ def add_parser(subparsers):
                         help='output encoding (default: %(default)s)',
                         default='utf-8')
     parser.add_argument('--dest-opts', nargs='+', metavar='O',
-                        help='space separated list of options O for writing ' \
-                            'output of the form key:value ' \
-                            '(default: %(default)s)',
+                        help='space separated list of options O for writing '
+                        'output of the form key:value '
+                        '(default: %(default)s)',
                         default=[])
     parser.add_argument('--split', metavar='HOW',
                         help='split output in several parts ' \
@@ -880,9 +982,12 @@ def run(args):
                                                      (args.src_opts)):
                     for algorithm in args.trans:
                         tree = globals()[algorithm](tree, **params)
-                    getattr(treeoutput, args.dest_format)(tree, dest_stream,
-                                                          **misc.options_dict \
-                                                          (args.dest_opts))
+                        if tree is None:
+                            break
+                    if tree is not None:
+                        getattr(treeoutput, args.dest_format)(tree, dest_stream,
+                                                              **misc.options_dict
+                                                              (args.dest_opts))
                     if cnt % args.counting == 0:
                         sys.stderr.write("\r%d" % cnt)
                     cnt += 1
@@ -902,7 +1007,10 @@ def run(args):
             for algorithm in args.trans:
                 tree = globals()[algorithm](tree,
                                             **misc.options_dict(args.params))
-            tree_list.append(tree)
+                if tree is None:
+                    break
+            if tree is not None:
+                tree_list.append(tree)
             if cnt % args.counting == 0:
                 sys.stderr.write("\r%d" % cnt)
             cnt += 1
@@ -923,9 +1031,10 @@ def run(args):
                 sys.stderr.write("\n")
 
 
-TRANSFORMATIONS = [root_attach, boyd_split, raising, add_topnode, 
+TRANSFORMATIONS = [root_attach, boyd_split, raising, add_topnode,
                    substitute_terminals, insert_terminals,
                    punctuation_delete, punctuation_verylow,
                    punctuation_symetrify, punctuation_root,
                    negra_mark_heads, mark_heads_by_rules,
-                   ptb_delete_traces, binarize]
+                   ptb_delete_traces, binarize, collapse_unary_chains,
+                   filter_by_length]

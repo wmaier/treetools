@@ -249,6 +249,28 @@ def dominance(tree):
         yield parent
 
 
+def levels(tree):
+    """Compute levels of all nodes (height).
+    """
+    levels = {}
+    reverse_levels = {}
+    for subtree in preorder(tree):
+        if has_children(subtree):
+            level = 0
+            for terminal in terminals(subtree):
+                path_length = 0
+                path_element = terminal
+                while not path_element == subtree:
+                    path_element = path_element.parent
+                    path_length += 1
+                level = max(level, path_length)
+            if level not in levels:
+                levels[level] = []
+            levels[level].append(subtree)
+            reverse_levels[subtree] = level
+    return levels, reverse_levels
+
+            
 def get_label(tree, **params):
     """Compute subtree label decorations depending on given parameters.
     """
