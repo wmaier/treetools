@@ -796,6 +796,7 @@ def collapse_unary_chains(tree, **params):
 def _uncollapse_unary_chains(tree):
     """Recursively uncollapse unary chains.
     """
+    unary = tree
     while tree.data['label'].find("+") > -1:
         # tree.parent -> tree -> c1 .. cn
         # tree.parent -> unary -> tree -> c1 .. cn
@@ -811,7 +812,7 @@ def _uncollapse_unary_chains(tree):
         tree.parent = unary
     for child in trees.children(tree):
         _uncollapse_unary_chains(child)
-    return tree
+    return unary
 
 
 def uncollapse_unary_chains(tree, **params):
@@ -822,7 +823,7 @@ def uncollapse_unary_chains(tree, **params):
     Parameters: none
     Output options: none
     """
-    _uncollapse_unary_chains(tree)
+    tree = _uncollapse_unary_chains(tree)
     return tree
 
 
