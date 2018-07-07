@@ -91,6 +91,8 @@ def export_format(subtree, **params):
         subtree.data['edge'] = '--'
     label = trees.get_label(subtree, **params)
     if not 'export_four' in params:
+        if subtree.data['morph'] == None:
+            subtree.data['morph'] = "--"
         return u"%s%s%s\t%s%s%s\t%d\n" \
             % (subtree.data['word'],
                export_tabs(len(subtree.data['word'])),
