@@ -8,6 +8,7 @@ Author: Wolfgang Maier <maierw@hhu.de>
 from __future__ import print_function
 import sys
 from distutils.core import setup
+from setuptools import setup
 from distutils.version import LooseVersion
 
 classifiers = """\
