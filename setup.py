@@ -35,7 +35,7 @@ long_description = ""
 with open("README.rst") as readme_file:
     long_description = readme_file.read()
 setup(name = "treetools",
-      version = "0.2.0",
+      version = "0.3.0",
       description = "Tools for processing treebank trees",
       author = "Wolfgang Maier",
       author_email = "wolfgang.maier@gmail.com",
