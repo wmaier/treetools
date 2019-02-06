@@ -43,6 +43,34 @@ def topdown(tree):
     return terminals, list(reversed(transitions))
 
 
+def _inorder(tree):
+    """Recursive inorder transition
+    """
+    transitions = []
+    c = trees.children(tree)
+    if len(trees.children(c[0])) == 0:
+        transitions.append(Transition("SHIFT"))
+    else:
+        transitions.extend(_inorder(c[0]))
+    transitions.append(Transition("PJ-{}".format(tree.data['label'])))
+    for child in c[1:]:
+        if len(trees.children(child)) == 0:
+            transitions.append(Transition("SHIFT"))
+        else:   
+            transitions.extend(_inorder(child))
+    transitions.append(Transition("REDUCE"))
+    return transitions
+
+
+def inorder(tree):
+    """Extract inorder transitions for continuous trees.
+    """
+    terminals = [(terminal.data['word'], terminal.data['label'])
+                 for terminal in trees.terminals(tree)]
+    transitions = _inorder(tree)
+    return terminals, transitions
+
+
 def add_parser(subparsers):
     """Add an argument parser to the subparsers of treetools.py.
     """
@@ -145,7 +173,6 @@ def run(args):
                             args.src_format)(args.src, args.src_enc,
                                              **misc.options_dict
                                              (args.src_opts)):
-            print(args.transform)
             for algorithm in args.transform:
                 print(algorithm)
                 tree = getattr(transform, algorithm)(
@@ -167,4 +194,5 @@ def run(args):
     sys.exit()
 
 
-TRANSTYPES = {'topdown': 'Top-down continuous.'}
+TRANSTYPES = {'topdown': 'Top-down continuous.',
+              'inorder': 'Inorder continuous.'}
