@@ -12,7 +12,7 @@ Contributions: Kilian Gebhardt
 
 Requirements:
 
-- Python 2.7.3+/3.4+
+- Python 3.7+
 
 To install the latest release from the Python package index, type::
 
