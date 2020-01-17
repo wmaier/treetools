@@ -1,6 +1,4 @@
-=====================================================================
- treetools - tree processing
-=====================================================================
+# treetools - tree processing
 
 treetools is a collection of tools for processing treebank trees. It contains algorithms for tree manipulation (such as removal of  crossing branches), tree analysis, and grammar extraction.
 
@@ -9,11 +7,8 @@ treetools has been developed at the Department for Computational Linguistics at 
 Author: Wolfgang Maier <maierw@hhu.de>.
 Contributions: Kilian Gebhardt 
 
-.. contents::
 
-
-Installation
-============
+## Installation
 
 Requirements:
 
@@ -31,11 +26,9 @@ within the repository directory.
 
 If you have superuser privileges and want to perform a system-wide installation, omit the `--user` option, respectively. 
 
-Running
-=======
+## Running
 
-Syntax
-------
+### Syntax
 
 To run treetools, type::
 
@@ -55,8 +48,7 @@ To get verbose help on available transformation algorithms, available options, e
 
     treetools [subcommand] --usage
 
-Examples
---------
+### Examples
 
 To attach the punctuation in TIGER and remove its crossing branches while converting it from TigerXML to the export format, type::
 
@@ -75,8 +67,7 @@ To extract an left-to-right binarized LCFRS with v1/h2 markovization in rparse f
     treetools grammar input_treebank output_grammar leftright --dest-format rcg --markov v:1 h:2
 
 
-License
-=======
+### License
 
 The code is released under the GNU General Public Licence (GPL) 3.0 or higher. The license texts can be found at at
 http://www.gnu.org/licenses/gpl-3.0. 
