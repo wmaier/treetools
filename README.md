@@ -1,4 +1,6 @@
-[![Build Status](https://travis-ci.org/wmaier/treetools.svg?branch=master)](https://travis-ci.org/wmaier/treetools)
+[![Build Status](https://travis-ci.org/wmaier/treetools.svg?branch=master)](https://travis-ci.org/wmaier/treetools) 
+[![Requirements Status](https://requires.io/github/wmaier/treetools/requirements.svg?branch=master)](https://requires.io/github/wmaier/treetools/requirements/?branch=master)
+
 
 # treetools - tree processing
 
