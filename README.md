@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/wmaier/treetools.svg?branch=master)](https://travis-ci.org/wmaier/treetools)
+
 # treetools - tree processing
 
 treetools is a collection of tools for processing treebank trees. It contains algorithms for tree manipulation (such as removal of  crossing branches), tree analysis, and grammar extraction.
