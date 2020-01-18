@@ -9,10 +9,7 @@ import io
 import sys
 from itertools import chain
 from collections import defaultdict
-if sys.version_info[0] < 3:
-    from StringIO import StringIO
-else:
-    from io import StringIO
+from io import StringIO
 from . import grammarconst, grammaranalysis
 
 

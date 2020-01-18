@@ -5,7 +5,6 @@ This module provides functions and classes for transition extraction.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
-from __future__ import print_function
 import argparse
 import sys
 from collections import Counter

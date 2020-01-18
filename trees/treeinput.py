@@ -7,23 +7,14 @@ trees.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
-from __future__ import with_statement, print_function
 import io
 import re
 import string
 import sys
 import xml.etree.ElementTree as ET
 from collections import defaultdict
-if sys.version_info[0] < 3:
-    from StringIO import StringIO
-else:
-    from io import StringIO
+from io import StringIO
 from . import trees, misc
-# In Python 3.5, unicode() does not exist anymore, just str()
-try:
-    type(unicode)
-except NameError:
-    unicode = lambda s: str(s)
 
 
 def tigerxml_build_tree(s_element, **params):
@@ -39,7 +30,7 @@ def tigerxml_build_tree(s_element, **params):
     term_cnt = 1
     for node in s_element.find('graph').find('terminals').findall('t'):
         subtree = trees.Tree(trees.make_node_data())
-        subtree.data['word'] = unicode(node.get('word'))
+        subtree.data['word'] = str(node.get('word'))
         subtree.data['label'] = node.get('pos')
         subtree.data['morph'] = node.get('morph')
         subtree.data['lemma'] = node.get('lemma')
