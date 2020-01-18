@@ -285,9 +285,9 @@ CONT_GRAMMAR_OUTPUT_RCG = [
     "C:1 NP1([0]) --> NNP1([0])",
     "C:1 VP1([0][1][2]) --> VB1([0]) NNP1([1]) SBAR1([2])"]
 GRAMMAR_OUTPUT_RCG_LEX = [
-    "Who\tWP 1", "Fritz\tNNP 1", "Manfred\tNNP 1", "?\t? 1",
-    "Hans\tNNP 1", "tell\tVB 1", "that\tIN 1", "likes\tVB 1",
-    "did\tVB 1"]
+    "Who\tWP 1", "did\tVB 1", "Fritz\tNNP 1", "tell\tVB 1",
+    "Hans\tNNP 1", "that\tIN 1", "Manfred\tNNP 1", "likes\tVB 1",
+    "?\t? 1"]
 DISCONT_GRAMMAR_OUTPUT_PMCFG = [
     "fun1 : VROOT <- S ?",
     "fun1 = s1",
