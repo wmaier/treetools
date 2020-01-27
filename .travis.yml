@@ -10,6 +10,3 @@ install:
 # command to run tests
 script:
   - pytest tests
-after_success:
-  - coverage run -m pytest tests --include tests
-  - coverage-badge -o coverage.svg
