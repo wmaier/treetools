@@ -12,5 +12,4 @@ script:
   - pytest tests
 after_success:
   - coverage run -m pytest tests --include tests
-  - less .coverage
   - coverage-badge -o coverage.svg
