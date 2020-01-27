@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/wmaier/treetools.svg?branch=master)](https://travis-ci.org/wmaier/treetools) 
 [![Requirements Status](https://requires.io/github/wmaier/treetools/requirements.svg?branch=master)](https://requires.io/github/wmaier/treetools/requirements/?branch=master)
 [![PyPI version](https://badge.fury.io/py/treetools.svg)](https://badge.fury.io/py/treetools)
-![Alt text](./coverage.svg)
+![coverage badge](./coverage.svg)
 <img src="./coverage.svg">
 # treetools - tree processing
 
