@@ -21,19 +21,12 @@ Programming Language :: Python
 Topic :: Text Processing :: Linguistic
 """
 
-if sys.version_info < (2, 3):
-    _setup = setup
-    def setup(**kwargs):
-        if kwargs.has_key("classifiers"):
-            del kwargs["classifiers"]
-        _setup(**kwargs)
-
-if LooseVersion(sys.version) < LooseVersion("2.7.3"):
-    print("Requires Python version >= 2.7.3")
+if LooseVersion(sys.version) < LooseVersion("3.7"):
+    print("Requires Python version >= 3.7")
     sys.exit(1)
 
 long_description = ""
-with open("README.rst") as readme_file:
+with open("README.md") as readme_file:
     long_description = readme_file.read()
 setup(name = "treetools",
       version = "0.3.0",
@@ -46,7 +39,7 @@ setup(name = "treetools",
       packages = ["trees"],
       scripts = ["treetools"],
       keywords = ["treebanks", "trees", "grammar"],
-      download_url = "https://github.com/wmaier/treetools/archive/v0.2.0.tar.gz",
+      download_url = "https://github.com/wmaier/treetools/archive/v0.3.0.tar.gz",
       classifiers = filter(None, classifiers.split("\n")),
       long_description = long_description,
 )
