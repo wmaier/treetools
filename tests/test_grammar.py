@@ -75,13 +75,13 @@ def test_discont_grammar_markov_optimal(discont_grammar):
     assert bin_grammar == testdata.DISCONT_GRAMMAR_OPTIMAL_H2_V1_BTOP_BBOT
 
 
-# def test_binarize_leftright(discont_grammar, cont_grammar):
-    # """Test left-to-right binarization
-    # """
-    # discont_grammar = grammar.binarize(discont_grammar)
-    # cont_grammar = grammar.binarize(cont_grammar)
-    # assert testdata.DISCONT_GRAMMAR_LEFT_RIGHT == discont_grammar
-    # assert testdata.CONT_GRAMMAR_LEFT_RIGHT == cont_grammar
+def test_binarize_leftright(discont_grammar, cont_grammar):
+    """Test left-to-right binarization
+    """
+    discont_grammar = grammar.binarize(discont_grammar)
+    cont_grammar = grammar.binarize(cont_grammar)
+    assert testdata.DISCONT_GRAMMAR_LEFT_RIGHT == discont_grammar
+    assert testdata.CONT_GRAMMAR_LEFT_RIGHT == cont_grammar
 
 
 # def test_output_rcg(discont_grammar, discont_lex, cont_grammar, cont_lex):
