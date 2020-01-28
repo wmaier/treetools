@@ -38,6 +38,12 @@ def get_doc_opts(opts):
     return "\n".join(result) + "\n"
 
 
+def make_headline(title):
+    """Make a headline for --usage docs
+    """
+    return bold("{}\n{}\n".format(title, "=" * len(title)))
+
+
 def options_dict(options):
     """Given a list of key/value pairs with the key separated from the resp.
     value by a colon, return a dict with the pairs in which

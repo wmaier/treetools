@@ -19,6 +19,9 @@ class Transition():
     def pretty_print(self):
         return self.name
 
+    def __str__(self):
+        return self.name
+
 
 def topdown(tree):
     """Extract transitions topdown for continuous trees.
@@ -36,9 +39,12 @@ def topdown(tree):
             if 'head' not in children[0].data:
                 raise ValueError("heads are supposed to be marked")
             headside = "LEFT" if children[0].data['head'] else "RIGHT"
-            transitions.append(Transition("BINARY-%s-%s" % (headside, node.data["label"])))
+            transitions.append(Transition("BINARY-%s-%s" %
+                                          (headside, node.data["label"])))
         else:
             raise ValueError("trees must be binarized")
+    print(terminals, [str(t)
+                      for t in list(reversed(transitions))], file=sys.stderr)
     return terminals, list(reversed(transitions))
 
 
@@ -55,7 +61,7 @@ def _inorder(tree):
     for child in c[1:]:
         if len(trees.children(child)) == 0:
             transitions.append(Transition("SHIFT"))
-        else:   
+        else:
             transitions.extend(_inorder(child))
     transitions.append(Transition("REDUCE"))
     return transitions
@@ -131,29 +137,13 @@ class UsageAction(argparse.Action):
     """
 
     def __call__(self, parser, namespace, values, option_string=None):
-        title_str = misc.bold("%s help" % sys.argv[0])
-        help_str = "\n\n%s\n%s\n\n%s\n%s\n\n%s" \
-                   + "\n%s\n\n%s\n%s\n\n%s\n%s" \
-            % (misc.bold("%s\n%s\n" %
-                         ('available transition types: ',
-                          '=============================== ')),
-               misc.get_doc_opts(TRANSTYPES),
-               misc.bold("%s\n%s\n" %
-                         ('available tree input formats: ',
-                          '============================= ')),
-               misc.get_doc(treeinput.INPUT_FORMATS),
-               misc.bold("%s\n%s\n" %
-                         ('available input options (trees): ',
-                          '================================ ')),
-               misc.get_doc_opts(treeinput.INPUT_OPTIONS),
-               misc.bold("%s\n%s\n" %
-                         ('available dest formats: ',
-                          '======================= ')),
-               misc.get_doc(transitionoutput.FORMATS),
-               misc.bold("%s\n%s\n" %
-                         ('available dest options: ',
-                          '======================= ')),
-               misc.get_doc_opts(transitionoutput.FORMAT_OPTIONS))
+        title_str = misc.bold("{} help".format(sys.argv[0]))
+        help_str = "\n\n{}\n{}\n\n{}\n{}\n\n{}\n{}\n\n{}\n{}\n\n{}\n{}".\
+            format(misc.make_headline("available transition types:"), misc.get_doc_opts(TRANSTYPES),
+                misc.make_headline("available tree input formats:"), misc.get_doc(treeinput.INPUT_FORMATS),
+                misc.make_headline("available tree input opts:"), misc.get_doc_opts(treeinput.INPUT_OPTIONS),
+                misc.make_headline("available output formats:"), misc.get_doc(transitionoutput.FORMATS),
+                misc.make_headline("available output opts:"), misc.get_doc_opts(transitionoutput.FORMAT_OPTIONS))
         print("\n%s%s" % (title_str, help_str))
         sys.exit()
 

@@ -8,10 +8,7 @@ Author: Wolfgang Maier <maierw@hhu.de>
 import pytest
 import tempfile
 import sys
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+from io import StringIO
 from trees import trees, treeinput, treeoutput, transform, treeanalysis
 from . import testdata
 

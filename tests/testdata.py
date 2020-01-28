@@ -80,22 +80,22 @@ likes                   VB      --              HD      500
 #504                    S       --              --      0
 #EOS 1
 """
-WORDS = [u'Who', u'did', u'Fritz', u'tell', u'Hans', u'that', u'Manfred', 
+WORDS = [u'Who', u'did', u'Fritz', u'tell', u'Hans', u'that', u'Manfred',
          u'likes', u'?']
 POS = [u'WP', u'VB', u'NNP', u'VB', u'NNP', u'IN', u'NNP', u'VB', u'?']
-DISCONT_EXPORT_NUMBERING = [0, 504, 503, 502, 500, 1, 8, 6, 501, 7, 4, 5, 2, \
-                                3, 9]
+DISCONT_EXPORT_NUMBERING = [0, 504, 503, 502, 500, 1, 8, 6, 501, 7, 4, 5, 2,
+                            3, 9]
 DISCONT_LEFT_REORDER = [1, 8, 6, 7, 4, 5, 2, 3, 9]
 DISCONT_RIGHTD_REORDER = [2, 3, 1, 8, 6, 7, 4, 5, 9]
 DISCONT_LABELS_PREORDER = [u'VROOT', u'S', u'VP', u'SBAR', u'VP', u'WP',
                            u'VB', u'IN', u'NP', u'NNP', u'VB', u'NNP',
                            u'VB', u'NNP', u'?']
 DISCONT_HEADS_PREORDER = []
-DISCONT_RIGHTSIB_PREORDER = [None, u'?', u'VB', u'VB', u'IN', u'VB', 
-                             None, u'NP', None, None, u'NNP', None, 
+DISCONT_RIGHTSIB_PREORDER = [None, u'?', u'VB', u'VB', u'IN', u'VB',
+                             None, u'NP', None, None, u'NNP', None,
                              u'NNP', None, None]
-DISCONT_LEFTSIB_PREORDER = [None, None, None, None, None, None, u'WP', 
-                            u'VP', u'IN', None, u'SBAR', u'VB', u'VP', 
+DISCONT_LEFTSIB_PREORDER = [None, None, None, None, None, None, u'WP',
+                            u'VP', u'IN', None, u'SBAR', u'VB', u'VP',
                             u'VB', u'S']
 DISCONT_LABELSBOYD_PREORDER = [u'VROOT', u'S', u'VP', u'SBAR', u'VP',
                                u'WP', u'VB', u'NNP', u'VP', u'VB',
@@ -108,18 +108,18 @@ DISCONT_LABELS_BIN_PREORDER = [u'VROOT', u'S', u'VP', u'SBAR', u'VP',
 CONT_LABELS_PREORDER = [u'VROOT', u'S', u'WP', u'VB', u'NNP',
                         u'VP', u'VB', u'NNP', u'SBAR', u'IN',
                         u'NP', u'NNP', u'VP', u'VB', u'?']
-CONT_RIGHTSIB_PREORDER = [None, u'?', u'VB', u'NNP', u'VP', 
-                          None, u'NNP', u'SBAR', None, u'NP', 
+CONT_RIGHTSIB_PREORDER = [None, u'?', u'VB', u'NNP', u'VP',
+                          None, u'NNP', u'SBAR', None, u'NP',
                           u'VP', None, None, None, None]
-CONT_LEFTSIB_PREORDER = [None, None, None, u'WP', u'VB', u'NNP', None, 
-                         u'VB', u'NNP', None, u'IN', None, u'NP', None, 
+CONT_LEFTSIB_PREORDER = [None, None, None, u'WP', u'VB', u'NNP', None,
+                         u'VB', u'NNP', None, u'IN', None, u'NP', None,
                          u'S']
 CONT_LABELS_BIN_PREORDER = [u'VROOT', u'S', u'@S', u'@S', u'WP', u'VB',
                             u'NNP', u'VP', u'@VP', u'VB', u'NNP', u'SBAR',
                             u'@SBAR', u'IN', u'NP', u'NNP', u'VP', u'VB',
                             u'?']
-DISCONT_BLOCKS_VP = [[1], [4,5,6,7,8]]
-CONT_BLOCKS_VP = [[4,5,6,7,8]]
+DISCONT_BLOCKS_VP = [[1], [4, 5, 6, 7, 8]]
+CONT_BLOCKS_VP = [[4, 5, 6, 7, 8]]
 DISCONT_DOM_FIRST = [u'WP', u'VP', u'SBAR', u'VP',  u'S', u'VROOT']
 CONT_DOM_FIRST = [u'WP', u'S', u'VROOT']
 # grammar stuff
@@ -129,11 +129,11 @@ CONT_GRAMMAR_FUNCS = [(u'VROOT', u'S', u'?'),
                       (u'SBAR', u'IN', u'NP', u'VP'),
                       (u'NP', u'NNP'),
                       (u'VP', u'VB')]
-DISCONT_GRAMMAR_FUNCS = [(u'VROOT', u'S', u'?'), 
-                         (u'S', u'VP', u'VB', u'NNP'), 
-                         (u'SBAR', u'VP', u'IN', u'NP'), 
-                         (u'VP', u'SBAR', u'VB', u'NNP'), 
-                         (u'VP', u'WP', u'VB'), 
+DISCONT_GRAMMAR_FUNCS = [(u'VROOT', u'S', u'?'),
+                         (u'S', u'VP', u'VB', u'NNP'),
+                         (u'SBAR', u'VP', u'IN', u'NP'),
+                         (u'VP', u'SBAR', u'VB', u'NNP'),
+                         (u'VP', u'WP', u'VB'),
                          (u'NP', u'NNP')]
 DISCONT_GRAMMAR_LINS = [(((0, 0), (1, 0), (2, 0), (0, 1)),),
                         (((0, 0),), ((1, 0), (2, 0), (0, 1))),
@@ -141,51 +141,53 @@ DISCONT_GRAMMAR_LINS = [(((0, 0), (1, 0), (2, 0), (0, 1)),),
                         (((0, 0), (1, 0)),),
                         (((0, 0),), ((1, 0),)),
                         (((0, 0),),)]
-CONT_GRAMMAR_LEFT_RIGHT = {('VROOT', 'S', '?'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('S', 'WP', '@1X'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('@1X', 'VB', '@2X'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('@2X', 'NNP', 'VP'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('VP', 'VB', '@3X'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('@3X', 'NNP', 'SBAR'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('SBAR', 'IN', '@4X'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('@4X', 'NP', 'VP'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('NP', 'NNP'): {(((0, 0),),): {'VERT': 1}}, ('VP', 'VB'): {(((0, 0),),): {'VERT': 1}}}
-DISCONT_GRAMMAR_LEFT_RIGHT = {('VROOT', 'S', '?'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('S', 'VP', '@1X'): {(((0, 0), (1, 0), (0, 1)),): {'VERT': 1}}, ('@1X', 'VB', 'NNP'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('VP', 'SBAR', '@2X'): {(((0, 0),), ((1, 0), (0, 1))): {'VERT': 1}}, ('@2X', 'VB', 'NNP'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('SBAR', 'VP', '@3X'): {(((0, 0),), ((1, 0), (0, 1))): {'VERT': 1}}, ('@3X', 'IN', 'NP'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('VP', 'WP', 'VB'): {(((0, 0),), ((1, 0),)): {'VERT': 1}}, ('NP', 'NNP'): {(((0, 0),),): {'VERT': 1}}}
+CONT_GRAMMAR_LEFT_RIGHT = {('VROOT', 'S', '?'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('S', 'WP', '@1X'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('@1X', 'VB', '@2X'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('@2X', 'NNP', 'VP'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('VP', 'VB', '@3X'): {(((0, 0), (1, 0)),): {
+    'VERT': 1}}, ('@3X', 'NNP', 'SBAR'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('SBAR', 'IN', '@4X'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('@4X', 'NP', 'VP'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('NP', 'NNP'): {(((0, 0),),): {'VERT': 1}}, ('VP', 'VB'): {(((0, 0),),): {'VERT': 1}}}
+DISCONT_GRAMMAR_LEFT_RIGHT = {('VROOT', 'S', '?'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('S', 'VP', '@1X'): {(((0, 0), (1, 0), (0, 1)),): {'VERT': 1}}, ('@1X', 'VB', 'NNP'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('VP', 'SBAR', '@2X'): {(((0, 0),), ((1, 0), (0, 1))): {'VERT': 1}}, ('@2X', 'VB', 'NNP'): {
+    (((0, 0), (1, 0)),): {'VERT': 1}}, ('SBAR', 'VP', '@3X'): {(((0, 0),), ((1, 0), (0, 1))): {'VERT': 1}}, ('@3X', 'IN', 'NP'): {(((0, 0), (1, 0)),): {'VERT': 1}}, ('VP', 'WP', 'VB'): {(((0, 0),), ((1, 0),)): {'VERT': 1}}, ('NP', 'NNP'): {(((0, 0),),): {'VERT': 1}}}
 DISCONT_GRAMMAR_LR_H1_V2_BTOP_BBOT = \
     {(u'@^S1^VROOT1-VP2X', u'VB', u'NNP'): {(((0, 0), (1, 0)),): {'VERT':
-                                                                      1}},
+                                                                  1}},
      (u'SBAR', u'VP', u'@^SBAR2^VP2-VP2X'): {(((0, 0),), ((1, 0), (0,
                                                                    1))):
-                                                 {'VERT': 1}}, (u'VP',
-                                                                u'SBAR',
-                                                                u'@^VP2^S1-SBAR2X'):
-         {(((0, 0),), ((1, 0), (0, 1))): {'VERT': 1}}, (u'VP', u'WP',
-                                                        u'VB'): {(((0,
-                                                                    0),),
-                                                                  ((1,
-                                                                    0),)):
-                                                                     {'VERT':
-                                                                          1}},
+                                             {'VERT': 1}}, (u'VP',
+                                                            u'SBAR',
+                                                            u'@^VP2^S1-SBAR2X'):
+     {(((0, 0),), ((1, 0), (0, 1))): {'VERT': 1}}, (u'VP', u'WP',
+                                                    u'VB'): {(((0,
+                                                                0),),
+                                                              ((1,
+                                                                0),)):
+                                                             {'VERT':
+                                                              1}},
      (u'VROOT', u'S', u'?'): {(((0, 0), (1, 0)),): {'VERT': 1}},
      (u'@^VP2^S1-SBAR2X', u'VB', u'NNP'): {(((0, 0), (1, 0)),): {'VERT':
-                                                                     1}},
+                                                                 1}},
      (u'S', u'VP', u'@^S1^VROOT1-VP2X'): {(((0, 0), (1, 0), (0, 1)),):
-                                              {'VERT': 1}}, (u'NP',
-                                                             u'NNP'):
-         {(((0, 0),),): {'VERT': 1}}, (u'@^SBAR2^VP2-VP2X', u'IN', u'NP'):
+                                          {'VERT': 1}}, (u'NP',
+                                                         u'NNP'):
+     {(((0, 0),),): {'VERT': 1}}, (u'@^SBAR2^VP2-VP2X', u'IN', u'NP'):
          {(((0, 0), (1, 0)),): {'VERT': 1}}}
 DISCONT_GRAMMAR_LR_H2_V1_BTOP_BBOT = \
     {(u'SBAR', u'VP', u'@^SBAR2-VP2X'): {(((0, 0),), ((1, 0), (0, 1))):
-                                             {'VERT': 1}}, (u'S', u'VP',
-                                                            u'@^S1-VP2X'):
-         {(((0, 0), (1, 0), (0, 1)),): {'VERT': 1}}, (u'@^VP2-SBAR2X',
-                                                      u'VB', u'NNP'):
-         {(((0, 0), (1, 0)),): {'VERT': 1}}, (u'VROOT', u'S', u'?'):
+                                         {'VERT': 1}}, (u'S', u'VP',
+                                                        u'@^S1-VP2X'):
+     {(((0, 0), (1, 0), (0, 1)),): {'VERT': 1}}, (u'@^VP2-SBAR2X',
+                                                  u'VB', u'NNP'):
+     {(((0, 0), (1, 0)),): {'VERT': 1}}, (u'VROOT', u'S', u'?'):
          {(((0, 0), (1, 0)),): {'VERT': 1}}, (u'@^S1-VP2X', u'VB',
                                               u'NNP'): {(((0, 0), (1,
                                                                    0)),):
-                                                            {'VERT': 1}},
+                                                        {'VERT': 1}},
      (u'VP', u'WP', u'VB'): {(((0, 0),), ((1, 0),)): {'VERT': 1}}, (u'VP',
                                                                     u'SBAR',
                                                                     u'@^VP2-SBAR2X'):
-         {(((0, 0),), ((1, 0), (0, 1))): {'VERT': 1}}, (u'@^SBAR2-VP2X',
-                                                        u'IN', u'NP'):
-         {(((0, 0), (1, 0)),): {'VERT': 1}}, (u'NP', u'NNP'): {(((0,
-                                                                  0),),):
-                                                                   {'VERT':
-                                                                        1}}}
+     {(((0, 0),), ((1, 0), (0, 1))): {'VERT': 1}}, (u'@^SBAR2-VP2X',
+                                                    u'IN', u'NP'):
+     {(((0, 0), (1, 0)),): {'VERT': 1}}, (u'NP', u'NNP'): {(((0,
+                                                              0),),):
+                                                           {'VERT':
+                                                            1}}}
 DISCONT_GRAMMAR_OPTIMAL_H2_V1_BTOP_BBOT = \
     {(u'SBAR', u'VP', u'@^SBAR2-VP2X'): {(((0, 0),), ((1, 0), (0, 1))):
                                          {'VERT': 1}}, (u'S', u'VP',
@@ -206,7 +208,7 @@ DISCONT_GRAMMAR_OPTIMAL_H2_V1_BTOP_BBOT = \
                                                                        0)),):
                                                                     {'VERT':
                                                                      1}},
-     (u'NP', u'NNP'): {(((0, 0),),): {'VERT': 1}}} 
+     (u'NP', u'NNP'): {(((0, 0),),): {'VERT': 1}}}
 DISCONT_GRAMMAR_OUTPUT_RCG = [
     "C:1 SBAR2([0],[1][2][3]) --> VP2([0],[3]) IN1([1]) NP1([2])",
     "C:1 VP2([0],[1][2][3]) --> SBAR2([0],[3]) VB1([1]) NNP1([2])",
@@ -248,7 +250,7 @@ CONT_GRAMMAR_OUTPUT_PMCFG = [
     "s2 -> 0:0 1:0 2:0 3:0",
     "s3 -> 0:0 1:0 2:0",
     "s4 -> 0:0"
-    ]
+]
 DISCONT_GRAMMAR_OUTPUT_PMCFG = [
     "fun1 : VROOT <- S ?",
     "fun1 = s1",

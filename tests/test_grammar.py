@@ -11,13 +11,7 @@ import os
 from trees import grammar, grammaroutput, grammarinput, grammarconst
 from . import testdata
 
-
-try:
-    UNICODE_EXISTS = bool(type(unicode))
-except NameError:
-    def unicode(s): return str(s)
-
-
+ 
 def test_cont_grammar(cont_grammar):
     """Test grammar extraction from non-discontinuous trees
     """
@@ -150,10 +144,10 @@ def test_input_rcg(discont_grammar_novert, discont_lex):
     tempdestname = os.path.join('.', 'tempdest')
     with io.open(tempdestname + '.rcg', 'w') as tempdest:
         for line in testdata.DISCONT_GRAMMAR_OUTPUT_RCG:
-            tempdest.write(unicode(line) + "\n")
+            tempdest.write(str(line) + "\n")
     with io.open(tempdestname + '.lex', 'w') as tempdest:
         for line in testdata.GRAMMAR_OUTPUT_RCG_LEX:
-            tempdest.write(unicode(line) + "\n")
+            tempdest.write(str(line) + "\n")
     grammar, lexicon = grammarinput.rcg(tempdestname, 'utf-8')
     assert grammar == discont_grammar_novert
     assert lexicon == discont_lex
