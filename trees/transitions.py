@@ -113,10 +113,14 @@ def gap(tree):
             transitions.append(t)
             while len(d) > 0:
                 s = [d.pop(0)] + s
-            d = [b[0]] + d
-            b = b[1:]
+            d = [b.pop(0)] + d
         if len(s) == 0 and len(b) == 0 and len(d) == 1:
             break
+        # check for unary
+        while len(d) > 0 and d[0].parent and len(trees.children(d[0].parent)) == 1:
+            t = Transition("UNARY-{}".format(d[0].parent.data['label']))
+            transitions.append(t)
+            d[0] = d[0].parent
     return terminals, transitions
 
 
