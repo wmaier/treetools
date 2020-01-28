@@ -76,6 +76,47 @@ def inorder(tree):
     return terminals, transitions
 
 
+def gap(tree):
+    """GAP transition parsing (Coavoux & Crabbe)
+    """
+    terminals = [(terminal.data['word'], terminal.data['label'])
+                  for terminal in trees.terminals(tree)]
+    transitions = []
+    b = [terminal for terminal in trees.terminals(tree)]
+    d = []
+    s = []
+    while True:
+        if len(s) > 0 and len(d) > 0 and d[0].parent == s[0].parent:
+            # REDUCE
+            t = Transition("R-{}".format(s[0].parent.data['label']))
+            transitions.append(t)
+            p = s[0].parent
+            s = s[1:]
+            d = d[1:]
+            while len(d) > 0:
+                s = [d.pop(0)] + s
+            d = [p] + d
+        elif len(d) > 0 and any([n.parent == d[0].parent for i,n in enumerate(s)]):
+            # GAP
+            for i, n in enumerate(s):
+                if n.parent == d[0].parent:
+                    for j in range(i):
+                        d.append(s.pop(0))
+                        t = Transition("GAP")
+                        transitions.append(t)
+                    break
+        else: 
+            t = Transition("SHIFT")
+            transitions.append(t)
+            while len(d) > 0:
+                s = [d.pop(0)] + s
+            d = [b[0]] + d
+            b = b[1:]
+        if len(s) == 0 and len(b) == 0 and len(d) == 1:
+            break
+    return terminals, transitions
+
+
 def add_parser(subparsers):
     """Add an argument parser to the subparsers of treetools.py.
     """
@@ -184,4 +225,5 @@ def run(args):
 
 
 TRANSTYPES = {'topdown': 'Top-down continuous.',
-              'inorder': 'Inorder continuous.'}
+              'inorder': 'Inorder continuous.',
+              'gap': 'Gap discontinuous.'}
