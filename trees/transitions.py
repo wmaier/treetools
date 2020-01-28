@@ -76,6 +76,54 @@ def inorder(tree):
     return terminals, transitions
 
 
+def gap(tree):
+    """GAP transition parsing (Coavoux & Crabbe)
+    """
+    terminals = [(terminal.data['word'], terminal.data['label'])
+                  for terminal in trees.terminals(tree)]
+    transitions = []
+    b = [terminal for terminal in trees.terminals(tree)]
+    d = []
+    s = []
+    while True:
+        if len(s) > 0 and len(d) > 0 and d[0].parent == s[0].parent:
+            # REDUCE
+            p = s[0].parent
+            if 'head' not in s[0].data or 'head' not in d[0].data:
+                raise ValueError("heads are supposed to be marked")
+            headside = "LEFT" if s[0].data['head'] else "RIGHT"
+            t = Transition("R{}-{}".format(headside, p.data['label']))
+            transitions.append(t)
+            s = s[1:]
+            d = d[1:]
+            while len(d) > 0:
+                s = [d.pop(0)] + s
+            d = [p] + d
+        elif len(d) > 0 and any([n.parent == d[0].parent for i,n in enumerate(s)]):
+            # GAP
+            for i, n in enumerate(s):
+                if n.parent == d[0].parent:
+                    for j in range(i):
+                        d.append(s.pop(0))
+                        t = Transition("GAP")
+                        transitions.append(t)
+                    break
+        else: 
+            t = Transition("SHIFT")
+            transitions.append(t)
+            while len(d) > 0:
+                s = [d.pop(0)] + s
+            d = [b.pop(0)] + d
+        if len(s) == 0 and len(b) == 0 and len(d) == 1:
+            break
+        # check for unary
+        while len(d) > 0 and d[0].parent and len(trees.children(d[0].parent)) == 1:
+            t = Transition("UNARY-{}".format(d[0].parent.data['label']))
+            transitions.append(t)
+            d[0] = d[0].parent
+    return terminals, transitions
+
+
 def add_parser(subparsers):
     """Add an argument parser to the subparsers of treetools.py.
     """
@@ -183,5 +231,6 @@ def run(args):
     sys.exit()
 
 
-TRANSTYPES = {'topdown': 'Top-down continuous.',
-              'inorder': 'Inorder continuous.'}
+TRANSTYPES = {'topdown': 'Top-down continuous',
+              'inorder': 'Inorder continuous',
+              'gap': 'Gap discontinuous'}
