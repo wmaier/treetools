@@ -88,9 +88,12 @@ def gap(tree):
     while True:
         if len(s) > 0 and len(d) > 0 and d[0].parent == s[0].parent:
             # REDUCE
-            t = Transition("R-{}".format(s[0].parent.data['label']))
-            transitions.append(t)
             p = s[0].parent
+            if 'head' not in s[0].data or 'head' not in d[0].data:
+                raise ValueError("heads are supposed to be marked")
+            headside = "LEFT" if s[0].data['head'] else "RIGHT"
+            t = Transition("R{}-{}".format(headside, p.data['label']))
+            transitions.append(t)
             s = s[1:]
             d = d[1:]
             while len(d) > 0:
