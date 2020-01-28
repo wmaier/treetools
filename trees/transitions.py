@@ -231,6 +231,6 @@ def run(args):
     sys.exit()
 
 
-TRANSTYPES = {'topdown': 'Top-down continuous.',
-              'inorder': 'Inorder continuous.',
-              'gap': 'Gap discontinuous.'}
+TRANSTYPES = {'topdown': 'Top-down continuous',
+              'inorder': 'Inorder continuous',
+              'gap': 'Gap discontinuous'}
