@@ -92,7 +92,7 @@ def gap(tree):
             if 'head' not in s[0].data or 'head' not in d[0].data:
                 raise ValueError("heads are supposed to be marked")
             headside = "LEFT" if s[0].data['head'] else "RIGHT"
-            t = Transition("R{}-{}".format(headside, p.data['label']))
+            t = Transition("R-{}-{}".format(headside, p.data['label']))
             transitions.append(t)
             s = s[1:]
             d = d[1:]
