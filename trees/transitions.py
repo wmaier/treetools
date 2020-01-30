@@ -76,39 +76,6 @@ def inorder(tree):
     return terminals, transitions
 
 
-def _inorder_gap(tree):
-    """Recursive inorder transition
-    """
-    transitions = []
-    c = trees.children(tree)
-    if len(c) > 2:
-        raise ValueError("trees must be binarized")
-    # left
-    if len(trees.children(c[0])) == 0:
-        transitions.append(Transition("SHIFT"))
-    else:
-        transitions.extend(_inorder_gap(c[0]))
-    # parent
-    transitions.append(Transition("PJ-{}".format(tree.data['label'])))
-    # right
-    if len(trees.children(c[1])) == 0:
-        distance = c[1].data['num'] - trees.terminals(c[0])[-1].data['num']
-        transitions.append(Transition("SHIFT-{}".format(distance)))
-    else:
-        transitions.extend(_inorder_gap(c[1]))
-    transitions.append(Transition("REDUCE"))
-    return transitions
-
-
-def inorder_gap(tree):
-    """Extract inorder transitions for continuous trees.
-    """
-    terminals = [(terminal.data['word'], terminal.data['label'])
-                 for terminal in trees.terminals(tree)]
-    transitions = _inorder_gap(tree)
-    return terminals, transitions
-
-
 def gap(tree):
     """GAP transition parsing (Coavoux & Crabbe)
     """
@@ -266,5 +233,4 @@ def run(args):
 
 TRANSTYPES = {'topdown': 'Top-down continuous',
               'inorder': 'Inorder continuous',
-              'inorder_gap': 'Inorder with skip-shift',
               'gap': 'Gap discontinuous'}
