@@ -5,17 +5,16 @@
 
 treetools is a collection of tools for processing treebank trees. It contains algorithms for tree manipulation (such as removal of  crossing branches), tree analysis, and grammar extraction.
 
-treetools has been developed at the Department for Computational Linguistics at the Institute for Language and Information at the University of Düsseldorf, Germany (see http://phil.hhu.de/beyond-cfg). The project is sponsored by Deutsche Forschungsgemeinschaft (DFG). It is maintained by Wolfgang Maier.
+treetools has been developed at the Department for Computational Linguistics at the Institute for Language and Information at the University of Düsseldorf, Germany (see <http://phil.hhu.de/beyond-cfg>). The project is sponsored by Deutsche Forschungsgemeinschaft (DFG). It is maintained by Wolfgang Maier.
 
-Author: Wolfgang Maier <maierw@hhu.de>.
+Author: Wolfgang Maier <mailto:maierw@hhu.de>.
 Contributions: Kilian Gebhardt 
-
 
 ## Installation
 
 Requirements:
 
-- Python 3.7+
+  - Python 3.7+
 
 To install the latest release from the Python package index, type::
 
@@ -39,9 +38,9 @@ To run treetools, type::
 
 Available subcommands are:
 
-- ``transform``: Process treebank trees. Run transformations and convert between different formats.
-- ``grammar``: Extract grammars for different parsers from treebanks.
-- ``treeanalysis``: Analyze certain properties of treebank trees, such as, e.g., gap degree.
+  - ``transform``: Process treebank trees. Run transformations and convert between different formats.
+  - ``grammar``: Extract grammars for different parsers from treebanks.
+  - ``treeanalysis``: Analyze certain properties of treebank trees, such as, e.g., gap degree.
 
 To get see the available parameters for a subcommand, type::
 
@@ -69,9 +68,7 @@ To extract an left-to-right binarized LCFRS with v1/h2 markovization in rparse f
 
     treetools grammar input_treebank output_grammar leftright --dest-format rcg --markov v:1 h:2
 
-
 ### License
 
 The code is released under the GNU General Public Licence (GPL) 3.0 or higher. The license texts can be found at at
-http://www.gnu.org/licenses/gpl-3.0. 
-
+<http://www.gnu.org/licenses/gpl-3.0>. 
