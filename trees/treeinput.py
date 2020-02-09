@@ -78,15 +78,15 @@ def tigerxml_build_tree(s_element, **params):
         root.parent = top
     # split gf as postprocessing step if applicable
     if 'gf_split' in params:
-        coindexseparator = trees.DEFAULT_COINDEX_SEPARATOR
-        if len(label_parts.coindex) == 0:
-            coindexseparator = trees.DEFAULT_COINDEX_SEPARATOR
-        gapseparator = trees.DEFAULT_GAPPING_SEPARATOR
-        if len(label_parts.gapindex) == 0:
-            gapseparator = ""
         for subtree in trees.preorder(top):
             label_parts = trees.parse_label(subtree.data['label'], \
                                       gf_separator=gf_separator)
+            coindexseparator = trees.DEFAULT_COINDEX_SEPARATOR
+            if len(label_parts.coindex) == 0:
+                coindexseparator = trees.DEFAULT_COINDEX_SEPARATOR
+            gapseparator = trees.DEFAULT_GAPPING_SEPARATOR
+            if len(label_parts.gapindex) == 0:
+                gapseparator = ""
             subtree.data['label'] = label_parts.label \
                                     + gapseparator\
                                     + label_parts.gapindex \
