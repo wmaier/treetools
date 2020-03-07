@@ -71,6 +71,13 @@ def test_get_doc():
     comp = misc.get_doc([sample_func])
     assert sample == comp
 
+
 def test_get_doc_opts():
     comp = misc.get_doc_opts(sample_options)
     assert sample_opts_formatted == comp
+
+
+def test_options_dict():
+    input = ["a:b", "c:d", "e:1"]
+    sample = {"a" : "b", "c" : "d", "e" : 1}
+    assert misc.options_dict(input) == sample
