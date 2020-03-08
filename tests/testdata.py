@@ -10,6 +10,14 @@ SAMPLE_BRACKETS = """
 ((S(WP Who)(VB did)(NNP Fritz)(VP(VB tell)(NNP Hans)(SBAR(IN that)
 (NP(NNP Manfred))(VP(VB likes)))))(? ?))
 """
+SAMPLE_BRACKETS_OUTPUT = """
+(VROOT(S(WP Who)(VB did)(NNP Fritz)(VP(VB tell)(NNP Hans)(SBAR(IN that)(NP(NNP Manfred))(VP(VB likes)))))(? ?))
+"""
+SAMPLE_BRACKETS_OUTPUT_NOROOT = """
+((S(WP Who)(VB did)(NNP Fritz)(VP(VB tell)(NNP Hans)(SBAR(IN that)(NP(NNP Manfred))(VP(VB likes)))))(? ?))
+"""
+SAMPLE_DISCOBRACKETS_OUTPUT_CONT = "(VROOT(S(WP 1)(VB 2)(NNP 3)(VP(VB 4)(NNP 5)(SBAR(IN 6)(NP(NNP 7))(VP(VB 8)))))(? 9))	Who did Fritz tell Hans that Manfred likes ?"
+SAMPLE_DISCOBRACKETS_OUTPUT_DISCONT = "(VROOT(S(VP(SBAR(VP(WP 1)(VB 8))(IN 6)(NP(NNP 7)))(VB 4)(NNP 5))(VB 2)(NNP 3))(? 9))	Who did Fritz tell Hans that Manfred likes ?"
 SAMPLE_BRACKETS_TOL = """
 ((S(Who)(did)(Fritz)(VP(tell)(Hans)(SBAR(that)(NP(Manfred))(VP(likes)
 ))))(?))
@@ -80,6 +88,7 @@ likes                   VB      --              HD      500
 #504                    S       --              --      0
 #EOS 1
 """
+SAMPLE_EXPORT_OUTPUT = ['#BOS 1', 'Who\t\t\tWP\t--\t\t--\t500', 'did\t\t\tVB\t--\t\tHD\t504', 'Fritz\t\t\tNNP\t--\t\tHD\t504', 'tell\t\t\tVB\t--\t\tHD\t503', 'Hans\t\t\tNNP\t--\t\t--\t503', 'that\t\t\tIN\t--\t\tHD\t502', 'Manfred\t\t\tNNP\t--\t\tHD\t501', 'likes\t\t\tVB\t--\t\tHD\t500', '?\t\t\t?\t--\t\t--\t0', '#500\t\t\tVP\t--\t\t--\t502', '#501\t\t\tNP\t--\t\t--\t502', '#502\t\t\tSBAR\t--\t\t--\t503', '#503\t\t\tVP\t--\t\t--\t504', '#504\t\t\tS\t--\t\t--\t0', '#EOS 1', '']
 WORDS = [u'Who', u'did', u'Fritz', u'tell', u'Hans', u'that', u'Manfred',
          u'likes', u'?']
 POS = [u'WP', u'VB', u'NNP', u'VB', u'NNP', u'IN', u'NNP', u'VB', u'?']

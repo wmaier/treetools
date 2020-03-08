@@ -10,11 +10,6 @@ import sys
 from math import floor
 from xml.sax.saxutils import quoteattr
 from . import trees, treeanalysis
-# In Python 3.5, unicode() does not exist anymore, just str()
-try:
-    type(unicode)
-except NameError:
-    def unicode(s): return str(s)
 
 
 def parse_split_specification(split_spec, size):
@@ -220,7 +215,7 @@ def discobrackets(tree, stream, **params):
     terminals = trees.terminals(tree)
     sentence = ' '.join([terminal.data['word'] for terminal in terminals])
     for terminal in terminals:
-        terminal.data['word'] = unicode(terminal.data['num'])
+        terminal.data['word'] = str(terminal.data['num'])
     write_brackets_subtree(tree, stream, **params)
     stream.write("\t" + sentence + "\n")
 
@@ -258,7 +253,7 @@ def terminals(tree, stream, **params):
                 result = terminal.data['word']
                 if 'terminals_pos' in params:
                     result += "/%s" % terminal.data['label']
-            print(unicode(result), end=u" ", file=stream)
+            print(str(result), end=u" ", file=stream)
     print(u"", file=stream)
 
 
