@@ -1,5 +1,4 @@
-"""
-treetools: Tools for transforming treebank trees.
+"""treetools: Tools for transforming treebank trees.
 
 This module handles tree writing in different formats.
 

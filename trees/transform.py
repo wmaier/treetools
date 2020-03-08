@@ -1,5 +1,4 @@
-"""
-treetools: Tools for transforming treebank trees.
+"""treetools: Tools for transforming treebank trees.
 
 This module provides algorithms for tree transformations. Transformation
 function take a single tree as argument and return the modified tree.

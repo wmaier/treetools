@@ -1,5 +1,4 @@
-"""
-treetools: Tools for transforming treebank trees.
+"""treetools: Tools for transforming treebank trees.
 
 This module handles reading of trees. Tree readers are implemented
 as generators reading from a file with a given encoding and yielding
