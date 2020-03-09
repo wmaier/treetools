@@ -1,5 +1,4 @@
-"""
-treetools: Tools for transforming treebank trees.
+"""treetools: Tools for transforming treebank trees.
 
 conftest.py setup for py.test
 
@@ -16,7 +15,7 @@ from trees import trees, treeinput
                 params=[(treeinput.tigerxml, testdata.SAMPLE_TIGERXML, {}),
                         (treeinput.export, testdata.SAMPLE_EXPORT, {})])
 def discont_tree(request):
-    """Load discontinuous tree samples
+    """Load discontinuous tree samples.
     """
     tempfile_name = None
     with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp:
@@ -37,7 +36,7 @@ def discont_tree(request):
                         (treeinput.brackets, testdata.SAMPLE_BRACKETS_TOL,
                          {'brackets_emptypos': True})])
 def cont_tree(request):
-    """Load continuous tree samples
+    """Load continuous tree samples.
     """
     tempfile_name = None
     with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp:
@@ -49,6 +48,7 @@ def cont_tree(request):
 
     def fin():
         os.remove(tempfile_name)
+    request.addfinalizer(fin)
     tree = next(reader)
     # 'fix' POS tags for brackets_emptypos mode
     terms = trees.terminals(tree)
