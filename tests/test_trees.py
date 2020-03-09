@@ -1,5 +1,4 @@
-"""
-treetools: Tools for transforming treebank trees.
+"""treetools: Tools for transforming treebank trees.
 
 Unit tests (pytest) for tree operations
 
@@ -7,14 +6,14 @@ Author: Wolfgang Maier <maierw@hhu.de>
 """
 import pytest
 import tempfile
-import sys
 from io import StringIO
-from trees import trees, treeinput, treeoutput, transform, treeanalysis
+from trees import trees, treeoutput, transform, treeanalysis
 from . import testdata
 
 
 def test_labels(cont_tree):
-    """General test concerning the parsing and output of labels
+    """
+    General test concerning the parsing and output of labels.
     """
     label = ""
     e = trees.parse_label(label)
@@ -97,7 +96,8 @@ def test_cont_general(cont_tree):
 
 
 def test_discont_general(discont_tree):
-    """General tests concerning discontinuous trees.
+    """
+    General tests concerning discontinuous trees.
     """
     tree = discont_tree
     nodes = [node for node in trees.preorder(tree)]
@@ -125,7 +125,8 @@ def test_discont_general(discont_tree):
 
 
 def test_discont_output(discont_tree):
-    """Test tree output
+    """
+    Test tree output.
     """
     stream = StringIO()
     # export: check if all fields are the same
@@ -148,9 +149,9 @@ def test_discont_output(discont_tree):
 
 
 def test_cont_output(cont_tree):
-    """Test continuous tree output
     """
-    tree = cont_tree
+    Test continuous tree output.
+    """
     # brackets
     stream = StringIO()
     original = testdata.SAMPLE_BRACKETS.replace('\n', '')
@@ -165,7 +166,8 @@ def test_cont_output(cont_tree):
 
 
 def test_delete_terminal(discont_tree, cont_tree):
-    """trees.delete_terminal
+    """
+    Test terminal deletion.
     """
     # discont
     old_num_nodes = len([node for node in trees.preorder(discont_tree)])
@@ -192,7 +194,8 @@ def test_delete_terminal(discont_tree, cont_tree):
 
 
 def test_lca(discont_tree, cont_tree):
-    """trees.lca
+    """
+    Test LCA computation.
     """
     tree = discont_tree
     ctree = cont_tree
@@ -213,9 +216,9 @@ def test_lca(discont_tree, cont_tree):
 
 
 def test_right_sibling(discont_tree, cont_tree):
-    """trees.right_sibling
     """
-    tree = discont_tree
+    trees.right_sibling.
+    """
     rs = []
     for node in trees.preorder(discont_tree):
         sibling = trees.right_sibling(node)
@@ -223,7 +226,6 @@ def test_right_sibling(discont_tree, cont_tree):
             rs.append(sibling)
         else:
             rs.append(sibling.data['label'])
-    ctree = cont_tree
     crs = []
     for node in trees.preorder(cont_tree):
         sibling = trees.right_sibling(node)
@@ -236,9 +238,9 @@ def test_right_sibling(discont_tree, cont_tree):
 
 
 def test_left_sibling(discont_tree, cont_tree):
-    """trees.right_sibling
     """
-    tree = discont_tree
+    trees.left_sibling.
+    """
     rs = []
     for node in trees.preorder(discont_tree):
         sibling = trees.left_sibling(node)
@@ -246,7 +248,6 @@ def test_left_sibling(discont_tree, cont_tree):
             rs.append(sibling)
         else:
             rs.append(sibling.data['label'])
-    ctree = cont_tree
     crs = []
     for node in trees.preorder(cont_tree):
         sibling = trees.left_sibling(node)
@@ -259,7 +260,8 @@ def test_left_sibling(discont_tree, cont_tree):
 
 
 def test_terminal_blocks(discont_tree, cont_tree):
-    """trees.terminal_blocks
+    """
+    trees.terminal_blocks.
     """
     for node in trees.preorder(discont_tree):
         if node.data['label'] == 'VP':
@@ -276,7 +278,8 @@ def test_terminal_blocks(discont_tree, cont_tree):
 
 
 def test_dominance(discont_tree, cont_tree):
-    """trees.dominance
+    """
+    trees.dominance.
     """
     dterms = trees.terminals(discont_tree)
     ddom = [node.data['label'] for node in trees.dominance(dterms[0])]
@@ -287,7 +290,8 @@ def test_dominance(discont_tree, cont_tree):
 
 
 def test_root_attach(discont_tree):
-    """See transform.root_attach
+    """
+    See transform.root_attach.
     """
     tree = discont_tree
     tree = transform.root_attach(tree)
@@ -305,7 +309,8 @@ def test_root_attach(discont_tree):
 
 
 def test_boyd(discont_tree):
-    """See transform.boyd_split
+    """
+    See transform.boyd_split.
     """
     tree = discont_tree
     tree = transform.root_attach(tree)
@@ -323,7 +328,8 @@ def test_boyd(discont_tree):
 
 
 def test_raising(discont_tree):
-    """See transform.raising
+    """
+    See transform.raising.
     """
     tree = discont_tree
     tree = transform.root_attach(tree)
@@ -342,7 +348,8 @@ def test_raising(discont_tree):
 
 
 def test_add_topnode(discont_tree, cont_tree):
-    """transform.add_topnode
+    """
+    transform.add_topnode.
     """
     dtree = discont_tree
     discont_nodes = [node for node in trees.preorder(dtree)]
@@ -361,7 +368,8 @@ def test_add_topnode(discont_tree, cont_tree):
 
 
 def test_insert_terminal(discont_tree, cont_tree):
-    """transform.insert_terminals
+    """
+    transform.insert_terminals.
     """
     temp = tempfile.NamedTemporaryFile(mode='w')
     temp.write('1\t0\tTest1\tPosTest1\n')
@@ -433,7 +441,8 @@ def test_insert_terminal(discont_tree, cont_tree):
 
 
 def test_punctuation_verylow(discont_tree, cont_tree):
-    """transform.punctuation_verylow
+    """
+    transform.punctuation_verylow.
     """
     terminals = trees.terminals(discont_tree)
     old_vp_children = terminals[0].parent.children
@@ -470,7 +479,8 @@ def test_punctuation_verylow(discont_tree, cont_tree):
 
 
 def test_punctuation_symetrify(discont_tree, cont_tree):
-    """transform.punctuation_symetrify
+    """
+    transform.punctuation_symetrify.
     """
     temp = tempfile.NamedTemporaryFile(mode='w')
     temp.write('1\t3\t"\t$(\n')
@@ -510,7 +520,8 @@ def test_punctuation_symetrify(discont_tree, cont_tree):
 
 
 def test_punctuation_root(discont_tree, cont_tree):
-    """transform.punctuation_root
+    """
+    transform.punctuation_root.
     """
     terms = trees.terminals(discont_tree)
     terms[0].data['word'] = ","
@@ -529,7 +540,8 @@ def test_punctuation_root(discont_tree, cont_tree):
 
 
 def test_ptb_delete_traces(cont_tree):
-    """transform.ptb_delete_traces
+    """
+    transform.ptb_delete_traces.
     """
     terms = trees.terminals(cont_tree)
     terms[-2].data['label'] = "-NONE-"
@@ -538,7 +550,8 @@ def test_ptb_delete_traces(cont_tree):
 
 
 def test_analysis(discont_tree, cont_tree):
-    """See treeanalysis
+    """
+    See treeanalysis.
     """
     gapdegree = treeanalysis.GapDegree()
     gapdegree.run(cont_tree)
@@ -567,7 +580,8 @@ def test_analysis(discont_tree, cont_tree):
 
 
 def test_binarize(discont_tree, cont_tree):
-    """See transform.binarize
+    """
+    See transform.binarize.
     """
     tree = discont_tree
     tree = transform.negra_mark_heads(tree)
