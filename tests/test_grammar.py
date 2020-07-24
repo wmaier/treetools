@@ -78,6 +78,22 @@ def test_binarize_leftright(discont_grammar, cont_grammar):
     assert testdata.CONT_GRAMMAR_LEFT_RIGHT == cont_grammar
 
 
+def test_output_lopar(cont_grammar, cont_lex):
+    tempdest_lopar = os.path.join('.', 'tempdest_lopar')
+    grammaroutput.lopar(cont_grammar, cont_lex, tempdest_lopar, 'utf8')
+    endings = [(testdata.CONT_GRAMMAR_OUTPUT_LOPAR_OCLOWER, 'oc'), 
+               (testdata.CONT_GRAMMAR_OUTPUT_LOPAR_OCUPPER, 'OC'),
+               (testdata.CONT_GRAMMAR_OUTPUT_LOPAR_GRAM, 'gram'),
+               (testdata.CONT_GRAMMAR_OUTPUT_LOPAR_START, 'start')]
+    for c, ending in endings:
+        lines = []
+        with io.open("{}.{}".format("tempdest_lopar", ending)) as tempf:
+            lines = [l.strip() for l in tempf.readlines()]
+        assert len(lines) == len(c)
+        assert all([line in c for line in lines])
+        os.remove("tempdest_lopar.{}".format(ending))
+
+
 def test_output_rcg(discont_grammar, discont_lex, cont_grammar, cont_lex):
     """Test grammar output (RCG format)
     """
