@@ -7,7 +7,6 @@ Author: Wolfgang Maier <maierw@hhu.de>
 """
 import tempfile
 import gzip
-import sys
 from itertools import zip_longest
 
 

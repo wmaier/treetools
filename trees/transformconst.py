@@ -4,7 +4,6 @@ transformations: constants and utilities
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
-import itertools
 from . import trees
 
 # Head rules for PTB (WSJ) from Collins (1999, p. 240)
@@ -74,7 +73,7 @@ HEAD_RULES_NEGRA = {
     'vroot' : [('left-to-right', '$. $')]
 }
 
-def get_headpos_by_rule(parent_label, children_label, rules, 
+def get_headpos_by_rule(parent_label, children_label, rules,
                         default=0):
     """Given parent and children labels and head rules,
     return position of lexical head.
@@ -97,8 +96,8 @@ def get_headpos_by_rule(parent_label, children_label, rules,
                         return i
             elif hrule[0] == 'right-to-left':
                 for i, child_label in \
-                    itertools.izip(reversed(xrange(len(children_label))),
-                                   reversed(children_label)):
+                    zip(reversed(range(len(children_label))),
+                        reversed(children_label)):
                     parsed_label = trees.parse_label(child_label.lower())
                     if parsed_label.label.lower() == label:
                         return i

@@ -15,7 +15,7 @@ def rcg(src, src_enc, **opts):
     lexicon = {}
     grammar = {}
     if 'lex_in_grammar' in opts:
-       raise ValueError("Not supported for RCG format") 
+       raise ValueError("Not supported for RCG format")
     with io.open('%s.lex' % src) as lexfile:
         for line in lexfile:
             sp = line.strip().split()

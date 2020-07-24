@@ -85,7 +85,7 @@ def boyd_split(tree, **params):
     is used. The algorithm is documented in Boyd (2007) (ACL-LAW workshop).
     The algorithm relies on a previous application of head marking.
 
-    Prerequisites: 
+    Prerequisites:
         A previous application of root_attach() and head marking.
     Parameters: none
     Output options:
@@ -150,7 +150,7 @@ def raising(tree, **params):
     splitting and removes all those newly introduced nodes which are *not*
     marked as head block (see above).
 
-    Prerequisite: 
+    Prerequisite:
         Previous application of boyd_split().
     Parameters: none
     Output options: none
@@ -193,7 +193,7 @@ def add_topnode(tree, **params):
 
 def substitute_terminals(tree, **params):
     """Substitute terminal nodes in the tree, given in a parameter file
-    in four colums: sentence index, word index, word, part-of-speech. 
+    in four colums: sentence index, word index, word, part-of-speech.
     The POS column is optional.
 
     Example: To substitute the 5th word in sentence 5 with "house"/NN,
@@ -208,7 +208,7 @@ def substitute_terminals(tree, **params):
     allowed.
 
     Prerequisites: none
-    Parameters: 
+    Parameters:
         quiet                : no messages
         terminalfile:[file]  : the terminals to insert
     Output options: none
@@ -413,7 +413,7 @@ def punctuation_symetrify(tree, **params):
         relpron = params['relc']
         parens = [(i, terminal) for (i, terminal) in enumerate(terms)
                   if terminal.data['word'] in trees.PAIRPUNCT
-                  or (i < len(terms) - 1 
+                  or (i < len(terms) - 1
                       and terms[i + 1].data['label'] == relpron)]
     done = []
     for (i, terminal) in parens:
@@ -575,7 +575,7 @@ def ptb_delete_traces(tree, **params):
                         cursor = cursor.parent
                     if cursor.parent == None and not mapping_found:
                         raise ValueError("no mapping found")
-            newindex = 1
+            # newindex = 1 # was unused
             new_index_to_traces = defaultdict(list)
             new_index_to_nonterms = defaultdict(list)
             for trace in trace_filler:
@@ -584,7 +584,7 @@ def ptb_delete_traces(tree, **params):
                 new_index_to_nonterms[str(index)].append(filler)
             index_to_traces = new_index_to_traces
             index_to_nonterms = new_index_to_nonterms
-        # check if there is no filler for some trace, fillers with index and no 
+        # check if there is no filler for some trace, fillers with index and no
         # trace are no problem!
         if (any([index not in index_to_nonterms for index in index_to_traces])):
             print("\n", file=sys.stderr)
@@ -663,7 +663,7 @@ def negra_mark_heads(tree, **params):
 
 def mark_heads_by_rules(tree, **params):
     """Mark the head child of each node in a tree using Collins-style head
-    rules. Rule file must be specified as parameter mark_heads_rulefile, 
+    rules. Rule file must be specified as parameter mark_heads_rulefile,
     or 'standard' rules for NeGra/TIGER ('negra') or the Penn Treebank ('ptb')
     can be loaded with the parameter mark_heads_preset.
 

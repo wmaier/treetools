@@ -6,8 +6,7 @@ Author: Wolfgang Maier <maierw@hhu.de>
 """
 import argparse
 import sys
-from collections import Counter
-from . import trees, treeinput, treeanalysis, transform
+from . import trees, treeinput, transform
 from . import misc, transitionoutput
 
 
@@ -107,7 +106,7 @@ def gap(tree):
                         t = Transition("GAP")
                         transitions.append(t)
                     break
-        else: 
+        else:
             t = Transition("SHIFT")
             transitions.append(t)
             while len(d) > 0:

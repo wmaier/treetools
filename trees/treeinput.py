@@ -63,7 +63,7 @@ def tigerxml_build_tree(s_element, **params):
     if len(roots) == 0:
         raise ValueError("looks like a cycle")
     if len(roots) > 1:
-        raise ValueError("multiple roots: %s" % " ".join([node.data['label'] 
+        raise ValueError("multiple roots: %s" % " ".join([node.data['label']
                                                           for node in roots]))
     root = roots[0]
     top = root
@@ -340,10 +340,10 @@ def brackets(in_file, in_encoding, **params):
 def discobrackets(in_file, in_encoding, **params):
     """ Build a tree from disco bracket input. Every terminal is supposed to
     be an integer i. For a sentence of length n, all 1 <= i <= n must be
-    present. Tree is parsed as regular bracketed tree; after that, the 
+    present. Tree is parsed as regular bracketed tree; after that, the
     terminals are reordered w.r.t. to their numbering. 
 
-    The required format is one tree per line, after each tree a tab is 
+    The required format is one tree per line, after each tree a tab is
     expected, followed by the tokens in their correct order, separated by
     a space.
     """

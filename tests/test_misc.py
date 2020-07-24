@@ -55,7 +55,7 @@ def test_grouper():
 
 
 def test_bold():
-    sample = '\033[1m{}\033[0m'.format("Test") 
+    sample = '\033[1m{}\033[0m'.format("Test")
     test = misc.bold("Test")
     assert(sample == test)
 

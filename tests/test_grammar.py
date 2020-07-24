@@ -11,7 +11,7 @@ import os
 from trees import grammar, grammaroutput, grammarinput, grammarconst
 from . import testdata
 
- 
+
 def test_cont_grammar(cont_grammar):
     """Test grammar extraction from non-discontinuous trees
     """
@@ -141,7 +141,7 @@ def test_output_pmcfg(discont_grammar, discont_lex, cont_grammar, cont_lex):
     assert all([line in testdata.GRAMMAR_OUTPUT_RCG_LEX for line in lines])
     grammaroutput.pmcfg(cont_grammar, cont_lex, tempdest, 'utf8')
     lines = []
-    with io.open("%s.pmcfg" % tempdest) as tempf: 
+    with io.open("%s.pmcfg" % tempdest) as tempf:
         lines = [l.strip() for l in tempf.readlines()]
     assert len(lines) == len(testdata.CONT_GRAMMAR_OUTPUT_PMCFG)
     assert all([line in testdata.CONT_GRAMMAR_OUTPUT_PMCFG for line

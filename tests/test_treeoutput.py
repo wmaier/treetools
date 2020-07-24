@@ -9,7 +9,7 @@ import pytest
 import tempfile
 import sys
 from io import StringIO
-from trees import trees, treeinput, treeoutput, transform, treeanalysis
+from trees import treeinput, treeoutput, transform, treeanalysis
 from . import testdata
 
 
@@ -27,7 +27,7 @@ def test_brackets(cont_tree):
     s = StringIO()
     treeoutput.brackets(cont_tree, s)
     output = s.getvalue()
-    assert output.strip() == testdata.SAMPLE_BRACKETS_OUTPUT.strip()    
+    assert output.strip() == testdata.SAMPLE_BRACKETS_OUTPUT.strip()
     s = StringIO()
     params = {'brackets_emptyroot' : True}
     treeoutput.brackets(cont_tree, s, **params)
@@ -39,7 +39,7 @@ def test_brackets(cont_tree, discont_tree):
     s = StringIO()
     treeoutput.discobrackets(cont_tree, s)
     output = s.getvalue()
-    assert output.strip() == testdata.SAMPLE_DISCOBRACKETS_OUTPUT_CONT.strip()    
+    assert output.strip() == testdata.SAMPLE_DISCOBRACKETS_OUTPUT_CONT.strip()
     s = StringIO()
     treeoutput.discobrackets(discont_tree, s)
     output = s.getvalue()
@@ -51,7 +51,7 @@ def test_terminals(discont_tree):
     s = StringIO()
     treeoutput.terminals(discont_tree, s)
     output = s.getvalue().split()
-    assert output == testdata.WORDS    
+    assert output == testdata.WORDS
     s = StringIO()
     params = {'pos_only' : True}
     treeoutput.terminals(discont_tree, s, **params)

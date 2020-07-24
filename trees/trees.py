@@ -8,7 +8,6 @@ from __future__ import print_function
 import itertools
 import sys
 from copy import deepcopy
-from collections import namedtuple
 
 
 # separators in labels
@@ -269,14 +268,14 @@ def levels(tree):
             reverse_levels[subtree] = level
     return levels, reverse_levels
 
-            
+
 def get_label(tree, **params):
     """Compute subtree label decorations depending on given parameters.
     """
     label = tree.data['label']
     gf_separator = DEFAULT_GF_SEPARATOR
     if 'gf_separator' in params:
-        gf_separator = unicode(params['gf_separator'])
+        gf_separator = str(params['gf_separator'])
     gf_string = ""
     if 'gf' in params and not tree.data['edge'].startswith("-") \
        and (has_children(tree)
@@ -397,14 +396,9 @@ def replace_chars(tree, cands):
     """Replace characters in node data before bracketing output given a
     dictionary.
     """
-    thestringtype = None
-    if sys.version_info[0] < 3:
-        thestringtype = basestring
-    else:
-        thestringtype = str
     for field in FIELDS:
         if not tree.data[field] is None \
-                and isinstance(tree.data[field], thestringtype):
+                and isinstance(tree.data[field], str):
             for cand in cands:
                 tree.data[field] = tree.data[field].replace(cand, cands[cand])
     return tree

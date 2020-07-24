@@ -167,7 +167,7 @@ def reordering_none(func, lin):
 
 
 def reordering_optimal(func, lin):
-    """Locally optimal binarization (minimize fan-out per single decision). 
+    """Locally optimal binarization (minimize fan-out per single decision).
     """
     order = []
     pos = [i for i in range(1, len(func))]
@@ -180,7 +180,7 @@ def reordering_optimal(func, lin):
         winner_pos = pos[0]
         for posc in pos:
             # try all rhs predicates and check for the one ...
-            rhsc = func[posc]
+            # rhsc = func[posc] # was unused, why?
             tlin = linsub(lin, lambda x: x == posc - 1, lambda x: None, False)
             if len(tlin) < fanout_min:
                 # ... which gives the lowest fanout when binarizing with it
