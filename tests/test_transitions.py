@@ -6,10 +6,8 @@ Unit tests (pytest) for tree operations
 Author: Wolfgang Maier <maierw@hhu.de>
 """
 import pytest
-import io
-import os
-from trees import transitions, transitionoutput, transform
-from . import testdata_transitions, testdata
+from trees import transitions, transform
+from . import testdata_transitions
 
 
 def test_topdown_cont_negra(cont_tree):

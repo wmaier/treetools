@@ -6,10 +6,8 @@ Unit tests (pytest) for tree operations
 Author: Wolfgang Maier <maierw@hhu.de>
 """
 import pytest
-import tempfile
-import sys
 from io import StringIO
-from trees import treeinput, treeoutput, transform, treeanalysis
+from trees import treeoutput, transform, treeanalysis
 from . import testdata
 
 
@@ -35,7 +33,7 @@ def test_brackets(cont_tree):
     assert output.strip() == testdata.SAMPLE_BRACKETS_OUTPUT_NOROOT.strip()
 
 
-def test_brackets(cont_tree, discont_tree):
+def test_discobrackets(cont_tree, discont_tree):
     s = StringIO()
     treeoutput.discobrackets(cont_tree, s)
     output = s.getvalue()
