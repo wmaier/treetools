@@ -1,4 +1,5 @@
-"""treetools: Tools for transforming treebank trees.
+"""
+treetools: Tools for transforming treebank trees.
 
 This module provides misc utility functions.
 
@@ -11,7 +12,8 @@ from itertools import zip_longest
 
 
 def get_doc(funs):
-    """Generate a string from the names and docstrings of a list of given
+    """
+    Generate a string from the names and docstrings of a list of given
     functions.
     """
     return "\n".join(["%s\n%s\n%s" % (bold(fun.__name__),
@@ -21,7 +23,8 @@ def get_doc(funs):
 
 
 def get_doc_opts(opts):
-    """Generate a string from a dict with names and short explanations.
+    """
+    Generate a string from a dict with names and short explanations.
     """
     result = []
     for key in sorted(opts.keys()):
@@ -38,13 +41,15 @@ def get_doc_opts(opts):
 
 
 def make_headline(title):
-    """Make a headline for --usage docs
+    """
+    Make a headline for --usage docs
     """
     return bold("{}\n{}\n".format(title, "=" * len(title)))
 
 
 def options_dict(options):
-    """Given a list of key/value pairs with the key separated from the resp.
+    """
+    Given a list of key/value pairs with the key separated from the resp.
     value by a colon, return a dict with the pairs in which
        - True is inserted for each key with no value
        - int() is called on all values for which isdigit() holds
@@ -63,13 +68,15 @@ def options_dict(options):
 
 
 def bold(text):
-    """For getting bold text on the command line (ANSI).
+    """
+    For getting bold text on the command line (ANSI).
     """
     return u'\033[1m%s\033[0m' % text
 
 
 def gunzip(in_file):
-    """If filename ends with .gz, unzip file to temp file and
+    """
+    If filename ends with .gz, unzip file to temp file and
     return name of temporary file. This is ugly, but proper streaming
     support for zipped files does not seem to exist in Python 2.
     """
@@ -84,7 +91,8 @@ def gunzip(in_file):
 
 
 def grouper(n, iterable, fillvalue=None):
-    """Grouper recipe from 
+    """
+    Grouper recipe from 
     http://docs.python.org/library/itertools.html#recipes.
     Example: grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx
     """

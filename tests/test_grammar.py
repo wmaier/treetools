@@ -81,7 +81,7 @@ def test_binarize_leftright(discont_grammar, cont_grammar):
 def test_output_lopar(cont_grammar, cont_lex):
     tempdest_lopar = os.path.join('.', 'tempdest_lopar')
     grammaroutput.lopar(cont_grammar, cont_lex, tempdest_lopar, 'utf8')
-    endings = [(testdata.CONT_GRAMMAR_OUTPUT_LOPAR_OCLOWER, 'oc'), 
+    endings = [(testdata.CONT_GRAMMAR_OUTPUT_LOPAR_OCLOWER, 'oc'),
                (testdata.CONT_GRAMMAR_OUTPUT_LOPAR_OCUPPER, 'OC'),
                (testdata.CONT_GRAMMAR_OUTPUT_LOPAR_GRAM, 'gram'),
                (testdata.CONT_GRAMMAR_OUTPUT_LOPAR_START, 'start')]
