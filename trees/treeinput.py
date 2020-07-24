@@ -252,12 +252,12 @@ def brackets(in_file, in_encoding, **params):
                             tokenmap = defaultdict(int)
                             position = 1
                             try:
-                                lextoken, lexclass = lexer.next()
+                                lextoken, lexclass = next(lexer)
                             except StopIteration:
                                 raise ValueError("no sentence after tree")
                             try:
                                 while not lextoken == "\n":
-                                    lextoken, lexclass = lexer.next()
+                                    lextoken, lexclass = next(lexer)
                                     if not lextoken == ' ':
                                         tokenmap[position] = lextoken
                                         position += 1
