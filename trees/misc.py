@@ -92,7 +92,7 @@ def gunzip(in_file):
 
 def grouper(n, iterable, fillvalue=None):
     """
-    Grouper recipe from 
+    Grouper recipe from
     http://docs.python.org/library/itertools.html#recipes.
     Example: grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx
     """
