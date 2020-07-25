@@ -182,35 +182,6 @@ def disco_order(tree, mode):
     return result
 
 
-def scalar_(tree):
-    """Return tree in scalar notation
-    """
-    children = trees.children(tree)
-    dist = []
-    const = []
-    tag = None
-    height = 0
-    if len(children) == 0:
-        tag = [tree.data['label']]
-    elif len(children) == 1:
-        raise ValueError("Unary chains must be removed before using this")
-    elif len(children) == 2:
-        children = trees.children(tree)
-        dl, cl, tl, hl = scalar_(children[0])
-        dr, cr, tr, hr = scalar_(children[1])
-        height = max(hl, hr) + 1
-        dist = dl + [h] + dr
-        const = cl + [tree.data['label']] + cr
-        tag = tl + tr
-    else:
-        raise ValueError("Trees must be binarized")
-    return dist, const, tag, height
-
-
-def scalar(tree):
-    return scalar_(tree)
-
-
 def add_parser(subparsers):
     """Add an argument parser to the subparsers of treetools.py.
     """
