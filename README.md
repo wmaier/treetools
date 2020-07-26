@@ -2,6 +2,8 @@
 [![Build Status](https://travis-ci.org/wmaier/treetools.svg?branch=master)](https://travis-ci.org/wmaier/treetools) 
 [![Requirements Status](https://requires.io/github/wmaier/treetools/requirements.svg?branch=master)](https://requires.io/github/wmaier/treetools/requirements/?branch=master)
 [![PyPI version](https://badge.fury.io/py/treetools.svg)](https://badge.fury.io/py/treetools)
+[![Github All Releases](https://img.shields.io/github/downloads/kotlin-graphics/kotlin-unsigned/total.svg)]()
+
 # treetools - tree processing
 
 treetools is a collection of tools for processing treebank trees. It contains algorithms for tree manipulation (such as removal of  crossing branches), tree analysis, and grammar extraction.
