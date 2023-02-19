@@ -1,6 +1,5 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/dd9c9290ba414e54a6fa6be48e2543de)](https://app.codacy.com/manual/wmaier/treetools?utm_source=github.com&utm_medium=referral&utm_content=wmaier/treetools&utm_campaign=Badge_Grade_Dashboard)
 [![Build Status](https://travis-ci.org/wmaier/treetools.svg?branch=master)](https://travis-ci.org/wmaier/treetools) 
-[![Requirements Status](https://requires.io/github/wmaier/treetools/requirements.svg?branch=master)](https://requires.io/github/wmaier/treetools/requirements/?branch=master)
 [![PyPI version](https://badge.fury.io/py/treetools.svg)](https://badge.fury.io/py/treetools)
 [![Github All Releases](https://img.shields.io/github/downloads/kotlin-graphics/kotlin-unsigned/total.svg)]()
 
