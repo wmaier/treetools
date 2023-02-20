@@ -6,6 +6,7 @@ Author: Wolfgang Maier <maierw@hhu.de>
 """
 import io
 import sys
+import platform
 from itertools import chain
 from collections import defaultdict
 from io import StringIO
@@ -18,6 +19,8 @@ BRACKETS = ["(", ")"]
 def lopar(gram, lexicon, dest, dest_enc, **params):
     """Write grammar, lexicon and oc files in LoPar format.
     """
+    if not platform.system() == "Linux":
+        raise Exception("not supported on {}".format(platform.system()))
     if not grammaranalysis.is_contextfree(gram):
         raise ValueError("must be PCFG to be written in LoPar format.")
     # look for start symbols
@@ -27,11 +30,11 @@ def lopar(gram, lexicon, dest, dest_enc, **params):
     # open class: cat -> counter, no effort to distinguish closed from open
     oc_lower = defaultdict(int)
     oc_upper = defaultdict(int)
-    with io.open("%s.gram" % dest, 'w', encoding=dest_enc) as gram_stream, \
-         io.open("%s.lex" % dest, 'w', encoding=dest_enc) as lex_stream, \
-         io.open("%s.start" % dest, 'w', encoding=dest_enc) as start_stream, \
-         io.open("%s.oc" % dest, 'w', encoding=dest_enc) as ocl_stream, \
-         io.open("%s.OC" % dest, 'w', encoding=dest_enc) as ocu_stream:
+    with open(f"{dest}.gram", 'w', encoding=dest_enc) as gram_stream, \
+         open(f"{dest}.lex", 'w', encoding=dest_enc) as lex_stream, \
+         open(f"{dest}.start", 'w', encoding=dest_enc) as start_stream, \
+         open(f"{dest}.oc", 'w', encoding=dest_enc) as ocl_stream, \
+         open(f"{dest}.OC", 'w', encoding=dest_enc) as ocu_stream:
         for func in gram:
             for lin in gram[func]:
                 count = sum(gram[func][lin].values())
@@ -41,7 +44,7 @@ def lopar(gram, lexicon, dest, dest_enc, **params):
                 lhs = u"%s" % func[0]
                 rhs = ' '.join([u"%s" % func[i + 1]
                                 for i in range(len(func[1:]))])
-                gram_stream.write(u"%d %s %s\n" % (count, lhs, rhs))
+                print(f"{count} {lhs} {rhs}", file=gram_stream)
         for word in lexicon:
             if any(c in BRACKETS for c in word):
                 sys.stderr.write("brackets seem to not have been replaced, " \
@@ -53,15 +56,15 @@ def lopar(gram, lexicon, dest, dest_enc, **params):
             else:
                 for tag in lexicon[word]:
                     oc_lower[tag] += lexicon[word][tag]
-            tags = ["%s %d" % (tag, lexicon[word][tag])
+            tags = ["{} {}".format(tag, lexicon[word][tag])
                     for tag in lexicon[word]]
-            lex_stream.write(u"%s\t%s\n" % (word, ' '.join(tags)))
+            print("{}\t{}".format(word, ' '.join(tags)), file=lex_stream)
         for symbol in startsymbols:
-            start_stream.write(u"%s %d\n" % (symbol, startsymbols[symbol]))
+            print("{} {}".format(symbol, startsymbols[symbol]), file=start_stream)
         for tag in oc_lower:
-            ocl_stream.write(u"%s %d\n" % (tag, oc_lower[tag]))
+            print("{} {}".format(tag, oc_lower[tag]), file=ocl_stream)
         for tag in oc_upper:
-            ocu_stream.write(u"%s %d\n" % (tag, oc_upper[tag]))
+            print("{} {}".format(tag, oc_upper[tag]), file=ocu_stream)
 
 
 def pmcfg(gram, lexicon, dest, dest_enc, **params):

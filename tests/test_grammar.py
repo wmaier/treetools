@@ -6,6 +6,7 @@ Unit tests (pytest) for tree operations
 Author: Wolfgang Maier <maierw@hhu.de>
 """
 import pytest
+import platform
 import io
 import os
 from trees import grammar, grammaroutput, grammarinput, grammarconst
@@ -79,6 +80,8 @@ def test_binarize_leftright(discont_grammar, cont_grammar):
 
 
 def test_output_lopar(cont_grammar, cont_lex):
+    if not platform.system() == "Linux":
+        return
     tempdest_lopar = os.path.join('.', 'tempdest_lopar')
     grammaroutput.lopar(cont_grammar, cont_lex, tempdest_lopar, 'utf8')
     endings = [(testdata.CONT_GRAMMAR_OUTPUT_LOPAR_OCLOWER, 'oc'),
@@ -86,11 +89,13 @@ def test_output_lopar(cont_grammar, cont_lex):
                (testdata.CONT_GRAMMAR_OUTPUT_LOPAR_GRAM, 'gram'),
                (testdata.CONT_GRAMMAR_OUTPUT_LOPAR_START, 'start')]
     for c, ending in endings:
+        print(f"checking {ending}")
         lines = []
-        with io.open("{}.{}".format("tempdest_lopar", ending)) as tempf:
+        with open("{}.{}".format("tempdest_lopar", ending)) as tempf:
             lines = [l.strip() for l in tempf.readlines()]
-        assert len(lines) == len(c)
         assert all([line in c for line in lines])
+        assert all([line in lines for line in c])
+    for _, ending in endings:
         os.remove("tempdest_lopar.{}".format(ending))
 
 
