@@ -67,7 +67,7 @@ def tigerxml_build_tree(s_element, **params):
                                                           for node in roots]))
     root = roots[0]
     top = root
-    if not root.data['label'] == trees.DEFAULT_ROOT:
+    if root.data['label'] != trees.DEFAULT_ROOT:
         top = trees.Tree(trees.make_node_data())
         top.data['label'] = trees.DEFAULT_ROOT
         top.children.append(root)
@@ -133,7 +133,7 @@ def bracket_lexer(stream):
     tokenbuf = StringIO()
     whitespacebuf = StringIO()
     character = stream.read(1)
-    while not character == "":
+    while character != "":
         # holds tokens
         tval = tokenbuf.getvalue()
         # holds whitespace
@@ -256,9 +256,9 @@ def brackets(in_file, in_encoding, **params):
                             except StopIteration:
                                 raise ValueError("no sentence after tree")
                             try:
-                                while not lextoken == "\n":
+                                while lextoken != "\n":
                                     lextoken, lexclass = next(lexer)
-                                    if not lextoken == ' ':
+                                    if lextoken != ' ':
                                         tokenmap[position] = lextoken
                                         position += 1
                             except StopIteration:

@@ -86,14 +86,14 @@ def linsub(lin, src, dest, replace):
             if src(rhspos):
                 this_dest = dest(rhspos)
                 # if replacement is not None
-                if not this_dest == None:
+                if this_dest != None:
                     # if we don't want subsequent identical values
                     # in the result list, append if the current sublist
                     # was empty or if the last appended element in the sublist
                     # was not the same as now
                     if replace:
                         if len(repl_arg) == 0 \
-                           or not repl_arg[-1][0] == this_dest:
+                           or repl_arg[-1][0] != this_dest:
                             rhsargpos.update([this_dest])
                             repl_arg.append((this_dest,
                                              rhsargpos[this_dest] - 1))
@@ -104,13 +104,13 @@ def linsub(lin, src, dest, replace):
                 else:
                     # if replacement is None, don't do replacement
                     # but create new sublist
-                    if not len(repl_arg) == 0:
+                    if len(repl_arg) != 0:
                         result.append(tuple(repl_arg))
                     repl_arg = []
             else:
                 rhsargpos.update([rhspos])
                 repl_arg.append((rhspos, rhsargpos[rhspos] - 1))
-        if not len(repl_arg) == 0:
+        if len(repl_arg) != 0:
             result.append(tuple(repl_arg))
     return tuple(result)
 
@@ -299,7 +299,7 @@ def extract(tree, grammar, lexicon):
                     # the current terminal if nothing has been appended yet
                     # or if the current element is different from the last one
                     # appended
-                    if len(lin[-1]) == 0 or not lin[-1][-1][0] == rhs_pos:
+                    if len(lin[-1]) == 0 or lin[-1][-1][0] != rhs_pos:
                         lin[-1].append((rhs_pos, rhs_argpos[rhs_pos]))
                         rhs_argpos[rhs_pos] += 1
                 # make the argument a tuple
@@ -457,7 +457,7 @@ def run(args):
     else:
         raise ValueError("Specify input format %s" % args.src_format)
     print("\n", file=sys.stderr)
-    if not args.gramtype == 'treebank':
+    if args.gramtype != 'treebank':
         markov_opts = None
         if args.markov is not None:
             markov_opts = misc.options_dict(args.markov)

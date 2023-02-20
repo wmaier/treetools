@@ -80,7 +80,7 @@ def test_binarize_leftright(discont_grammar, cont_grammar):
 
 
 def test_output_lopar(cont_grammar, cont_lex):
-    if not platform.system() == "Linux":
+    if platform.system() != "Linux":
         return
     tempdest_lopar = os.path.join('.', 'tempdest_lopar')
     grammaroutput.lopar(cont_grammar, cont_lex, tempdest_lopar, 'utf8')

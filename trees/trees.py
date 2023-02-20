@@ -176,7 +176,7 @@ def delete_terminal(tree, leaf):
     or the (given) root.
     """
     root = tree
-    while not root.parent == None:
+    while root.parent != None:
         root = root.parent
     terms = terminals(root)
     num = leaf.data['num']
@@ -222,17 +222,17 @@ def lca(tree_a, tree_b):
     """
     dom_a = [tree_a]
     parent = tree_a
-    while not parent.parent is None:
+    while parent.parent is not None:
         parent = parent.parent
         dom_a.append(parent)
     dom_b = [tree_b]
     parent = tree_b
-    while not parent.parent is None:
+    while parent.parent is not None:
         parent = parent.parent
         dom_b.append(parent)
     i = 0
     for i, (el_a, el_b) in enumerate(zip(dom_a[::-1], dom_b[::-1])):
-        if not el_a == el_b:
+        if el_a != el_b:
             return dom_a[::-1][i - 1]
     return None
 
@@ -242,7 +242,7 @@ def dominance(tree):
     """
     parent = tree
     yield parent
-    while not parent.parent is None:
+    while parent.parent is not None:
         parent = parent.parent
         yield parent
 
@@ -258,7 +258,7 @@ def levels(tree):
             for terminal in terminals(subtree):
                 path_length = 0
                 path_element = terminal
-                while not path_element == subtree:
+                while path_element != subtree:
                     path_element = path_element.parent
                     path_length += 1
                 level = max(level, path_length)
@@ -377,7 +377,7 @@ def format_label(label, **params):
     label_always = 'always_label' in params
     edge_always = 'always_gf' in params
     lab = ""
-    if not label.label == DEFAULT_LABEL or label_always:
+    if label.label != DEFAULT_LABEL or label_always:
         lab = label.label
     index = ""
     if len(label.gapindex) > 0:
@@ -385,7 +385,7 @@ def format_label(label, **params):
     if len(label.coindex) > 0:
         index += DEFAULT_COINDEX_SEPARATOR + label.coindex
     gf = ""
-    if not label.gf == DEFAULT_EDGE or edge_always:
+    if label.gf != DEFAULT_EDGE or edge_always:
         gf = label.gf_separator + label.gf
     headmarker = "'" if label.headmarker else ""
     result = lab + gf + index + headmarker
@@ -397,7 +397,7 @@ def replace_chars(tree, cands):
     dictionary.
     """
     for field in FIELDS:
-        if not tree.data[field] is None \
+        if tree.data[field] is not None \
                 and isinstance(tree.data[field], str):
             for cand in cands:
                 tree.data[field] = tree.data[field].replace(cand, cands[cand])
