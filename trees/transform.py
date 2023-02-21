@@ -739,10 +739,14 @@ def _binarize_tree(tree, bare_bin_labels):
             last_tree.children.append(binarization_tree)
             last_tree.children.append(child)
             binarization_tree.parent = last_tree
+            if child is None:
+                raise ValueError("child was None")
             child.parent = last_tree
             last_tree = binarization_tree
         for i in range(2):
             child = remaining[i]
+            if binarization_tree is None:
+                raise ValueError("binarization_tree was None")
             binarization_tree.children.append(child)
             child.parent = binarization_tree
 
