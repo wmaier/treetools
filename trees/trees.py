@@ -4,9 +4,7 @@ This module provides basic data structures and functions for handling trees.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
-from __future__ import print_function
 import itertools
-import sys
 from copy import deepcopy
 
 

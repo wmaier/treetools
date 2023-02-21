@@ -4,7 +4,6 @@ This module handles tree writing in different formats.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
-from __future__ import division, print_function
 import sys
 from math import floor
 from xml.sax.saxutils import quoteattr

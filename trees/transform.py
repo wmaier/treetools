@@ -5,7 +5,6 @@ function take a single tree as argument and return the modified tree.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
-from __future__ import print_function, with_statement
 import argparse
 import sys
 import io
