@@ -19,7 +19,7 @@ BRACKETS = ["(", ")"]
 def lopar(gram, lexicon, dest, dest_enc, **params):
     """Write grammar, lexicon and oc files in LoPar format.
     """
-    if not platform.system() == "Linux":
+    if platform.system() != "Linux":
         raise Exception("not supported on {}".format(platform.system()))
     if not grammaranalysis.is_contextfree(gram):
         raise ValueError("must be PCFG to be written in LoPar format.")
@@ -161,7 +161,7 @@ def rcg(gram, lexicon, dest, dest_enc, **params):
                 rhsargs = defaultdict(dict)
                 rhsarity = defaultdict(int)
                 for i, arg in enumerate(lin):
-                    if not i == 0:
+                    if i != 0:
                         lhsargs.write(u",")
                         lhsarity += 1
                     for var in arg:

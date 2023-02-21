@@ -4,7 +4,6 @@ This module handles tree writing in different formats.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
-from __future__ import division, print_function
 import sys
 from math import floor
 from xml.sax.saxutils import quoteattr
@@ -37,7 +36,7 @@ def parse_split_specification(split_spec, size):
     sum_parts = sum(parts)
     if sum_parts < size:
         diff = size - sum_parts
-        if not rest_index == None:
+        if rest_index != None:
             parts[rest_index] = diff
         else:
             sys.stderr.write("rounding: extra %d sentences will be\n" % diff)
@@ -46,7 +45,7 @@ def parse_split_specification(split_spec, size):
             sys.stderr.write("are added to the first part.\n")
             parts[parts.index(max(parts))] += diff
     elif sum_parts == size:
-        if not rest_index == None:
+        if rest_index != None:
             sys.stderr.write("warning: 'rest' part will be empty\n")
     elif sum_parts > size:
         raise ValueError("treebank smaller than sum of split (%d vs %d)\n"

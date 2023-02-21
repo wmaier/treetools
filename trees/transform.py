@@ -5,7 +5,6 @@ function take a single tree as argument and return the modified tree.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
-from __future__ import print_function, with_statement
 import argparse
 import sys
 import io
@@ -45,7 +44,7 @@ def root_attach(tree, **params):
         # dominated by siblings of the current child of VROOT
         focus = child
         sibling = trees.right_sibling(focus)
-        while not sibling == None:
+        while sibling != None:
             focus_ind = [terminal.data['num'] for terminal
                          in trees.terminals(focus)]
             sibling_ind = [terminal.data['num'] for terminal
@@ -157,7 +156,7 @@ def raising(tree, **params):
     """
     removal = []
     for subtree in trees.preorder(tree):
-        if not subtree == tree:
+        if subtree != tree:
             if subtree.data['split']:
                 if not subtree.data['head_block']:
                     removal.append(subtree)
@@ -215,7 +214,7 @@ def substitute_terminals(tree, **params):
     """
     # read terminals file only if filename is new
     if not hasattr(substitute_terminals, "fn") \
-       or not substitute_terminals.fn == params['terminalfile']:
+       or substitute_terminals.fn != params['terminalfile']:
         substitute_terminals.fn = params['terminalfile']
         substitute_terminals.terminals = dict()
         with io.open(substitute_terminals.fn) as tf:
@@ -255,7 +254,7 @@ def substitute_terminals(tree, **params):
         terminal.data['word'] = new_word
         new_pos = substitute_terminals.\
                   terminals[tree.data['sid']][terminal_num][1]
-        if not new_pos is None:
+        if new_pos is not None:
             terminal.data['label'] = new_pos
     return tree
 
@@ -284,7 +283,7 @@ def insert_terminals(tree, **params):
     """
     # read terminals file only if filename is new
     if not hasattr(insert_terminals, "fn") \
-       or not insert_terminals.fn == params['terminalfile']:
+       or insert_terminals.fn != params['terminalfile']:
         insert_terminals.fn = params['terminalfile']
         insert_terminals.terminals = dict()
         with io.open(insert_terminals.fn) as tf:
@@ -382,7 +381,7 @@ def punctuation_verylow(tree, **params):
         if not all([child.data['word'] in trees.PUNCT \
                     for child in element.parent.children]):
             target = terminals[i - 1].parent
-            if not target == element.parent:
+            if target != element.parent:
                 element.parent.children.remove(element)
                 element.parent = target
                 target.children.append(element)
@@ -421,7 +420,7 @@ def punctuation_symetrify(tree, **params):
         if terminal in done:
             continue
         leftmost_term = trees.terminals(terminal.parent)[0]
-        if not leftmost_term == terms[0]:
+        if leftmost_term != terms[0]:
             candnum = leftmost_term.data['num'] - 1
             cand = terms[candnum - 1]
             if cand.data['word'] in trees.PAIRPUNCT \
@@ -434,7 +433,7 @@ def punctuation_symetrify(tree, **params):
         if terminal in done:
             continue
         rightmost_term = trees.terminals(terminal.parent)[-1]
-        if not rightmost_term == terms[-1]:
+        if rightmost_term != terms[-1]:
             candnum = rightmost_term.data['num'] + 1
             cand = terms[candnum - 1]
             if cand.data['word'] in trees.PAIRPUNCT \
@@ -546,7 +545,7 @@ def ptb_delete_traces(tree, **params):
                 for trace in index_to_traces[index]:
                     mapping_found = False
                     cursor = trace
-                    while not cursor.parent is None:
+                    while cursor.parent is not None:
                         for filler in fillers:
                             if cursor.parent is filler:
                                 # dominance
@@ -618,13 +617,13 @@ def ptb_delete_traces(tree, **params):
                 # annotate path from filler to goal
                 annot = trees.parse_label(filler.data['label']).label
                 cursor = filler
-                while not cursor == goal:
-                    if not cursor == filler:
+                while cursor != goal:
+                    if cursor != filler:
                         cursor.data['label'] += "/" + annot
                     cursor = cursor.parent
                 cursor = trace
-                while not cursor == goal:
-                    if not cursor == trace:
+                while cursor != goal:
+                    if cursor != trace:
                         cursor.data['label'] += "/" + annot
                     cursor = cursor.parent
     return tree
@@ -656,7 +655,7 @@ def negra_mark_heads(tree, **params):
                 index = (len(edges) - 1) - edges[::-1].index('NK')
             subtree_children[index].data['head'] = True
             for i, child in enumerate(subtree_children):
-                if not i == index:
+                if i != index:
                     child.data['head'] = False
     return tree
 
@@ -685,7 +684,7 @@ def mark_heads_by_rules(tree, **params):
             raise ValueError("unknown head rule preset "
                              + str(params['mark_heads_preset']))
     elif 'mark_heads_rulefile' in params:
-        if not len(params['mark_heads_rulefile']) == 0:
+        if len(params['mark_heads_rulefile']) != 0:
             raise ValueError("not yet implemented")
     else:
         raise ValueError("must specify head rule preset or rule file")
@@ -740,10 +739,14 @@ def _binarize_tree(tree, bare_bin_labels):
             last_tree.children.append(binarization_tree)
             last_tree.children.append(child)
             binarization_tree.parent = last_tree
+            if child is None:
+                raise ValueError("child was None")
             child.parent = last_tree
             last_tree = binarization_tree
         for i in range(2):
             child = remaining[i]
+            if binarization_tree is None:
+                raise ValueError("binarization_tree was None")
             binarization_tree.children.append(child)
             child.parent = binarization_tree
 
@@ -803,7 +806,7 @@ def _uncollapse_unary_chains(tree):
         unary = trees.Tree(tree.data)
         unary.data['label'] = tree.data['label'][:ind]
         tree.data['label'] = tree.data['label'][ind + 1:]
-        if not tree.parent is None:
+        if tree.parent is not None:
             tree.parent.children.remove(tree)
             tree.parent.children.append(unary)
         unary.children.append(tree)
@@ -957,7 +960,7 @@ def run(args):
     sys.stderr.write("writing to '%s' in format '%s' and encoding '%s'\n"
                      % (args.dest, args.dest_format, args.dest_enc))
     sys.stderr.write("applying %s\n" % args.trans)
-    if not args.split == "":
+    if args.split != "":
         sys.stderr.write("splitting output like this: %s\n" % args.split)
     cnt = 1
     params = misc.options_dict(args.params)
