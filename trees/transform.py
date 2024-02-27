@@ -677,9 +677,9 @@ def mark_heads_by_rules(tree, **params):
         raise ValueError("specify either head rule preset or rule file")
     if 'mark_heads_preset' in params:
         if params['mark_heads_preset'] == 'negra':
-            rules = transformconst.HEAD_RULES_PTB
-        elif params['mark_heads_preset'] == 'ptb':
             rules = transformconst.HEAD_RULES_NEGRA
+        elif params['mark_heads_preset'] == 'ptb':
+            rules = transformconst.HEAD_RULES_PTB
         else:
             raise ValueError("unknown head rule preset "
                              + str(params['mark_heads_preset']))

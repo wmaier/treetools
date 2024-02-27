@@ -84,7 +84,7 @@ def get_headpos_by_rule(parent_label, children_label, rules,
         if len(hrule[1]) == 0:
             if hrule[0] == 'left-to-right':
                 return len(children_label) - 1
-            elif hrule[0] == 'right-to_left':
+            elif hrule[0] == 'right-to-left':
                 return 0
             else:
                 raise ValueError("unknown head rule direction")
