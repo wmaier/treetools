@@ -1,5 +1,3 @@
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/dd9c9290ba414e54a6fa6be48e2543de)](https://app.codacy.com/manual/wmaier/treetools?utm_source=github.com&utm_medium=referral&utm_content=wmaier/treetools&utm_campaign=Badge_Grade_Dashboard)
-[![Build Status](https://travis-ci.org/wmaier/treetools.svg?branch=master)](https://travis-ci.org/wmaier/treetools) 
 [![PyPI version](https://badge.fury.io/py/treetools.svg)](https://badge.fury.io/py/treetools)
 [![Github All Releases](https://img.shields.io/github/downloads/kotlin-graphics/kotlin-unsigned/total.svg)]()
 
@@ -16,19 +14,13 @@ Contributions: Kilian Gebhardt
 
 Requirements:
 
--  Python 3.7+
+-  Python 3.11+
 
 To install the latest release from the Python package index, type::
 
     pip install treetools --user
 
-To install the latest version clone the git repository and run::
-
-    python setup.py install --user
-
-within the repository directory. 
-
-If you have superuser privileges and want to perform a system-wide installation, omit the `--user` option, respectively. 
+For a system-wide installation, omit the `--user` option.
 
 ## Running
 
