@@ -18,9 +18,7 @@ Requirements:
 
 To install the latest release from the Python package index, type::
 
-    pip install treetools --user
-
-For a system-wide installation, omit the `--user` option.
+    pip install treetools
 
 ## Running
 
@@ -28,39 +26,40 @@ For a system-wide installation, omit the `--user` option.
 
 To run treetools, type::
 
-    treetools [subcommand] [parameters] [options]
+    treetools-cli [subcommand] [parameters] [options]
 
 Available subcommands are:
 
 -  ``transform``: Process treebank trees. Run transformations and convert between different formats.
 -  ``grammar``: Extract grammars for different parsers from treebanks.
 -  ``treeanalysis``: Analyze certain properties of treebank trees, such as, e.g., gap degree.
+-  ``transitions``: Extract transition sequences as used by transition-based parsers.
 
 To get see the available parameters for a subcommand, type::
 
-    treetools [subcommand] --help
+    treetools-cli [subcommand] --help
 
 To get verbose help on available transformation algorithms, available options, etc., type::
 
-    treetools [subcommand] --usage
+    treetools-cli [subcommand] --usage
 
 ### Examples
 
 To attach the punctuation in TIGER and remove its crossing branches while converting it from TigerXML to the export format, type::
 
-    treetools transform tiger.xml tiger.continuous.export --trans root_attach negra_mark_heads boyd_split raising --src-format tigerxml --dest-format export
+    treetools-cli transform tiger.xml tiger.continuous.export --trans root_attach negra_mark_heads boyd_split raising --src-format tigerxml --dest-format export
 
 To extract the bare sentences (one per line) from a treebank in bracketed format, such as the Penn Treebank, type::
 
-    treetools transform treebank.brackets treebank.terminals --src-format brackets --dest-format terminals
+    treetools-cli transform treebank.brackets treebank.terminals --src-format brackets --dest-format terminals
 
 To delete the traces and co-indexation from the Penn Treebank, type::
 
-    treetools transform ptb ptb.notrace --transform ptb_transform --src-format brackets --dest-format brackets
+    treetools-cli transform ptb ptb.notrace --transform ptb_transform --src-format brackets --dest-format brackets
 
 To extract an left-to-right binarized LCFRS with v1/h2 markovization in rparse format from an export-format treebank, type::
 
-    treetools grammar input_treebank output_grammar leftright --dest-format rcg --markov v:1 h:2
+    treetools-cli grammar input_treebank output_grammar leftright --dest-format rcg --markov v:1 h:2
 
 ### License
 
