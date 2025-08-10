@@ -1,5 +1,0 @@
-include setup.py
-include treetools
-include README.rst
-include LICENSE.txt
-include trees/*.py
