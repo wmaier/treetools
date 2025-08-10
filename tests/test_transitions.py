@@ -6,7 +6,7 @@ Unit tests (pytest) for tree operations
 Author: Wolfgang Maier <maierw@hhu.de>
 """
 import pytest
-from trees import transitions, transform
+from treetools import transitions, transform
 from . import testdata_transitions
 
 

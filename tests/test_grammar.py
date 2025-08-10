@@ -9,7 +9,7 @@ import pytest
 import platform
 import io
 import os
-from trees import grammar, grammaroutput, grammarinput, grammarconst
+from treetools import grammar, grammaroutput, grammarinput, grammarconst
 from . import testdata
 
 
