@@ -6,7 +6,7 @@ Unit tests (pytest) for tree operations
 Author: Wolfgang Maier <maierw@hhu.de>
 """
 import pytest
-from trees import misc, transform
+from treetools import misc, transform
 
 
 sample = "\x1b[1msample_func\x1b[0m\n\x1b[1m-----------\x1b[0m\nReattach some children of the virtual root node in NeGra/TIGER/TueBa-DZ.\n    In a nutshell, the algorithm moves all children of VROOT to the least\n    common ancestor of the left neighbor terminal of the leftmost terminal and\n    the right neighbor terminal of the rightmost terminal they dominate. We\n    iterate through the children of VROOT left to right. Therefore, we might\n    have to skip over adjacent children of VROOT on the right (which are not\n    attached yet) in order to find the rightmost terminal. If the VROOT child\n    constitutes the start or end of the sentence, or if the least common\n    ancestor as described above is VROOT, it is not moved.\n\n    Prerequisite: none\n    Parameters: none\n    Output options: none\n    "

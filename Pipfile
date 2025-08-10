@@ -1,0 +1,7 @@
+[dev-packages]
+pytest = ">=5.3.4"
+pytest-cov = ">=2.8.1"
+coverage-badge = "==1.0.1"
+
+[requires]
+python_version = "3.11"

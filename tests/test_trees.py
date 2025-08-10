@@ -7,7 +7,7 @@ Author: Wolfgang Maier <maierw@hhu.de>
 import pytest
 import tempfile
 from io import StringIO
-from trees import trees, treeoutput, transform, treeanalysis
+from treetools import trees, treeoutput, transform, treeanalysis
 from . import testdata
 
 

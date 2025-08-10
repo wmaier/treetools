@@ -8,7 +8,7 @@ import pytest
 import tempfile
 import os
 from . import testdata
-from trees import trees, treeinput
+from treetools import trees, treeinput
 
 
 @pytest.fixture(scope='function',

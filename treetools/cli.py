@@ -5,7 +5,7 @@ treetools: Tools for transforming treebank trees.
 Author: Wolfgang Maier <maierw@hhu.de>
 """
 import argparse
-from trees import transform, treeanalysis, grammar, transitions
+from . import transform, treeanalysis, grammar, transitions
 
 
 def main():
