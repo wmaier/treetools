@@ -8,7 +8,7 @@ name = "treetools"
 version = "1.0.0"
 description = "Tools for processing treebank trees"
 readme = "README.md"
-authors = [{ name = "Wolfgang Maier", email = "wolfgang.maier@gmail.com" }]
+authors = [{ name = "Wolfgang Maier", email = "maierw@hhu.de" }]
 
 license = "GPL-3.0-or-later"
 license-files = ["LICEN[CS]E*"]
@@ -33,7 +33,7 @@ classifiers = [
 Homepage = "https://github.com/wmaier/treetools"
 Repository = "https://github.com/wmaier/treetools"
 Issues = "https://github.com/wmaier/treetools/issues"
-Download = "https://github.com/wmaier/treetools/archive/v0.4.0.tar.gz"
+Download = "https://github.com/wmaier/treetools/archive/v1.0.0.tar.gz"
 Changelog = "https://github.com/wmaier/treetools/releases"
 
 [project.optional-dependencies]
