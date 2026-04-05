@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "treetools"
-version = "1.0.0"
+version = "1.0.2"
 description = "Tools for processing treebank trees"
 readme = "README.md"
 authors = [{ name = "Wolfgang Maier", email = "maierw@hhu.de" }]
@@ -48,3 +48,9 @@ treetools-cli = "treetools.cli:main"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["treetools"]
+
+[dependency-groups]
+dev = [
+    "build>=1.4.2",
+    "twine>=6.2.0",
+]
