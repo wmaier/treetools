@@ -16,9 +16,27 @@ Requirements:
 
 -  Python 3.11+
 
+### From PyPI
+
 To install the latest release from the Python package index, type::
 
     pip install treetools
+
+### Development Installation
+
+To set up a development environment, first install [uv](https://docs.astral.sh/uv/). On macOS with Homebrew::
+
+    brew install uv
+
+Or using pip::
+
+    pip install uv
+
+Then clone the repository and sync dependencies::
+
+    git clone https://github.com/wmaier/treetools.git
+    cd treetools
+    uv sync
 
 ## Running
 
@@ -60,6 +78,26 @@ To delete the traces and co-indexation from the Penn Treebank, type::
 To extract an left-to-right binarized LCFRS with v1/h2 markovization in rparse format from an export-format treebank, type::
 
     treetools-cli grammar input_treebank output_grammar leftright --dest-format rcg --markov v:1 h:2
+
+## Development
+
+### Running Tests
+
+To run tests with the development environment, type::
+
+    uv run pytest
+
+### Installing New Packages
+
+To add a new package to your development environment, type::
+
+    uv add <package-name>
+
+For development-only dependencies (like testing tools), use::
+
+    uv add --dev <package-name>
+
+This will update both `pyproject.toml` and `uv.lock` automatically.
 
 ### License
 
