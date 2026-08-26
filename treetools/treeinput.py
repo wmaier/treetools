@@ -246,9 +246,6 @@ def brackets(in_file, in_encoding, **params):
                                 subtree = trees.replace_chars(subtree,
                                                               trees.BRACKETS)
                         if 'disco' in params and params['disco']:
-                            terminalmap = {}
-                            for terminal in trees.terminals(queue[0]):
-                                terminalmap[int(terminal.data['word'])] = terminal
                             tokenmap = defaultdict(int)
                             position = 1
                             try:
@@ -265,8 +262,9 @@ def brackets(in_file, in_encoding, **params):
                                 pass
                             if 'disco_reordered' in params:
                                 for terminal in trees.terminals(queue[0]):
-                                    terminal.data['word'] = terminal.data['word'] + "-" \
-                                        + tokenmap[terminal.data['num']]
+                                    original_num = int(terminal.data['word'])
+                                    terminal.data['word'] = "%d-%s" % \
+                                        (original_num, tokenmap[original_num])
                             else:
                                 for terminal in trees.terminals(queue[0]):
                                     terminal.data['num'] = int(terminal.data['word']) + 1
