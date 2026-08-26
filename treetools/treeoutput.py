@@ -280,21 +280,12 @@ def tigerxml(tree, stream, **params):
     stream.write(u"  <terminals>\n")
     for terminal in trees.terminals(tree):
         stream.write(u"    <t id=\"%d\" " % terminal.data['num'])
-        defaults = {
-            'word': trees.DEFAULT_WORD,
-            'lemma': trees.DEFAULT_LEMMA,
-            'label': trees.DEFAULT_LABEL,
-            'morph': trees.DEFAULT_MORPH,
-        }
-        for field, default in defaults.items():
-            if terminal.data[field] is None:
-                terminal.data[field] = default
-        for field in ['word', 'lemma', 'label', 'morph']:
-            terminal.data[field] = quoteattr(terminal.data[field])
-        stream.write(u"%s=%s " % ('word', terminal.data['word']))
-        stream.write(u"%s=%s " % ('lemma', terminal.data['lemma']))
-        stream.write(u"%s=%s " % ('pos', terminal.data['label']))
-        stream.write(u"%s=%s " % ('morph', terminal.data['morph']))
+        fields = [('word', 'word'), ('lemma', 'lemma'),
+                  ('pos', 'label'), ('morph', 'morph')]
+        for xml_field, data_field in fields:
+            value = terminal.data[data_field]
+            if value is not None:
+                stream.write(u"%s=%s " % (xml_field, quoteattr(value)))
         stream.write(u"/>\n")
     stream.write(u"  </terminals>\n")
     stream.write(u"  <nonterminals>\n")

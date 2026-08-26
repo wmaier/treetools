@@ -5,7 +5,7 @@ from io import StringIO
 from treetools import treeoutput, trees
 
 
-def test_tigerxml_uses_defaults_for_missing_terminal_fields():
+def test_tigerxml_omits_missing_terminal_fields():
     root = trees.Tree(trees.make_node_data())
     root.data['label'] = trees.DEFAULT_ROOT
     root.data['sid'] = 1
@@ -22,6 +22,6 @@ def test_tigerxml_uses_defaults_for_missing_terminal_fields():
 
     xml = output.getvalue()
     assert 'word="word"' in xml
-    assert 'lemma="--"' in xml
     assert 'pos="NN"' in xml
-    assert 'morph="--"' in xml
+    assert 'lemma=' not in xml
+    assert 'morph=' not in xml
