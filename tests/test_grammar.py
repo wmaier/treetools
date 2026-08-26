@@ -9,6 +9,7 @@ import pytest
 import platform
 import io
 import os
+from types import SimpleNamespace
 from treetools import grammar, grammaroutput, grammarinput, grammarconst
 from . import testdata
 
@@ -174,6 +175,32 @@ def test_input_rcg(discont_grammar_novert, discont_lex):
     assert lexicon == discont_lex
     for ending in ['lex', 'rcg']:
         os.remove("tempdest.%s" % ending)
+
+
+def test_run_preserves_grammar_read_from_rcg(monkeypatch):
+    loaded_grammar = {('S', 'NP'): {(((0, 0),),): {('DEFAULT',): 1}}}
+    loaded_lexicon = {'word': {'NN': 1}}
+    written = {}
+
+    monkeypatch.setattr(
+        grammarinput, 'rcg',
+        lambda src, enc, **opts: (loaded_grammar, loaded_lexicon))
+
+    def capture_output(gram, lexicon, dest, enc, **opts):
+        written['grammar'] = gram
+        written['lexicon'] = lexicon
+
+    monkeypatch.setattr(grammaroutput, 'rcg', capture_output)
+    args = SimpleNamespace(
+        src='input', src_format='rcg', src_enc='utf-8', src_opts=[],
+        gramtype='treebank', dest='output', dest_format='rcg',
+        dest_enc='utf-8', dest_opts=[])
+
+    with pytest.raises(SystemExit):
+        grammar.run(args)
+
+    assert written['grammar'] is loaded_grammar
+    assert written['lexicon'] is loaded_lexicon
 
 
 @pytest.fixture(scope='function')

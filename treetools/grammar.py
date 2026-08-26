@@ -440,9 +440,8 @@ def run(args):
         raise ValueError("Ambiguous input format specification")
     elif args.src_format in grammar_inputformats:
         print("reading grammar (%s)" % args.gramtype, file=sys.stderr)
-        getattr(grammarinput, args.src_format)(args.src, args.src_enc,
-                                               **misc.options_dict
-                                               (args.src_opts))
+        grammar, lexicon = getattr(grammarinput, args.src_format)(
+            args.src, args.src_enc, **misc.options_dict(args.src_opts))
     elif args.src_format in tree_inputformats:
         print("extracting grammar (%s)" % args.gramtype, file=sys.stderr)
         cnt = 1
