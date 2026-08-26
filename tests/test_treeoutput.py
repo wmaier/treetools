@@ -6,8 +6,9 @@ Unit tests (pytest) for tree operations
 Author: Wolfgang Maier <maierw@hhu.de>
 """
 import pytest
+from copy import deepcopy
 from io import StringIO
-from treetools import treeoutput, transform, treeanalysis
+from treetools import treeoutput, transform, treeanalysis, trees
 from . import testdata
 
 
@@ -43,6 +44,19 @@ def test_discobrackets(cont_tree, discont_tree):
     output = s.getvalue()
     print(output)
     assert output.strip() == testdata.SAMPLE_DISCOBRACKETS_OUTPUT_DISCONT.strip()
+
+
+@pytest.mark.parametrize('writer', [
+    treeoutput.discobrackets,
+    treeoutput.tigerxml,
+])
+def test_serializers_do_not_mutate_tree(discont_tree, writer):
+    before = [deepcopy(node.data) for node in trees.preorder(discont_tree)]
+
+    writer(discont_tree, StringIO())
+
+    after = [node.data for node in trees.preorder(discont_tree)]
+    assert after == before
 
 
 def test_terminals(discont_tree):
@@ -86,4 +100,3 @@ def test_parse_split_specification():
     s = "rest_20%_5000#"
     spec = treeoutput.parse_split_specification(s, 10000)
     assert spec == [3000, 2000, 5000]
-    

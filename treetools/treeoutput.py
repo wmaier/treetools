@@ -5,6 +5,7 @@ This module handles tree writing in different formats.
 Author: Wolfgang Maier <maierw@hhu.de>
 """
 import sys
+from copy import deepcopy
 from math import floor
 from xml.sax.saxutils import quoteattr
 from . import trees, treeanalysis
@@ -210,6 +211,7 @@ def discobrackets(tree, stream, **params):
     numbers and sentence is written after the tree in the same line,
     separated from the tree by a tab (terminal space-separated).
     """
+    tree = deepcopy(tree)
     terminals = trees.terminals(tree)
     sentence = ' '.join([terminal.data['word'] for terminal in terminals])
     for terminal in terminals:
@@ -274,6 +276,7 @@ def tigerxml(tree, stream, **params):
     """A single sentence as TIGER XML. The IDs should probably
     be more fancy.
     """
+    tree = deepcopy(tree)
     compute_export_numbering(tree)
     stream.write(u"<s id=\"%d\">\n" % tree.data['sid'])
     stream.write(u"<graph root=\"%s\">\n" % tree.data['num'])
