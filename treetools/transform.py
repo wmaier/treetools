@@ -236,7 +236,6 @@ def substitute_terminals(tree, **params):
                 # throw away stuff after fourth space
                 substitute_terminals.terminals[int(line[0])][int(line[1])] \
                     = (line[2], line[3])
-    print(substitute_terminals.terminals)
     if not tree.data['sid'] in substitute_terminals.terminals:
         return tree
     terminals = trees.terminals(tree)
@@ -247,7 +246,7 @@ def substitute_terminals(tree, **params):
                 print("sentence length %d, cannot insert at %d" \
                       % (len(trees.terminals(tree)),
                          terminal_num))
-                continue
+            continue
         terminal = terminals[terminal_num - 1]
         new_word = substitute_terminals.\
                    terminals[tree.data['sid']][terminal_num][0]
