@@ -7,7 +7,7 @@ Author: Wolfgang Maier <maierw@hhu.de>
 import pytest
 import tempfile
 from io import StringIO
-from treetools import trees, treeoutput, transform, treeanalysis
+from treetools import trees, treeoutput, transform, treeanalysis, treeinput
 from . import testdata
 
 
@@ -73,6 +73,17 @@ def test_labels(cont_tree):
     cont_tree_labels_new = [node.data['label'] for node
                             in trees.preorder(cont_tree)]
     assert cont_tree_labels_new == cont_tree_labels_goal
+
+
+def test_tigerxml_gf_split_without_coindexes(tmp_path):
+    """gf_split must not append a coindex separator to plain labels."""
+    source = tmp_path / "sample.xml"
+    source.write_text(testdata.SAMPLE_TIGERXML, encoding="utf-8")
+
+    tree = next(treeinput.tigerxml(source, "utf-8", gf_split=True, quiet=True))
+    labels = [node.data['label'] for node in trees.preorder(tree)]
+
+    assert labels == testdata.DISCONT_LABELS_PREORDER
 
 
 def test_cont_general(cont_tree):
