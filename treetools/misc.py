@@ -5,12 +5,16 @@ This module provides misc utility functions.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
-import tempfile
+from __future__ import annotations
+
 import gzip
+import tempfile
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from itertools import zip_longest
+from typing import Any
 
 
-def get_doc(funs):
+def get_doc(funs: Iterable[Callable[..., Any]]) -> str:
     """
     Generate a string from the names and docstrings of a list of given
     functions.
@@ -21,7 +25,7 @@ def get_doc(funs):
                       for fun in funs])
 
 
-def get_doc_opts(opts):
+def get_doc_opts(opts: Mapping[str, str]) -> str:
     """
     Generate a string from a dict with names and short explanations.
     """
@@ -39,14 +43,14 @@ def get_doc_opts(opts):
     return "\n".join(result) + "\n"
 
 
-def make_headline(title):
+def make_headline(title: str) -> str:
     """
     Make a headline for --usage docs
     """
     return bold("{}\n{}\n".format(title, "=" * len(title)))
 
 
-def options_dict(options):
+def options_dict(options: Iterable[str]) -> dict[str, str | int | bool]:
     """
     Given a list of key/value pairs with the key separated from the resp.
     value by a colon, return a dict with the pairs in which
@@ -66,14 +70,14 @@ def options_dict(options):
     return result
 
 
-def bold(text):
+def bold(text: str) -> str:
     """
     For getting bold text on the command line (ANSI).
     """
     return u'\033[1m%s\033[0m' % text
 
 
-def gunzip(in_file):
+def gunzip(in_file: str) -> str:
     """
     If filename ends with .gz, unzip file to temp file and
     return name of temporary file. This is ugly, but proper streaming
@@ -89,7 +93,8 @@ def gunzip(in_file):
     return in_file
 
 
-def grouper(n, iterable, fillvalue=None):
+def grouper(n: int, iterable: Iterable[Any], fillvalue: Any = None
+            ) -> Iterator[tuple[Any, ...]]:
     """
     Grouper recipe from
     http://docs.python.org/library/itertools.html#recipes.

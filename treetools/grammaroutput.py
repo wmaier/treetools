@@ -4,19 +4,25 @@ This module provides functions and classes for grammar output.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
+from __future__ import annotations
+
 import io
 import sys
 import platform
 from itertools import chain
 from collections import defaultdict
 from io import StringIO
+from typing import Any
+
 from . import grammarconst, grammaranalysis
+from .types import Grammar, Lexicon, GrammarWriter
 
 
 BRACKETS = ["(", ")"]
 
 
-def lopar(gram, lexicon, dest, dest_enc, **params):
+def lopar(gram: Grammar, lexicon: Lexicon, dest: str, dest_enc: str,
+          **params: Any) -> None:
     """Write grammar, lexicon and oc files in LoPar format.
     """
     if platform.system() != "Linux":
@@ -67,7 +73,8 @@ def lopar(gram, lexicon, dest, dest_enc, **params):
             print("{} {}".format(tag, oc_upper[tag]), file=ocu_stream)
 
 
-def pmcfg(gram, lexicon, dest, dest_enc, **params):
+def pmcfg(gram: Grammar, lexicon: Lexicon, dest: str, dest_enc: str,
+          **params: Any) -> None:
     """Write grammar in pmcfg format, with count field. Lexicon
     in LoPar format or as grammar productions if lex_in_grammar is specified.
     """
@@ -129,7 +136,8 @@ def pmcfg(gram, lexicon, dest, dest_enc, **params):
                 lex_stream.write(u"%s\t%s\n" % (word, ' '.join(tags)))
 
 
-def rcg(gram, lexicon, dest, dest_enc, **params):
+def rcg(gram: Grammar, lexicon: Lexicon, dest: str, dest_enc: str,
+        **params: Any) -> None:
     """Write grammar in rparse rcg format, with count field. Lexicon
     in LoPar format or as grammar productions if lex_in_grammar is specified.
     """
@@ -192,5 +200,7 @@ def rcg(gram, lexicon, dest, dest_enc, **params):
                 lex_stream.write(u"%s\t%s\n" % (word, ' '.join(tags)))
 
 
-FORMATS = [pmcfg, rcg, lopar]
+FORMATS: list[GrammarWriter] = [pmcfg, rcg, lopar]
+FORMAT_MAP: dict[str, GrammarWriter] = {writer.__name__: writer
+                                        for writer in FORMATS}
 FORMAT_OPTIONS = {'lex_in_grammar' : 'Lexicon as grammar rules'}

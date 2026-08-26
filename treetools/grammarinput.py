@@ -4,12 +4,17 @@ This module provides functions and classes for grammar input.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
+from __future__ import annotations
+
 import io
 from collections import Counter
+from typing import Any
+
 from . import misc, grammarconst
+from .types import Grammar, Lexicon, GrammarReader
 
 
-def rcg(src, src_enc, **opts):
+def rcg(src: str, src_enc: str, **opts: Any) -> tuple[Grammar, Lexicon]:
     """Read rparse RCG format grammar.
     """
     lexicon = {}
@@ -63,5 +68,7 @@ def rcg(src, src_enc, **opts):
     return grammar, lexicon
 
 
-FORMATS = [rcg]
+FORMATS: list[GrammarReader] = [rcg]
+FORMAT_MAP: dict[str, GrammarReader] = {reader.__name__: reader
+                                        for reader in FORMATS}
 FORMAT_OPTIONS = {'lex_in_grammar' : 'Grammar contains lexical rules'}

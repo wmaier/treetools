@@ -38,6 +38,7 @@ Changelog = "https://github.com/wmaier/treetools/releases"
 
 [project.optional-dependencies]
 dev = [
+  "mypy>=1.15",
   "pytest>=7",
   "pytest-cov>=4",
 ]
@@ -52,5 +53,21 @@ include = ["treetools"]
 [dependency-groups]
 dev = [
     "build>=1.4.2",
+    "mypy>=1.15",
     "twine>=6.2.0",
 ]
+
+[tool.mypy]
+# Typing is introduced in stages.  The legacy CLI and format-specific helper
+# modules remain permissive while the core tree data model is checked on every
+# development run.
+python_version = "3.11"
+files = [
+    "treetools/types.py",
+    "treetools/trees.py",
+]
+check_untyped_defs = false
+disallow_untyped_defs = false
+no_implicit_optional = true
+warn_return_any = true
+warn_unused_configs = true

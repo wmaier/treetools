@@ -4,11 +4,14 @@ treetools: Tools for transforming treebank trees.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
+from __future__ import annotations
+
 import argparse
+
 from . import transform, treeanalysis, grammar, transitions
 
 
-def main():
+def main() -> None:
     """Parse command line arguments and run appropriate action.
     """
     parser = argparse.ArgumentParser(description='Process constituency treebank trees',

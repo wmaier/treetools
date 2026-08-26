@@ -87,6 +87,13 @@ To run tests with the development environment, type::
 
     uv run pytest
 
+### Type Checking
+
+The typed tree core is checked with mypy while the remaining legacy modules
+are migrated incrementally:
+
+    uv run mypy
+
 ### Installing New Packages
 
 To add a new package to your development environment, type::

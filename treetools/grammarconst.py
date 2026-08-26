@@ -4,6 +4,8 @@ grammar constants and utilities
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
+from __future__ import annotations
+
 
 # PMCFG format constants
 PRAGMA = ":"
@@ -21,7 +23,7 @@ DEFAULT_MARKOV_VERTICALSEP = "^"
 DEFAULT_VERT = "VERT"
 
 
-def label_strip_fanout(label):
+def label_strip_fanout(label: str) -> str:
     """Assume the d+$ in a given label to be fanout and return
     the stripped version of the label.
     """

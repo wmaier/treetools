@@ -4,26 +4,32 @@ This module provides functions and classes for grammar extraction.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
+from __future__ import annotations
+
 import argparse
 import sys
 from collections import Counter
+from collections.abc import Callable
+from typing import Any
+
 from . import trees, treeinput, treeanalysis
 from . import misc, grammaranalysis, grammaroutput, grammarconst, grammarinput
+from .types import Function, Grammar, Lexicon, Linearization, VerticalContext
 
 
-class LabelGenerator(object):
+class LabelGenerator:
     """Generator which delivers unique binarization labels. For
     other kinds of labels, overwrite next().
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Allow parameters, also from subclasses.
         """
         self.args = args
         self.kwargs = kwargs
         self.numb = 0
 
-    def next(self, **params):
+    def next(self, **params: Any) -> str:
         """Deliver next unique label (wihtout fan-out)
         """
         self.numb += 1
@@ -36,7 +42,7 @@ class MarkovLabelGenerator(LabelGenerator):
     information.
     """
 
-    def next(self, **params):
+    def next(self, **params: Any) -> str:
         vert = ""
         if self.kwargs['p']['v'] > 0:
             for i, _ in enumerate(params['vert']):
@@ -64,7 +70,12 @@ class MarkovLabelGenerator(LabelGenerator):
                              grammarconst.DEFAULT_BINSUFFIX)
 
 
-def linsub(lin, src, dest, replace):
+def linsub(
+    lin: Linearization,
+    src: Callable[[int], bool],
+    dest: Callable[[int], int | None],
+    replace: bool,
+) -> Linearization:
     """Linearization vector substitution, operations 1.-3. of Maier (2013),
     p. 115. 'src' and 'dest' are functions. Creates a new two-dimensional list
     from a given two-dimensional list with linearization definitions. For all
@@ -115,7 +126,14 @@ def linsub(lin, src, dest, replace):
     return tuple(result)
 
 
-def binarize_rule(func, lin, rule_cnt, vert, label_gen, result):
+def binarize_rule(
+    func: Function,
+    lin: Linearization,
+    rule_cnt: int,
+    vert: VerticalContext,
+    label_gen: LabelGenerator,
+    result: Grammar,
+) -> None:
     """Left-to-right binarization of a single rule.
     """
     fanout = grammaranalysis.fan_out(lin)
@@ -160,13 +178,14 @@ def binarize_rule(func, lin, rule_cnt, vert, label_gen, result):
         result[bin_func][this_lin][grammarconst.DEFAULT_VERT] = rule_cnt
 
 
-def reordering_none(func, lin):
+def reordering_none(func: Function, lin: Linearization) -> tuple[Function, Linearization]:
     """No reordering.
     """
     return (func, lin)
 
 
-def reordering_optimal(func, lin):
+def reordering_optimal(func: Function,
+                       lin: Linearization) -> tuple[Function, Linearization]:
     """Locally optimal binarization (minimize fan-out per single decision).
     """
     order = []
@@ -209,7 +228,7 @@ def reordering_optimal(func, lin):
     return (newfunc, newlin)
 
 
-def binarize(grammar, **args):
+def binarize(grammar: Grammar, **args: Any) -> Grammar:
     """Grammar binarization.
     """
     result = {}
@@ -268,7 +287,7 @@ def binarize(grammar, **args):
     return result
 
 
-def extract(tree, grammar, lexicon):
+def extract(tree: trees.Tree, grammar: Grammar, lexicon: Lexicon) -> Grammar:
     """Extract a PMCFG. We remember "bare" CFG productions, together with
     possible linearizations, together with vertical contexts from the tree
     (for later markovization). So far no extraction of rules from pre-terminal
@@ -326,7 +345,7 @@ def extract(tree, grammar, lexicon):
     return grammar
 
 
-def add_parser(subparsers):
+def add_parser(subparsers: Any) -> Any:
     """Add an argument parser to the subparsers of treetools.py.
     """
     parser = subparsers.add_parser('grammar',
@@ -384,7 +403,8 @@ class UsageAction(argparse.Action):
     """Custom action which shows extended help on available options.
     """
 
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(self, parser: Any, namespace: Any, values: Any,
+                 option_string: str | None = None) -> None:
         title_str = misc.bold("%s help" % sys.argv[0])
         help_str = "\n\n%s\n%s\n\n%s\n%s\n\n%s" \
                    "\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n" \
@@ -425,30 +445,31 @@ class UsageAction(argparse.Action):
         sys.exit()
 
 
-def run(args):
+def run(args: Any) -> None:
     """Run the grammar extraction.
     """
     print("reading from '%s' in format '%s' and encoding '%s'"
           % (args.src, args.src_format, args.src_enc), file=sys.stderr)
     grammar = {}
     lexicon = {}
-    tree_inputformats = [fun.__name__ for fun in treeinput.INPUT_FORMATS]
-    grammar_inputformats = [fun.__name__ for fun in grammarinput.FORMATS]
+    tree_inputformats = treeinput.INPUT_FORMAT_MAP
+    grammar_inputformats = grammarinput.FORMAT_MAP
 
     if args.src_format in grammar_inputformats and args.src_format in \
        tree_inputformats:
         raise ValueError("Ambiguous input format specification")
     elif args.src_format in grammar_inputformats:
         print("reading grammar (%s)" % args.gramtype, file=sys.stderr)
+        # Resolve the module attribute at call time so applications/tests can
+        # replace a reader without having to rebuild the registry map.
         grammar, lexicon = getattr(grammarinput, args.src_format)(
             args.src, args.src_enc, **misc.options_dict(args.src_opts))
     elif args.src_format in tree_inputformats:
         print("extracting grammar (%s)" % args.gramtype, file=sys.stderr)
         cnt = 1
-        for tree in getattr(treeinput,
-                            args.src_format)(args.src, args.src_enc,
-                                             **misc.options_dict
-                                             (args.src_opts)):
+        for tree in getattr(treeinput, args.src_format)(
+                args.src, args.src_enc,
+                **misc.options_dict(args.src_opts)):
             extract(tree, grammar, lexicon)
             if cnt % 100 == 0:
                 print("\r%d" % cnt, end="", file=sys.stderr)
@@ -476,9 +497,9 @@ def run(args):
     sys.stderr.write("\nwriting grammar in format '%s', encoding '%s', to '%s'"
                      % (args.dest_format, args.dest_enc, args.dest))
     sys.stderr.write("\n")
-    getattr(grammaroutput, args.dest_format)(grammar, lexicon, args.dest,
-                                             args.dest_enc,
-                                             **misc.options_dict(args.dest_opts))
+    getattr(grammaroutput, args.dest_format)(
+        grammar, lexicon, args.dest, args.dest_enc,
+        **misc.options_dict(args.dest_opts))
     print("\n", file=sys.stderr)
     sys.exit()
 

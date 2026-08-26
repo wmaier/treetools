@@ -4,25 +4,30 @@ This module provides functions and classes for analyzing trees.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
+from __future__ import annotations
+
 import argparse
 import sys
 from collections import Counter
+from typing import Any
+
 from . import trees, treeinput, misc
+from .types import Analyzer
 
 
-class PosTags(object):
+class PosTags:
     """Accumulates statistics concerning POS tags over several trees.
     """
-    def __init__(self):
-        self.tags = []
+    def __init__(self) -> None:
+        self.tags: list[str | None] = []
 
-    def run(self, tree):
+    def run(self, tree: trees.Tree) -> None:
         """Collect and count POS tags (preterminal labels) in a single tree.
         """
         for term in trees.terminals(tree):
             self.tags.append(term.data['label'])
 
-    def done(self):
+    def done(self) -> None:
         """Print summary and write tags. To be extended.
         """
         tags_cnt = Counter(self.tags)
@@ -34,18 +39,18 @@ class PosTags(object):
 #            print("%s %d" % (tag, tags_cnt[tag]))
 
 
-class SentenceCount(object):
+class SentenceCount:
     """Counts sentences.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         self.cnt = 0
 
-    def run(self, tree):
+    def run(self, tree: trees.Tree) -> None:
         """Collect and count POS tags (preterminal labels) in a single tree.
         """
         self.cnt += 1
 
-    def done(self):
+    def done(self) -> None:
         """Print summary and write tags. To be extended.
         """
         print("*** Sentence count summary ***")
@@ -53,7 +58,7 @@ class SentenceCount(object):
         print("%d sentences" % self.cnt)
 
 
-def gap_degree_node(node):
+def gap_degree_node(node: trees.Tree) -> int:
     """Compute gap degree for a single node.
     """
     if not trees.has_children(node):
@@ -66,16 +71,16 @@ def gap_degree_node(node):
     return node_gap_deg
 
 
-class GapDegree(object):
+class GapDegree:
     """Accumulates statistics concerning gap degree over several trees.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         # counts gap degree for each node
-        self.gaps_per_node = {}
+        self.gaps_per_node: dict[int, int] = {}
         # counts highest node gap degree for each tree
-        self.gaps_per_tree = {}
+        self.gaps_per_tree: dict[int, int] = {}
 
-    def run(self, tree):
+    def run(self, tree: trees.Tree) -> None:
         """Return the maximal gap degree of any node of the given tree.
         """
         tree_gap_deg = 0
@@ -93,7 +98,7 @@ class GapDegree(object):
             self.gaps_per_tree[tree_gap_deg] = 0
         self.gaps_per_tree[tree_gap_deg] += 1
 
-    def done(self):
+    def done(self) -> None:
         """Compute and print summary about gap degree statistics collected
         during all runs of run().
         """
@@ -123,19 +128,19 @@ class GapDegree(object):
                              (self.gaps_per_node[gapdeg] / node_cnt * 100)))
 
 
-def gap_degree(tree):
+def gap_degree(tree: trees.Tree) -> int:
     """Return the maximal gap degree of the nodes in the given tree.
     """
     return max([gap_degree_node(subtree) for subtree in trees.preorder(tree)])
 
 
-def has_gaps(tree):
+def has_gaps(tree: trees.Tree) -> bool:
     """Return true if the tree has gaps.
     """
     return gap_degree_node(tree) > 0
 
 
-def gap_type(tree):
+def gap_type(tree: trees.Tree) -> str:
     """Return the gap type: source, pass, none (Maier & Lichte 2016).
     """
     if not trees.has_children(tree):
@@ -152,7 +157,7 @@ def gap_type(tree):
     return "none"
 
 
-def disco_order(tree, mode):
+def disco_order(tree: trees.Tree, mode: str) -> list[trees.Tree]:
     """Return the continuous reordering of this tree (Maier and Lichte, 2016).
     Mode can be one of 'left', 'rightd'.
     """
@@ -182,7 +187,7 @@ def disco_order(tree, mode):
     return result
 
 
-def add_parser(subparsers):
+def add_parser(subparsers: Any) -> Any:
     """Add an argument parser to the subparsers of treetools.py.
     """
     parser = subparsers.add_parser('treeanalysis',
@@ -222,7 +227,8 @@ class UsageAction(argparse.Action):
     """Custom action which shows extended help on available task
     options.
     """
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(self, parser: Any, namespace: Any, values: Any,
+                 option_string: str | None = None) -> None:
         title_str = misc.bold("%s help" % sys.argv[0])
         help_str = "\n\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n" \
                    % (misc.bold('available tasks: '),
@@ -235,18 +241,17 @@ class UsageAction(argparse.Action):
         sys.exit()
 
 
-def run(args):
+def run(args: Any) -> None:
     """Run the task on trees.
     """
     sys.stderr.write("reading from '%s' in format '%s' and encoding '%s'\n"
                      % (args.src, args.src_format, args.src_enc))
     sys.stderr.write("running %s\n" % args.task)
     cnt = 1
-    task_instance = globals()[args.task]()
-    for tree in getattr(treeinput,
-                        args.src_format)(args.src, args.src_enc,
-                                         **misc.options_dict \
-                                         (args.src_opts)):
+    task_instance = TASK_MAP[args.task]()
+    for tree in getattr(treeinput, args.src_format)(
+            args.src, args.src_enc,
+            **misc.options_dict(args.src_opts)):
         tree = task_instance.run(tree)
         if cnt % 100 == 0:
             sys.stderr.write("\r%d" % cnt)
@@ -255,4 +260,5 @@ def run(args):
     sys.stderr.write("\n")
 
 
-TASKS = [GapDegree, PosTags, SentenceCount]
+TASKS: list[type[Analyzer]] = [GapDegree, PosTags, SentenceCount]
+TASK_MAP: dict[str, type[Analyzer]] = {task.__name__: task for task in TASKS}

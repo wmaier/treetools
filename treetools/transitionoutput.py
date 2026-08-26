@@ -4,11 +4,16 @@ This module provides functions and classes for grammar output.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
+from __future__ import annotations
 
 import io
+from typing import Any
+
+from .types import Sentence, TransitionWriter
 
 
-def plain(trans, dest, dest_enc, **params):
+def plain(trans: list[tuple[Sentence, list[Any]]], dest: str,
+          dest_enc: str, **params: Any) -> None:
     """Write plain transitions.
     """
     with io.open(u"%s" % dest, 'w', encoding=dest_enc) as trans_stream:
@@ -23,3 +28,5 @@ def plain(trans, dest, dest_enc, **params):
 
 FORMATS = [plain]
 FORMAT_OPTIONS = {'pos': 'print out POS tags instead of words'}
+FORMAT_MAP: dict[str, TransitionWriter] = {writer.__name__: writer
+                                           for writer in FORMATS}

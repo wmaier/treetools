@@ -4,24 +4,37 @@ This module provides functions and classes for transition extraction.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
+from __future__ import annotations
+
 import argparse
 import sys
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
+
 from . import trees, treeinput, transform
 from . import misc, transitionoutput
+from .types import Sentence
 
 
-class Transition():
-    def __init__(self, name):
-        self.name = name
+@dataclass(eq=False)
+class Transition:
+    """Immutable value object representing one parser transition."""
 
-    def pretty_print(self):
+    name: str
+
+    def pretty_print(self) -> str:
         return self.name
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
-def topdown(tree):
+TransitionSequence = list[Transition]
+TransitionResult = tuple[Sentence, TransitionSequence]
+
+
+def topdown(tree: trees.Tree) -> TransitionResult:
     """Extract transitions topdown for continuous trees.
     """
     terminals = [(terminal.data['word'], terminal.data['label'])
@@ -46,7 +59,7 @@ def topdown(tree):
     return terminals, list(reversed(transitions))
 
 
-def _inorder(tree):
+def _inorder(tree: trees.Tree) -> TransitionSequence:
     """Recursive inorder transition
     """
     transitions = []
@@ -65,7 +78,7 @@ def _inorder(tree):
     return transitions
 
 
-def inorder(tree):
+def inorder(tree: trees.Tree) -> TransitionResult:
     """Extract inorder transitions for continuous trees.
     """
     terminals = [(terminal.data['word'], terminal.data['label'])
@@ -74,7 +87,7 @@ def inorder(tree):
     return terminals, transitions
 
 
-def gap(tree):
+def gap(tree: trees.Tree) -> TransitionResult:
     """GAP transition parsing (Coavoux & Crabbe)
     """
     terminals = [(terminal.data['word'], terminal.data['label'])
@@ -122,7 +135,7 @@ def gap(tree):
     return terminals, transitions
 
 
-def add_parser(subparsers):
+def add_parser(subparsers: Any) -> Any:
     """Add an argument parser to the subparsers of treetools.py.
     """
     parser = subparsers.add_parser('transitions',
@@ -182,7 +195,8 @@ class UsageAction(argparse.Action):
     """Custom action which shows extended help on available options.
     """
 
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(self, parser: Any, namespace: Any, values: Any,
+                 option_string: str | None = None) -> None:
         title_str = misc.bold("{} help".format(sys.argv[0]))
         help_str = "\n\n{}\n{}\n\n{}\n{}\n\n{}\n{}\n\n{}\n{}\n\n{}\n{}".\
             format(misc.make_headline("available transition types:"), misc.get_doc_opts(TRANSTYPES),
@@ -194,20 +208,19 @@ class UsageAction(argparse.Action):
         sys.exit()
 
 
-def run(args):
+def run(args: Any) -> None:
     """Run the transition extraction.
     """
     print("reading from '%s' in format '%s' and encoding '%s'"
           % (args.src, args.src_format, args.src_enc), file=sys.stderr)
-    tree_inputformats = [fun.__name__ for fun in treeinput.INPUT_FORMATS]
+    tree_inputformats = treeinput.INPUT_FORMAT_MAP
     transitions = []
     if args.src_format in tree_inputformats:
         print("extracting transitions (%s)" % args.transtype, file=sys.stderr)
         cnt = 1
-        for tree in getattr(treeinput,
-                            args.src_format)(args.src, args.src_enc,
-                                             **misc.options_dict
-                                             (args.src_opts)):
+        for tree in getattr(treeinput, args.src_format)(
+                args.src, args.src_enc,
+                **misc.options_dict(args.src_opts)):
             for algorithm in args.transform:
                 print(algorithm)
                 tree = getattr(transform, algorithm)(
@@ -223,8 +236,9 @@ def run(args):
     sys.stderr.write("\nwriting transitions in format '%s', encoding '%s', to '%s'"
                      % (args.dest_format, args.dest_enc, args.dest))
     sys.stderr.write("\n")
-    getattr(transitionoutput, args.dest_format)(transitions, args.dest, args.dest_enc,
-                                                **misc.options_dict(args.dest_opts))
+    getattr(transitionoutput, args.dest_format)(
+        transitions, args.dest, args.dest_enc,
+        **misc.options_dict(args.dest_opts))
     print("\n", file=sys.stderr)
     sys.exit()
 
@@ -232,3 +246,9 @@ def run(args):
 TRANSTYPES = {'topdown': 'Top-down continuous',
               'inorder': 'Inorder continuous',
               'gap': 'Gap discontinuous'}
+
+TRANSITION_MAP: dict[str, Callable[[trees.Tree], TransitionResult]] = {
+    'topdown': topdown,
+    'inorder': inorder,
+    'gap': gap,
+}

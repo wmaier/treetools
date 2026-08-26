@@ -4,10 +4,14 @@ This module provides functions and classes for analyzing grammars.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
+from __future__ import annotations
+
 from collections import Counter
 
+from .types import Grammar, Linearization
 
-def fan_out(lin):
+
+def fan_out(lin: Linearization) -> list[int | None]:
     """Given a function and the corresponding lineratization,
     return an array with the fan-out of each non-terminal in the
     given function.
@@ -20,7 +24,7 @@ def fan_out(lin):
     return result
 
 
-def is_contextfree(grammar):
+def is_contextfree(grammar: Grammar) -> bool:
     """Return true iff the given grammar is context-free.
     """
     for func in grammar:

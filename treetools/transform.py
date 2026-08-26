@@ -5,15 +5,20 @@ function take a single tree as argument and return the modified tree.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
+from __future__ import annotations
+
 import argparse
 import sys
 import io
 import os
 from collections import defaultdict
+from typing import Any
+
 from . import trees, treeinput, treeoutput, misc, transformconst
+from .types import TransformMap
 
 
-def root_attach(tree, **params):
+def root_attach(tree: trees.Tree, **params: Any) -> trees.Tree:
     """Reattach some children of the virtual root node in NeGra/TIGER/TueBa-DZ.
     In a nutshell, the algorithm moves all children of VROOT to the least
     common ancestor of the left neighbor terminal of the leftmost terminal and
@@ -75,7 +80,7 @@ def root_attach(tree, **params):
     return tree
 
 
-def boyd_split(tree, **params):
+def boyd_split(tree: trees.Tree, **params: Any) -> trees.Tree:
     """For each continuous terminal block of a discontinuous node in tree,
     introduce a node which covers exactly this block. A single unique
     node is marked as head block if it covers the original head daugther
@@ -143,7 +148,7 @@ def boyd_split(tree, **params):
     return tree
 
 
-def raising(tree, **params):
+def raising(tree: trees.Tree, **params: Any) -> trees.Tree:
     """Remove crossing branches by 'raising' nodes which cause crossing
     branches. This algorithm relies on a previous application of the Boyd
     splitting and removes all those newly introduced nodes which are *not*
@@ -171,7 +176,7 @@ def raising(tree, **params):
     return tree
 
 
-def add_topnode(tree, **params):
+def add_topnode(tree: trees.Tree, **params: Any) -> trees.Tree:
     """Add a node with label TOP ensuring that there is a unary edge
     on top of the tree.
 
@@ -190,7 +195,7 @@ def add_topnode(tree, **params):
     return top
 
 
-def substitute_terminals(tree, **params):
+def substitute_terminals(tree: trees.Tree, **params: Any) -> trees.Tree:
     """Substitute terminal nodes in the tree, given in a parameter file
     in four colums: sentence index, word index, word, part-of-speech.
     The POS column is optional.
@@ -259,7 +264,7 @@ def substitute_terminals(tree, **params):
     return tree
 
 
-def insert_terminals(tree, **params):
+def insert_terminals(tree: trees.Tree, **params: Any) -> trees.Tree:
     """Insert terminal nodes in the tree, given in a parameter file
     in four colums: sentence index, word index, word, part-of-speech. 
     Inserted terminals will be attached to the root node.
@@ -332,7 +337,7 @@ def insert_terminals(tree, **params):
     return tree
 
 
-def punctuation_delete(tree, **params):
+def punctuation_delete(tree: trees.Tree, **params: Any) -> trees.Tree:
     """Remove punctuation terminals and write them out
     on stdout.
 
@@ -361,7 +366,7 @@ def punctuation_delete(tree, **params):
     return tree
 
 
-def punctuation_verylow(tree, **params):
+def punctuation_verylow(tree: trees.Tree, **params: Any) -> trees.Tree:
     """Move all punctuation to the parent of its left terminal neighbor
     (when possible).
 
@@ -388,7 +393,7 @@ def punctuation_verylow(tree, **params):
     return tree
 
 
-def punctuation_symetrify(tree, **params):
+def punctuation_symetrify(tree: trees.Tree, **params: Any) -> trees.Tree:
     """Reattach pairwise punctuation symetrically. Loop through all
     punctuation terminals t that can occur in pairs from left to right.
     First check if t is on the left corner of a phrase which dominates
@@ -446,7 +451,7 @@ def punctuation_symetrify(tree, **params):
     return tree
 
 
-def punctuation_root(tree, **params):
+def punctuation_root(tree: trees.Tree, **params: Any) -> trees.Tree:
     """Attach all punctuation to the root node.
 
     Prerequisite: none
@@ -464,7 +469,7 @@ def punctuation_root(tree, **params):
     return tree
 
 
-def ptb_delete_traces(tree, **params):
+def ptb_delete_traces(tree: trees.Tree, **params: Any) -> trees.Tree:
     """Delete PTB traces and all co-indexation.
     Labels will swap positions with terminals, i.e., -NONE- will be
     terminal and trace symbol label. Gap indices ('=') are deleted.
@@ -629,7 +634,7 @@ def ptb_delete_traces(tree, **params):
     return tree
 
 
-def negra_mark_heads(tree, **params):
+def negra_mark_heads(tree: trees.Tree, **params: Any) -> trees.Tree:
     """Mark the head child of each node in a NeGra/TIGER tree using a simple
     heuristic. If there is child with a HD edge, it will be marked. Otherwise,
     the rightmost child with a NK edge will be marked. If there is no such
@@ -660,7 +665,7 @@ def negra_mark_heads(tree, **params):
     return tree
 
 
-def mark_heads_by_rules(tree, **params):
+def mark_heads_by_rules(tree: trees.Tree, **params: Any) -> trees.Tree:
     """Mark the head child of each node in a tree using Collins-style head
     rules. Rule file must be specified as parameter mark_heads_rulefile,
     or 'standard' rules for NeGra/TIGER ('negra') or the Penn Treebank ('ptb')
@@ -702,7 +707,7 @@ def mark_heads_by_rules(tree, **params):
     return tree
 
 
-def _binarize_tree(tree, bare_bin_labels):
+def _binarize_tree(tree: trees.Tree, bare_bin_labels: set[str]) -> trees.Tree:
     """Recursively binarize this tree.
     """
     if not trees.has_children(tree):
@@ -751,7 +756,7 @@ def _binarize_tree(tree, bare_bin_labels):
             child.parent = binarization_tree
 
 
-def binarize(tree, **params):
+def binarize(tree: trees.Tree, **params: Any) -> trees.Tree:
     """Destructively binarize the tree.
 
     Prerequisite: none
@@ -764,7 +769,7 @@ def binarize(tree, **params):
     return tree
 
 
-def _collapse_unary_chains(tree):
+def _collapse_unary_chains(tree: trees.Tree) -> trees.Tree:
     """Recursively collapse unary chains.
     """
     while len(trees.children(tree)) == 1:
@@ -783,7 +788,7 @@ def _collapse_unary_chains(tree):
         _collapse_unary_chains(child)
 
 
-def collapse_unary_chains(tree, **params):
+def collapse_unary_chains(tree: trees.Tree, **params: Any) -> trees.Tree:
     """Collapse unary chains and concatenate all labels.
     May not make sense for sentences of length one.
 
@@ -795,7 +800,7 @@ def collapse_unary_chains(tree, **params):
     return tree
 
 
-def _uncollapse_unary_chains(tree):
+def _uncollapse_unary_chains(tree: trees.Tree) -> trees.Tree:
     """Recursively uncollapse unary chains.
     """
     unary = tree
@@ -817,7 +822,7 @@ def _uncollapse_unary_chains(tree):
     return unary
 
 
-def uncollapse_unary_chains(tree, **params):
+def uncollapse_unary_chains(tree: trees.Tree, **params: Any) -> trees.Tree:
     """Un-collapse unary chains collapsed earlier by
     collapse_unary_chains.
 
@@ -829,7 +834,7 @@ def uncollapse_unary_chains(tree, **params):
     return tree
 
 
-def filter_by_length(tree, **params):
+def filter_by_length(tree: trees.Tree, **params: Any) -> trees.Tree | None:
     """Return None for all trees with a number of terminals
     less than, greater than, or equal to the given filtervalue.
 
@@ -854,7 +859,7 @@ def filter_by_length(tree, **params):
     return tree
 
 
-def add_parser(subparsers):
+def add_parser(subparsers: Any) -> Any:
     """Add an argument parser to the subparsers of treetools.py.
     """
     parser = subparsers.add_parser('transform',
@@ -925,7 +930,8 @@ class UsageAction(argparse.Action):
     """Custom action which shows extended help on available transformation
     options.
     """
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(self, parser: Any, namespace: Any, values: Any,
+                 option_string: str | None = None) -> None:
         title_str = misc.bold("%s help" % sys.argv[0])
         help_str = "\n\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n" \
                    % (misc.bold("%s\n%s" %
@@ -952,7 +958,7 @@ class UsageAction(argparse.Action):
         sys.exit()
 
 
-def run(args):
+def run(args: Any) -> None:
     """Runs the transformation given command line arguments.
     """
     sys.stderr.write("reading from '%s' in format '%s' and encoding '%s'\n"
@@ -979,18 +985,17 @@ def run(args):
                 getattr(treeoutput, args.dest_format + '_begin')\
                     (dest_stream,
                      **misc.options_dict(args.dest_opts))
-                for tree in getattr(treeinput,
-                                    args.src_format)(src, args.src_enc,
-                                                     **misc.options_dict \
-                                                     (args.src_opts)):
+                for tree in getattr(treeinput, args.src_format)(
+                        src, args.src_enc,
+                        **misc.options_dict(args.src_opts)):
                     for algorithm in args.trans:
                         tree = globals()[algorithm](tree, **params)
                         if tree is None:
                             break
                     if tree is not None:
-                        getattr(treeoutput, args.dest_format)(tree, dest_stream,
-                                                              **misc.options_dict
-                                                              (args.dest_opts))
+                        getattr(treeoutput, args.dest_format)(
+                            tree, dest_stream,
+                            **misc.options_dict(args.dest_opts))
                     if cnt % args.counting == 0:
                         sys.stderr.write("\r%d" % cnt)
                     cnt += 1
@@ -1004,12 +1009,12 @@ def run(args):
         cnt = 1
         tree_list = []
         sys.stderr.write("reading...\n")
-        for tree in getattr(treeinput, args.src_format)(args.src, args.src_enc,
-                                                        **misc.options_dict \
-                                                        (args.src_opts)):
+        for tree in getattr(treeinput, args.src_format)(
+                args.src, args.src_enc,
+                **misc.options_dict(args.src_opts)):
             for algorithm in args.trans:
-                tree = globals()[algorithm](tree,
-                                            **misc.options_dict(args.params))
+                tree = globals()[algorithm](
+                    tree, **misc.options_dict(args.params))
                 if tree is None:
                     break
             if tree is not None:
@@ -1026,9 +1031,9 @@ def run(args):
             with io.open("%s.%d" % (args.dest, i), 'w',
                          encoding=args.dest_enc) as dest_stream:
                 for tree_ind in range(0, part_size):
-                    getattr(treeoutput, args.dest_format) \
-                        (next(tree_iter), dest_stream, \
-                         **misc.options_dict(args.dest_opts))
+                    getattr(treeoutput, args.dest_format)(
+                        next(tree_iter), dest_stream,
+                        **misc.options_dict(args.dest_opts))
                     if tree_ind % args.counting == 0:
                         sys.stderr.write("\r%d" % tree_ind)
                 sys.stderr.write("\n")
@@ -1041,3 +1046,7 @@ TRANSFORMATIONS = [root_attach, boyd_split, raising, add_topnode,
                    negra_mark_heads, mark_heads_by_rules,
                    ptb_delete_traces, binarize, collapse_unary_chains,
                    filter_by_length]
+TRANSFORM_MAP: TransformMap = {
+    transformation.__name__: transformation
+    for transformation in TRANSFORMATIONS
+}

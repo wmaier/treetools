@@ -4,6 +4,10 @@ transformations: constants and utilities
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
+from __future__ import annotations
+
+from collections.abc import Mapping, Sequence
+
 from . import trees
 
 # Head rules for PTB (WSJ) from Collins (1999, p. 240)
@@ -73,8 +77,12 @@ HEAD_RULES_NEGRA = {
     'vroot' : [('left-to-right', '$. $')]
 }
 
-def get_headpos_by_rule(parent_label, children_label, rules,
-                        default=0):
+def get_headpos_by_rule(
+    parent_label: str,
+    children_label: Sequence[str],
+    rules: Mapping[str, list[tuple[str, str]]],
+    default: int = 0,
+) -> int:
     """Given parent and children labels and head rules,
     return position of lexical head.
     """

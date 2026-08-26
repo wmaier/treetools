@@ -4,13 +4,17 @@ This module handles tree writing in different formats.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
+from __future__ import annotations
+
 import sys
 from math import floor
 from xml.sax.saxutils import quoteattr
+from typing import Any, TextIO
 from . import trees, treeanalysis
+from .types import TreeWriter
 
 
-def parse_split_specification(split_spec, size):
+def parse_split_specification(split_spec: str, size: int) -> list[int]:
     """Parse the specification of part sizes for output splitting.
     The specification must be given as list of part size specifications
     separated by underscores where each part size specification is either a
@@ -53,19 +57,19 @@ def parse_split_specification(split_spec, size):
     return parts
 
 
-def export_begin(stream, **params):
+def export_begin(stream: TextIO, **params: Any) -> None:
     """Export preamble of output is empty.
     """
     pass
 
 
-def export_end(stream, **params):
+def export_end(stream: TextIO, **params: Any) -> None:
     """Export suffix of output is empty.
     """
     pass
 
 
-def export_tabs(length):
+def export_tabs(length: int) -> str:
     """Number of tabs after a single field in export format, given the
     length of the field.
     """
@@ -77,7 +81,7 @@ def export_tabs(length):
         return "\t"
 
 
-def export_format(subtree, **params):
+def export_format(subtree: trees.Tree, **params: Any) -> str:
     """Return an export formatted node line for a given subtree.
     """
     if subtree.data['edge'] == None:
@@ -107,7 +111,7 @@ def export_format(subtree, **params):
                subtree.parent.data['num'])
 
 
-def compute_export_numbering(tree):
+def compute_export_numbering(tree: trees.Tree) -> None:
     """We compute the 'level' of each node, i.e., its minimal path length to a
     terminal. We then distribute numbers >= 500 from left to right in each
     level, starting with the lowest one.
@@ -125,7 +129,7 @@ def compute_export_numbering(tree):
     tree.data['num'] = 0
 
 
-def export(tree, stream, **params):
+def export(tree: trees.Tree, stream: TextIO, **params: Any) -> None:
     """Export format as in Brants (1997).
     """
     # check parameters
@@ -150,19 +154,20 @@ def export(tree, stream, **params):
     stream.write(u"#EOS %d\n" % tree_id)
 
 
-def brackets_begin(stream, **params):
+def brackets_begin(stream: TextIO, **params: Any) -> None:
     """Brackets preamble of output is empty.
     """
     pass
 
 
-def brackets_end(stream, **params):
+def brackets_end(stream: TextIO, **params: Any) -> None:
     """Brackets suffix of output is empty.
     """
     pass
 
 
-def write_brackets_subtree(tree, stream, **params):
+def write_brackets_subtree(tree: trees.Tree, stream: TextIO,
+                           **params: Any) -> None:
     """Write a single bracketed subtree.
     """
     stream.write(u"(")
@@ -180,7 +185,7 @@ def write_brackets_subtree(tree, stream, **params):
     stream.write(u")")
 
 
-def brackets(tree, stream, **params):
+def brackets(tree: trees.Tree, stream: TextIO, **params: Any) -> None:
     """One bracketed tree per line. Tree must not be discontinuous.
     """
     if treeanalysis.gap_degree(tree) > 0:
@@ -193,19 +198,20 @@ def brackets(tree, stream, **params):
         stream.write(u"\n")
 
 
-def discobrackets_begin(stream, **params):
+def discobrackets_begin(stream: TextIO, **params: Any) -> None:
     """Discobrackets output preamble is empty.
     """
     pass
 
 
-def discobrackets_end(stream, **params):
+def discobrackets_end(stream: TextIO, **params: Any) -> None:
     """Discobrackets output suffix is empty.
     """
     pass
 
 
-def discobrackets(tree, stream, **params):
+def discobrackets(tree: trees.Tree, stream: TextIO,
+                  **params: Any) -> None:
     """One bracketed tree per line. Terminals are substituted for
     numbers and sentence is written after the tree in the same line,
     separated from the tree by a tab (terminal space-separated).
@@ -218,19 +224,19 @@ def discobrackets(tree, stream, **params):
     stream.write("\t" + sentence + "\n")
 
 
-def terminals_begin(stream, **params):
+def terminals_begin(stream: TextIO, **params: Any) -> None:
     """Terminals output preamble is empty.
     """
     pass
 
 
-def terminals_end(stream, **params):
+def terminals_end(stream: TextIO, **params: Any) -> None:
     """Terminals output suffix is empty.
     """
     pass
 
 
-def terminals(tree, stream, **params):
+def terminals(tree: trees.Tree, stream: TextIO, **params: Any) -> None:
     """All terminals of the tree on one line separated by whitespace.
     """
     if 'terminals_pos' in params and 'pos_only' in params:
@@ -255,7 +261,7 @@ def terminals(tree, stream, **params):
     print(u"", file=stream)
 
 
-def tigerxml_begin(stream, **params):
+def tigerxml_begin(stream: TextIO, **params: Any) -> None:
     """The start of a tigerxml document. To be completed.
     """
     stream.write(u"<?xml version='1.0'?>\n")
@@ -263,14 +269,14 @@ def tigerxml_begin(stream, **params):
     stream.write(u"<body>\n")
 
 
-def tigerxml_end(stream, **params):
+def tigerxml_end(stream: TextIO, **params: Any) -> None:
     """The end of a tigerxml document, to be completed.
     """
     stream.write(u"</body>\n")
     stream.write(u"</corpus>")
 
 
-def tigerxml(tree, stream, **params):
+def tigerxml(tree: trees.Tree, stream: TextIO, **params: Any) -> None:
     """A single sentence as TIGER XML. The IDs should probably
     be more fancy.
     """
@@ -304,7 +310,12 @@ def tigerxml(tree, stream, **params):
     stream.write(u"</s>\n")
 
 
-OUTPUT_FORMATS = [export, brackets, discobrackets, tigerxml, terminals]
+OUTPUT_FORMATS: list[TreeWriter] = [
+    export, brackets, discobrackets, tigerxml, terminals
+]
+OUTPUT_FORMAT_MAP: dict[str, TreeWriter] = {
+    writer.__name__: writer for writer in OUTPUT_FORMATS
+}
 OUTPUT_OPTIONS = {'boyd_split_marking': 'Boyd split: Mark split nodes with *',
                   'boyd_split_numbering': 'Boyd split: Number split nodes',
                   'brackets_emptyroot': 'Omit root label as in Penn Treebank',

@@ -4,8 +4,15 @@ This module provides basic data structures and functions for handling trees.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
+from __future__ import annotations
+
 import itertools
 from copy import deepcopy
+from collections.abc import Iterator, Mapping, MutableMapping
+from dataclasses import dataclass, fields
+from typing import Any, ClassVar, cast
+
+from .types import NodeData
 
 
 # separators in labels
@@ -41,7 +48,7 @@ DEFAULT_MORPH = u"--"
 DEFAULT_EDGE = u"--"
 DEFAULT_ROOT = u"VROOT"
 
-class Tree(object):
+class Tree:
     """A tree is represented by a unique ID per instance, a parent, a
     children list, and a data dict. New instances are constructed by
     copying given data dict. If there are no children, there must be a
@@ -51,40 +58,46 @@ class Tree(object):
     ID.
     """
     # unique id generator
-    newid = itertools.count()
+    newid: ClassVar[Iterator[int]] = itertools.count()
+    id: int
+    children: list[Tree]
+    parent: Tree | None
+    # Keep the runtime mapping open: format-specific readers attach additional
+    # metadata beyond the documented ``NodeData`` keys.
+    data: MutableMapping[str, Any]
 
-    def __init__(self, data):
+    def __init__(self, data: Mapping[str, Any]):
         """Construct a new tree and copy given data dict.
         """
         self.id = next(Tree.newid)
         self.children = []
         self.parent = None
-        self.data = deepcopy(data)
+        self.data = cast(MutableMapping[str, Any], deepcopy(data))
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, self.__class__):
             return self.id == other.id
         else:
             return False
 
-    def __ne__(self, other):
+    def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.id)
 
 
-def make_node_data():
+def make_node_data() -> NodeData:
     """Make an empty node data and pre-initialize with fields
     """
-    return dict(zip(FIELDS, [None] * NUMBER_OF_FIELDS))
+    return cast(NodeData, dict(zip(FIELDS, [None] * NUMBER_OF_FIELDS)))
 
 
-def make_node_data_fill():
+def make_node_data_fill() -> NodeData:
     """Make a node data hash, initialize with fields and fill them
     with default values.
     """
-    fields = dict(zip(FIELDS, [None] * NUMBER_OF_FIELDS))
+    fields = cast(NodeData, dict(zip(FIELDS, [None] * NUMBER_OF_FIELDS)))
     fields['word'] = DEFAULT_WORD
     fields['lemma'] = DEFAULT_LEMMA
     fields['label'] = u"EMPTY"
@@ -94,7 +107,7 @@ def make_node_data_fill():
     return fields
 
 
-def preorder(tree):
+def preorder(tree: Tree) -> Iterator[Tree]:
     """Generator which performs a preorder tree traversal and yields
     the subtrees encountered on its way.
     """
@@ -104,7 +117,7 @@ def preorder(tree):
             yield child_tree
 
 
-def postorder(tree):
+def postorder(tree: Tree) -> Iterator[Tree]:
     """Generator which performs a postorder tree traversal and yields
     the subtrees encountered on its way.
     """
@@ -114,19 +127,19 @@ def postorder(tree):
     yield tree
 
 
-def children(tree):
+def children(tree: Tree) -> list[Tree]:
     """Return the ordered children of the root of this tree.
     """
     return sorted(tree.children, key=lambda x: terminals(x)[0].data['num'])
 
 
-def has_children(tree):
+def has_children(tree: Tree) -> bool:
     """Return true if this tree has any child.
     """
     return len(tree.children) > 0
 
 
-def unordered_terminals(tree):
+def unordered_terminals(tree: Tree) -> list[Tree]:
     """Return all terminal children of this subtree.
     """
     if len(tree.children) == 0:
@@ -138,7 +151,7 @@ def unordered_terminals(tree):
         return result
 
 
-def terminals(tree):
+def terminals(tree: Tree) -> list[Tree]:
     """Return all terminal children of this subtree.
     """
     if len(tree.children) == 0:
@@ -153,11 +166,11 @@ def terminals(tree):
         return sorted(result, key=lambda x: x.data['num'])
 
 
-def terminal_blocks(tree):
+def terminal_blocks(tree: Tree) -> list[list[Tree]]:
     """Return an array of arrays of terminals representing the
     continuous blocks covered by the root of the tree given as
     argument."""
-    blocks = [[]]
+    blocks: list[list[Tree]] = [[]]
     terms = terminals(tree)
     for i, terminal in enumerate(terms[:-1]):
         blocks[-1].append(terminal)
@@ -167,7 +180,7 @@ def terminal_blocks(tree):
     return blocks
 
 
-def delete_terminal(tree, leaf):
+def delete_terminal(tree: Tree, leaf: Tree) -> Tree:
     """Delete a leaf node and recursively all of its ancestors
     which do not have siblings. Root of the tree with the leaf
     must be given as well. Return the first node with siblings
@@ -190,7 +203,7 @@ def delete_terminal(tree, leaf):
     return leaf
 
 
-def right_sibling(tree):
+def right_sibling(tree: Tree) -> Tree | None:
     """Return the right sibling of this tree if it exists and None otherwise.
     """
     if tree.parent is None:
@@ -202,7 +215,7 @@ def right_sibling(tree):
     return None
 
 
-def left_sibling(tree):
+def left_sibling(tree: Tree) -> Tree | None:
     """Return the left sibling of this tree if it exists and None otherwise.
     """
     if tree.parent is None:
@@ -214,7 +227,7 @@ def left_sibling(tree):
     return None
 
 
-def lca(tree_a, tree_b):
+def lca(tree_a: Tree, tree_b: Tree) -> Tree | None:
     """Return the least common ancestor of two trees and None if there
     is none.
     """
@@ -225,7 +238,7 @@ def lca(tree_a, tree_b):
     return None
 
 
-def dominance(tree):
+def dominance(tree: Tree) -> Iterator[Tree]:
     """Return all ancestors of this tree including the tree itself.
     """
     parent = tree
@@ -235,11 +248,11 @@ def dominance(tree):
         yield parent
 
 
-def levels(tree):
+def levels(tree: Tree) -> tuple[dict[int, list[Tree]], dict[Tree, int]]:
     """Compute levels of all nodes (height).
     """
-    levels = {}
-    reverse_levels = {}
+    levels: dict[int, list[Tree]] = {}
+    reverse_levels: dict[Tree, int] = {}
     for subtree in preorder(tree):
         if has_children(subtree):
             level = 0
@@ -247,6 +260,7 @@ def levels(tree):
                 path_length = 0
                 path_element = terminal
                 while path_element != subtree:
+                    assert path_element.parent is not None
                     path_element = path_element.parent
                     path_length += 1
                 level = max(level, path_length)
@@ -257,18 +271,19 @@ def levels(tree):
     return levels, reverse_levels
 
 
-def get_label(tree, **params):
+def get_label(tree: Tree, **params: Any) -> str:
     """Compute subtree label decorations depending on given parameters.
     """
-    label = tree.data['label']
+    label = str(tree.data.get('label') or DEFAULT_LABEL)
     gf_separator = DEFAULT_GF_SEPARATOR
     if 'gf_separator' in params:
         gf_separator = str(params['gf_separator'])
     gf_string = ""
-    if 'gf' in params and not tree.data['edge'].startswith("-") \
+    edge = str(tree.data.get('edge') or DEFAULT_EDGE)
+    if 'gf' in params and not edge.startswith("-") \
        and (has_children(tree)
             or 'gf_terminals' in params):
-        gf_string = "%s%s" % (gf_separator, tree.data['edge'])
+        gf_string = "%s%s" % (gf_separator, edge)
     head = ""
     if 'mark_heads_marking' in params and tree.data['head']:
         head = DEFAULT_HEAD_MARKER
@@ -277,21 +292,30 @@ def get_label(tree, **params):
         split_marker = "*"
     split_number = ""
     if 'boyd_split_numbering' in params and tree.data['split']:
-        split_number = tree.data['block_number']
+        split_number = str(tree.data['block_number'])
     return u"%s%s%s%s%s" % (label, gf_string, head, split_marker, split_number)
 
 
-class Label(object):
-    """Dummy class for labels
-    """
-    def __str__(self):
-        result = ""
-        for element in self.__dict__:
-            result += element + " -> " + str(self.__dict__[element]) + "\n"
-        return result
+@dataclass(eq=False)
+class Label:
+    """Parsed treebank label components."""
+
+    label: str = DEFAULT_LABEL
+    gf: str = DEFAULT_EDGE
+    gf_separator: str = DEFAULT_GF_SEPARATOR
+    coindex: str = ""
+    gapindex: str = ""
+    headmarker: str = ""
+    is_trace: bool = False
+
+    def __str__(self) -> str:
+        return "".join(
+            "%s -> %s\n" % (field.name, getattr(self, field.name))
+            for field in fields(self)
+        )
 
 
-def parse_label(label, **params):
+def parse_label(label: str, **params: Any) -> Label:
     """Generic parsing of treebank label assuming following
     format (no spaces):
 
@@ -355,7 +379,7 @@ def parse_label(label, **params):
     return lab
 
 
-def format_label(label, **params):
+def format_label(label: Label, **params: Any) -> str:
     """Glue parts of parsed label (parse_label) together. To delete a certain
     component of the label, parse_label it, set the corresponding components
     to the empty string and then format_label it.
@@ -380,7 +404,7 @@ def format_label(label, **params):
     return result
 
 
-def replace_chars(tree, cands):
+def replace_chars(tree: Tree, cands: Mapping[str, str]) -> Tree:
     """Replace characters in node data before bracketing output given a
     dictionary.
     """

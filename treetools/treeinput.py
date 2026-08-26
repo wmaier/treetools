@@ -6,6 +6,8 @@ trees.
 
 Author: Wolfgang Maier <maierw@hhu.de>
 """
+from __future__ import annotations
+
 import io
 import re
 import string
@@ -13,10 +15,13 @@ import sys
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from io import StringIO
+from collections.abc import Iterator
+from typing import Any, TextIO
 from . import trees, misc
+from .types import NodeData, TreeReader
 
 
-def tigerxml_build_tree(s_element, **params):
+def tigerxml_build_tree(s_element: ET.Element, **params: Any) -> trees.Tree:
     """Build a tree from a <s> element in TIGER XML. If there is
     no unique VROOT, add one (unary). Root is found by looking for
     nodes with no parent, 'root' attribute on <graph> is discarded.
@@ -96,7 +101,7 @@ def tigerxml_build_tree(s_element, **params):
     return top
 
 
-def tigerxml(in_file, _, **params):
+def tigerxml(in_file: str, _: str, **params: Any) -> Iterator[trees.Tree]:
     """Read trees from TIGER XML. The encoding argument is ignored here.
     """
     digits = re.compile(r'\d+')
@@ -127,7 +132,7 @@ def tigerxml(in_file, _, **params):
                           file=sys.stderr)
 
 
-def bracket_lexer(stream):
+def bracket_lexer(stream: TextIO) -> Iterator[tuple[str, str]]:
     """Lexes input coming from stream in opening and closing brackets,
     whitespace, and remaining characters. Works as generator."""
     tokenbuf = StringIO()
@@ -165,7 +170,8 @@ def bracket_lexer(stream):
         character = stream.read(1)
 
 
-def brackets(in_file, in_encoding, **params):
+def brackets(in_file: str, in_encoding: str,
+             **params: Any) -> Iterator[trees.Tree]:
     """Read bracketed trees with any kind of indentation by lexing
     input into whitespace, left/right brackets, and other tokens (aka
     labels/words).
@@ -337,7 +343,8 @@ def brackets(in_file, in_encoding, **params):
                 raise ValueError("unknown lexer token class")
 
 
-def discobrackets(in_file, in_encoding, **params):
+def discobrackets(in_file: str, in_encoding: str,
+                  **params: Any) -> Iterator[trees.Tree]:
     """ Build a tree from disco bracket input. Every terminal is supposed to
     be an integer i. For a sentence of length n, all 1 <= i <= n must be
     present. Tree is parsed as regular bracketed tree; after that, the
@@ -352,7 +359,8 @@ def discobrackets(in_file, in_encoding, **params):
         yield tree
 
 
-def export_build_tree(num, node_by_num, children_by_num):
+def export_build_tree(num: int, node_by_num: dict[int, NodeData],
+                      children_by_num: dict[int, list[int]]) -> trees.Tree:
     """ Build a tree from export. """
     tree = trees.Tree(node_by_num[num])
     tree.data['terminals'] = []
@@ -373,7 +381,7 @@ def export_build_tree(num, node_by_num, children_by_num):
     return tree
 
 
-def export_parse_line(line, **params):
+def export_parse_line(line: str, **params: Any) -> NodeData:
     """ Parse a single export format line, i.e., one node."""
     gf_separator = trees.DEFAULT_GF_SEPARATOR
     if 'gf_separator' in params:
@@ -409,7 +417,8 @@ def export_parse_line(line, **params):
     return fields
 
 
-def export(in_file, in_encoding, **params):
+def export(in_file: str, in_encoding: str,
+           **params: Any) -> Iterator[trees.Tree]:
     """Read export format (3 or 4). Ignores all fields after the parent number
     since not all export treebanks respect the original export definition
     from Brants (1997) (see TueBa-D/Z 8).
@@ -466,7 +475,10 @@ def export(in_file, in_encoding, **params):
                     sentence = []
 
 
-INPUT_FORMATS = [export, brackets, discobrackets, tigerxml]
+INPUT_FORMATS: list[TreeReader] = [export, brackets, discobrackets, tigerxml]
+INPUT_FORMAT_MAP: dict[str, TreeReader] = {
+    reader.__name__: reader for reader in INPUT_FORMATS
+}
 INPUT_OPTIONS = {'disco_reordered' : 'In discobrackets, output CF order with '\
                      'terminal indices',
                  'gf_split' : 'Brackets: Try to split grammatical ' \
