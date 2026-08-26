@@ -212,6 +212,10 @@ def run(args):
                 print(algorithm)
                 tree = getattr(transform, algorithm)(
                     tree, **misc.options_dict(args.transformparams))
+                if tree is None:
+                    break
+            if tree is None:
+                continue
             sentence, trans = globals()[args.transtype](tree)
             transitions.append((sentence, trans))
             if cnt % 100 == 0:
