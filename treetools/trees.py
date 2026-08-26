@@ -218,20 +218,10 @@ def lca(tree_a, tree_b):
     """Return the least common ancestor of two trees and None if there
     is none.
     """
-    dom_a = [tree_a]
-    parent = tree_a
-    while parent.parent is not None:
-        parent = parent.parent
-        dom_a.append(parent)
-    dom_b = [tree_b]
-    parent = tree_b
-    while parent.parent is not None:
-        parent = parent.parent
-        dom_b.append(parent)
-    i = 0
-    for i, (el_a, el_b) in enumerate(zip(dom_a[::-1], dom_b[::-1])):
-        if el_a != el_b:
-            return dom_a[::-1][i - 1]
+    ancestors_a = set(dominance(tree_a))
+    for candidate in dominance(tree_b):
+        if candidate in ancestors_a:
+            return candidate
     return None
 
 

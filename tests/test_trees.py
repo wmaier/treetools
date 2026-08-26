@@ -215,6 +215,30 @@ def test_lca(discont_tree, cont_tree):
     assert croot_children[0] == clca
 
 
+def test_lca_edge_cases():
+    """Test LCA behavior for ancestors, identical nodes, and separate trees."""
+    root = trees.Tree({'label': 'ROOT'})
+    left = trees.Tree({'label': 'LEFT'})
+    left_leaf = trees.Tree({'label': 'LEFT_LEAF', 'num': 1})
+    right = trees.Tree({'label': 'RIGHT'})
+    right_leaf = trees.Tree({'label': 'RIGHT_LEAF', 'num': 2})
+    other_root = trees.Tree({'label': 'OTHER_ROOT'})
+
+    root.children = [left, right]
+    left.parent = root
+    right.parent = root
+    left.children = [left_leaf]
+    left_leaf.parent = left
+    right.children = [right_leaf]
+    right_leaf.parent = right
+
+    assert trees.lca(left_leaf, right_leaf) is root
+    assert trees.lca(left_leaf, left_leaf) is left_leaf
+    assert trees.lca(root, left_leaf) is root
+    assert trees.lca(left_leaf, root) is root
+    assert trees.lca(root, other_root) is None
+
+
 def test_right_sibling(discont_tree, cont_tree):
     """
     trees.right_sibling.
