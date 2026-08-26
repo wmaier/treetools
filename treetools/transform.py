@@ -974,6 +974,8 @@ def run(args):
         else:
             files.append((args.src, args.dest))
         for src, dest in files:
+            if os.path.realpath(src) == os.path.realpath(dest):
+                raise ValueError("source and destination must be different files")
             print("%s --> %s" % (src, dest), file=sys.stderr)
             with io.open(dest, 'w', encoding=args.dest_enc) as dest_stream:
                 getattr(treeoutput, args.dest_format + '_begin')\
