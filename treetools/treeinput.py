@@ -82,7 +82,7 @@ def tigerxml_build_tree(s_element, **params):
                                       gf_separator=gf_separator)
             coindexseparator = trees.DEFAULT_COINDEX_SEPARATOR
             if len(label_parts.coindex) == 0:
-                coindexseparator = trees.DEFAULT_COINDEX_SEPARATOR
+                coindexseparator = ""
             gapseparator = trees.DEFAULT_GAPPING_SEPARATOR
             if len(label_parts.gapindex) == 0:
                 gapseparator = ""
