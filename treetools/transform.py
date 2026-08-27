@@ -911,7 +911,9 @@ def add_parser(subparsers):
                             '"rest" or a number suffixed by either "#" ' \
                             '(specifying an absolute number of sentences) ' \
                             'or "%%" (specifiying a percentage of all ' \
-                            'sentences) (default: no splitting).',
+                            'sentences). Split files are concatenable ' \
+                            'fragments and do not include format preambles ' \
+                            'or suffixes (default: no splitting).',
                         default='')
     parser.add_argument('--usage', nargs=0, help='show detailed information ' \
                         'about available algorithms, input options and ' \
