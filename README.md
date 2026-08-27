@@ -79,6 +79,18 @@ To extract an left-to-right binarized LCFRS with v1/h2 markovization in rparse f
 
     treetools-cli grammar input_treebank output_grammar leftright --dest-format rcg --markov v:1 h:2
 
+### Split output fragments
+
+The ``transform --split`` option writes numbered, concatenable fragments. It
+does not add a format's document preamble or suffix to each part. This makes it
+possible to assemble training data for cross-validation by concatenating the
+desired folds.
+
+For TIGERXML, each part contains ``<s>...</s>`` elements without the XML
+declaration or the surrounding ``<corpus><body>...</body></corpus>`` elements.
+After concatenating the desired parts, add those wrappers once around the
+combined fragments to obtain a complete TIGERXML document.
+
 ## Development
 
 ### Running Tests

@@ -912,7 +912,9 @@ def add_parser(subparsers):
                             '"rest" or a number suffixed by either "#" ' \
                             '(specifying an absolute number of sentences) ' \
                             'or "%%" (specifiying a percentage of all ' \
-                            'sentences) (default: no splitting).',
+                            'sentences). Split files are concatenable ' \
+                            'fragments and do not include format preambles ' \
+                            'or suffixes (default: no splitting).',
                         default='')
     parser.add_argument('--usage', nargs=0, help='show detailed information ' \
                         'about available algorithms, input options and ' \
@@ -1025,16 +1027,12 @@ def run(args):
             sys.stderr.write("writing part %d\n" % i)
             with io.open("%s.%d" % (args.dest, i), 'w',
                          encoding=args.dest_enc) as dest_stream:
-                getattr(treeoutput, args.dest_format + '_begin') \
-                    (dest_stream, **misc.options_dict(args.dest_opts))
                 for tree_ind in range(0, part_size):
                     getattr(treeoutput, args.dest_format) \
                         (next(tree_iter), dest_stream, \
                          **misc.options_dict(args.dest_opts))
                     if tree_ind % args.counting == 0:
                         sys.stderr.write("\r%d" % tree_ind)
-                getattr(treeoutput, args.dest_format + '_end') \
-                    (dest_stream, **misc.options_dict(args.dest_opts))
                 sys.stderr.write("\n")
 
 

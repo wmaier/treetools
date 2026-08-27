@@ -2,11 +2,11 @@
 
 from types import SimpleNamespace
 
-from treetools import transform, treeinput
+from treetools import transform
 from . import testdata
 
 
-def test_split_tigerxml_output_is_a_complete_document(tmp_path):
+def test_split_tigerxml_output_is_a_concatenable_fragment(tmp_path):
     source = tmp_path / "source.xml"
     destination = tmp_path / "trees.xml"
     source.write_text(testdata.SAMPLE_TIGERXML, encoding="utf-8")
@@ -19,6 +19,9 @@ def test_split_tigerxml_output_is_a_complete_document(tmp_path):
 
     transform.run(args)
 
-    trees = list(treeinput.tigerxml(
-        str(tmp_path / "trees.xml.0"), "utf-8", quiet=True))
-    assert len(trees) == 1
+    fragment = (tmp_path / "trees.xml.0").read_text(encoding="utf-8")
+    assert "<s id=" in fragment
+    assert "</s>" in fragment
+    assert "<?xml" not in fragment
+    assert "<corpus>" not in fragment
+    assert "<body>" not in fragment
